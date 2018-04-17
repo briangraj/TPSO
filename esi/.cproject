@@ -38,7 +38,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/sisopLib/Debug}&quot;"/>
 								</option>
 								<option id="gnu.c.link.option.libs.1446221090" name="Libraries (-l)" superClass="gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs">
-									<listOptionValue builtIn="false" value="sisopLib"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="sisopLib"/>
 									<listOptionValue builtIn="false" value="commons"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.504117672" superClass="cdt.managedbuild.tool.gnu.c.linker.input">

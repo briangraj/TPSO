@@ -26,4 +26,13 @@ int SOCKET_COORDINADOR;
 t_log* log_esi;
 t_config* archivo_config;
 
+
+//FUNCIONES
+void iniciar_esi();
+void crear_log();
+void leer_archivo_config();
+
+
+
+
 #endif /* FUNCIONES_ESI_H_ */

@@ -50,6 +50,9 @@ void leer_archivo_config(){
 	IP_PLANIFICADOR = config_get_string_value(archivo_config, "IP_PLANIFICADOR");
 	PUERTO_PLANIFICADOR = config_get_int_value(archivo_config, "PUERTO_PLANIFICADOR");
 	PUERTO_COORDINADOR = config_get_int_value(archivo_config, "PUERTO_COORDINADOR");
+
+	log_info(log_esi, "IP COORDINADOR: %s", IP_COORDINADOR);
+	log_info(log_esi, "PUERTO COORDINADOR: %d", PUERTO_COORDINADOR);
 }
 
 
