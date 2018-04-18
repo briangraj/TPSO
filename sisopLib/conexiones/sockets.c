@@ -38,3 +38,52 @@ void bindear_socket(int listener, char ip[], int puerto, t_log* log){
 	};
 }
 
+int conectarse_a_server(char* nombre_cliente, char* nombre_server, char* ip_server, int puerto_server, int socket_server, t_log* log_cliente){
+	socket_server = crear_socket();
+
+	if(socket_server < 0) {
+		log_error(log_cliente, "No se pudo crear el socket para conectarse al proceso %s, se finaliza el proceso %s.", nombre_server, nombre_cliente);
+		return -1;
+	}
+
+	if (conectar_socket_a(ip_server, puerto_server, socket_server) == -1) {
+		log_error(log_cliente, "El proceso %s no se pudo conectar al proceso %s por el socket %d",nombre_cliente, nombre_server, socket_server);
+		close(socket_server);
+		return -1;
+	}
+
+	log_trace(log_cliente, "El proceso %s se conecto al proceso %s con exito", nombre_cliente, nombre_server);
+
+	if(recibir_protocolo(socket_server) != CONEXION_EXITOSA){
+		log_error(log_cliente, "El proceso %s denego la conexion", nombre_server);
+		close(socket_server);
+		return -1;
+	}
+
+	log_trace(log_cliente, "El proceso %s confirmo la conexion con el proceso %s", nombre_server, nombre_cliente);
+
+	if(realizar_handshake(ESI, socket_server) <= 0){
+		log_error(log_cliente, "No se pudo iniciar el handshake con el proceso %s", nombre_server);
+		close(socket_server);
+		return -1;
+	}
+
+	log_trace(log_cliente, "Se inicio el handshake con el proceso %s", nombre_server);
+
+	if(recibir_protocolo(socket_server) != CONEXION_EXITOSA){
+		log_error(log_cliente, "No se pudo completar el handshake con el proceso %s", nombre_server);
+		close(socket_server);
+		return -1;
+	}
+
+
+	log_trace(log_cliente, "Se completo el handshake con el proceso %s", nombre_server);
+
+	return socket_server;
+}
+
+
+
+
+
+

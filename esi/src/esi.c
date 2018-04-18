@@ -10,8 +10,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <funciones_esi.h>
 
-int main(void) {
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
-	return EXIT_SUCCESS;
+int main(void) { // falta que el esi reciba la ruta del archivo del script como parametro
+
+	iniciar_esi();
+
+
+
 }
