@@ -5,7 +5,7 @@
  *      Author: utnso
  */
 
-#include <funciones_esi.h>
+#include "funciones_esi.h"
 
 void iniciar_esi(){
 	crear_log();
@@ -25,7 +25,6 @@ void iniciar_esi(){
 		exit(1);
 	}
 
-
 }
 
 void crear_log(){
@@ -43,7 +42,9 @@ void crear_log(){
 
 void leer_archivo_config(){
 
-	archivo_config = config_create("../../configs/esi.cfg"); // Ante problema con eclipse/consola, cambiarla por ruta absoluta
+	//archivo_config = config_create("../../configs/esi.cfg"); // Ante problema con eclipse/consola, cambiarla por ruta absoluta
+
+	archivo_config = config_create("/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/configs/esi.cfg");
 
 	IP_COORDINADOR = config_get_string_value(archivo_config, "IP_COORDINADOR");
 	IP_PLANIFICADOR = config_get_string_value(archivo_config, "IP_PLANIFICADOR");

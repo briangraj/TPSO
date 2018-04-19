@@ -20,6 +20,8 @@
 #include <arpa/inet.h>
 #include <commons/log.h>
 
+#include "protocolos.h"
+
 int crear_socket();
 int conectar_socket_a(char ip[], int puerto, int sockfd);
 void bindear_socket(int listener, char ip[], int puerto, t_log* log);

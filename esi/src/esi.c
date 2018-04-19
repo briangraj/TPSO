@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <funciones_esi.h>
+#include "funciones_esi.h"
 
 int main(void) { // falta que el esi reciba la ruta del archivo del script como parametro
 
