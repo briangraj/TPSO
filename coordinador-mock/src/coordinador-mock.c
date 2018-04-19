@@ -44,8 +44,6 @@ int main(void) {
 	//CICLO PRINCIPAL DE EJECUCION
 
 	for(;;) {
-		log_debug(log, "Casi llego al select");
-
 		read_fds = master;
 		if (select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1) {
 
@@ -60,6 +58,7 @@ int main(void) {
 				if (FD_ISSET(socket, &read_fds)) { // ¡¡tenemos datos!!
 					if (socket == listener) {
 						// ATIENDO A LOS NUEVOS CLIENTES Y LES DOY LA BIENVENIDA, SOLO SI SON GENTE DE BIEN (?
+
 						addrlen = sizeof(remoteaddr);
 						if ((newfd = accept(listener, (struct sockaddr *)&remoteaddr, &addrlen)) == -1) {
 							log_error(log, "ERROR: no se pudo aceptar la conexion del socket");
@@ -70,6 +69,12 @@ int main(void) {
 					} else {
 						// GESTIONO PETICIONES DE LOS CLIENTES CONOCIDOS
 						protocolo_cliente = recibir_protocolo(socket);
+
+						if(protocolo_cliente < 0){
+							FD_CLR(socket, &master);
+							log_info(log, "Se desconecto al cliente del socket %d", socket);
+							close(socket);
+						}
 
 						atender_protocolo(protocolo_cliente, socket);
 
