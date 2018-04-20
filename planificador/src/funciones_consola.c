@@ -9,6 +9,8 @@
 
 void levantar_consola(void * param){
 
+	setear_comandos();
+
 	  char * linea;
 
 	  while(1) {
@@ -29,6 +31,46 @@ void levantar_consola(void * param){
 
 	    free(linea);
 	  }
+
+}
+
+void setear_comandos(){
+
+	comandos[0].nombre = "pausar";
+	comandos[0].funcion = com_pausar;
+	comandos[0].descripcion = "El Planificador no le dará nuevas órdenes de ejecución a ningún ESI mientras se encuentre pausado";
+
+	comandos[1].nombre = "continuar";
+	comandos[1].funcion = com_continuar;
+	comandos[1].descripcion = "Permite que el planificador de nuevas ordenes de ejecución a los procesos ESI";
+
+	comandos[2].nombre = "bloquear";
+	comandos[2].funcion = com_bloquear;
+	comandos[2].descripcion = "Se bloqueará el proceso ESI hasta ser desbloqueado, especificado por dicho <ID> en la cola del recurso <clave>";
+
+	comandos[3].nombre = "desbloquear";
+	comandos[3].funcion = com_desbloquear;
+	comandos[3].descripcion = "Se desbloqueara el proceso ESI con el ID especificado. Solo se desbloquearán ESIs que fueron bloqueados con la consola";
+
+	comandos[4].nombre = "listar";
+	comandos[4].funcion = com_listar;
+	comandos[4].descripcion = "Lista los procesos encolados esperando al recurso";
+
+	comandos[5].nombre = "kill";
+	comandos[5].funcion = com_kill;
+	comandos[5].descripcion = "Finaliza el proceso";
+
+	comandos[6].nombre = "status";
+	comandos[6].funcion = com_status;
+	comandos[6].descripcion = "Información sobre las instancias del sistema";
+
+	comandos[7].nombre = "deadlock";
+	comandos[7].funcion = com_deadlock;
+	comandos[7].descripcion = "Permitirá analizar los deadlocks que existan en el sistema y a que ESI están asociados";
+
+	comandos[8].nombre = (char *)NULL;
+	comandos[8].funcion = (Function *)NULL;
+	comandos[8].descripcion = (char *)NULL;
 
 }
 
@@ -75,7 +117,7 @@ int ejecutar_linea(char* linea){
 
   if (!comando)
     {
-      printf("No se encontró el comando %s", word);
+      printf("No se encontró el comando %s \n", word);
       return (-1);
     }
 
@@ -106,7 +148,7 @@ t_comando* find_command (char* nombre){
 //COMANDOS
 
 int	com_pausar(char* parametro){
-	printf("El comando pausar recibió como parametro %s", parametro);
+	printf("El comando pausar recibió como parametro %s \n", parametro);
 	return 0;
 }
 int	com_continuar(char* parametro){
