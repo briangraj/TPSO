@@ -126,10 +126,6 @@ void atender_handshake(int socket_cliente){
 
 		informar_conexion_exitosa_a(socket_cliente);
 
-
-		sleep(5);
-		informar_conexion_exitosa_a(socket_cliente);
-
 	}
 }
 

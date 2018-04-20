@@ -27,11 +27,21 @@ t_log* log_esi;
 t_config* archivo_config;
 
 
-//FUNCIONES
-void iniciar_esi();
-void crear_log();
-void leer_archivo_config();
+//ESTRUCTURAS
+typedef struct{
+	int informe_coordinador;
+	char* sentencia_ejecutada;//REVISAR SI ES CHAR* U OTRA COSA
+} resultado_ejecucion;
 
+
+//FUNCIONES
+void					iniciar_esi							();
+void					crear_log							();
+void					leer_archivo_config					();
+resultado_ejecucion 	ejecutar_proxima_sentencia			(FILE* script);
+int 					informar_resultado_al_usuario		(resultado_ejecucion informe_ejecucion);
+bool					verificar_sentencias_restantes		(FILE* script);
+void					finalizar							();
 
 
 
