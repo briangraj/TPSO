@@ -1,7 +1,7 @@
 
 
-#ifndef COORDINADOR_MOCK_H_
-#define COORDINADOR_MOCK_H_
+#ifndef COORDINADOR_H_
+#define COORDINADOR_H_
 
 #include <conexiones/protocolos.h>
 #include <conexiones/serializacion.h>
@@ -26,4 +26,4 @@ void atender_handshake(int socket_cliente);
 void atender_protocolo(int protocolo, int socket_cliente);
 void desconectar_cliente(int cliente);
 
-#endif /* COORDINADOR_MOCK_H_ */
+#endif /* COORDINADOR_H_ */

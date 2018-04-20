@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>coordinador-mock</name>
+	<name>coordinador</name>
 	<comment></comment>
 	<projects>
 		<project>sisopLib</project>
