@@ -54,15 +54,15 @@ void leer_archivo_config(){
 	PUERTO_COORDINADOR = config_get_int_value(archivo_config, "PUERTO_COORDINADOR");
 }
 
-resultado_ejecucion ejecutar_proxima_sentencia(FILE* script){
-	resultado_ejecucion resultado = {.sentencia_ejecutada = string_new()};
+t_resultado_ejecucion ejecutar_proxima_sentencia(FILE* script){
+	t_resultado_ejecucion resultado = {.sentencia_ejecutada = string_new()};
 
 	//TODO: parsear y enviar sentencia al coordinador
 
 	return resultado;
 }
 
-int informar_resultado_al_usuario(resultado_ejecucion informe_ejecucion){
+int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion){
 
 	log_debug(log_esi, "Se intento ejecutar la sentencia %s", informe_ejecucion.sentencia_ejecutada);
 

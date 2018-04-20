@@ -8,8 +8,7 @@
  ============================================================================
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+
 #include "funciones_esi.h"
 
 int main(int argc, char** argv) { // falta que el esi reciba la ruta del archivo del script como parametro
@@ -44,7 +43,7 @@ int main(int argc, char** argv) { // falta que el esi reciba la ruta del archivo
 				break;
 
 			case EJECUTAR_SENTENCIA:{
-				resultado_ejecucion informe_ejecucion = ejecutar_proxima_sentencia(script);
+				t_resultado_ejecucion informe_ejecucion = ejecutar_proxima_sentencia(script);
 
 				int resultado = informar_resultado_al_usuario(informe_ejecucion);
 

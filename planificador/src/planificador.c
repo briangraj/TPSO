@@ -9,6 +9,7 @@
  */
 
 #include "funciones_planificador.h"
+#include "funciones_consola.h"
 
 int main(void) {
 	struct sockaddr_in remoteaddr; // dirección del cliente
@@ -24,6 +25,13 @@ int main(void) {
 	FD_ZERO(&read_fds);
 
 	iniciar_planificador();
+
+	if(crear_hilo(levantar_consola, NULL) != 0){
+		log_error(log_planif, "No se pudo levantar el hilo de la consola");
+		finalizar();
+	}
+
+
 
 	// CREO SOCKET PARA ESCUCHAR CONEXIONES ENTRANTES
 

@@ -1,7 +1,7 @@
 #include "funciones_planificador.h"
 
 void iniciar_planificador(){
-	log_planif = log_create("Planificador.log", "Planificador", 1, LOG_LEVEL_TRACE);
+	log_planif = log_create("Planificador.log", "Planificador", 0, LOG_LEVEL_TRACE);
 
 	leer_archivo_config();
 
@@ -19,7 +19,6 @@ void leer_archivo_config(){
 	IP_COORDINADOR = config_get_string_value(archivo_config, "IP_COORDINADOR");
 	PUERTO_COORDINADOR = config_get_int_value(archivo_config, "PUERTO_COORDINADOR");
 }
-
 
 void aniadir_cliente(fd_set* master, int cliente, int* fdmax){
 	FD_SET(cliente, master);//añadir al conjunto maestro
@@ -85,3 +84,24 @@ int conectarse_a_coordinador(){
 
 	return socket;
 }
+
+void finalizar(){
+	close(SOCKET_COORDINADOR);
+	log_destroy(log_planif);
+	config_destroy(archivo_config);
+
+	exit(1);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

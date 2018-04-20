@@ -8,6 +8,8 @@
 #ifndef FUNCIONES_ESI_H_
 #define FUNCIONES_ESI_H_
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <commons/config.h>
 #include <conexiones/protocolos.h>
 #include <conexiones/sockets.h>
@@ -31,15 +33,15 @@ t_config* archivo_config;
 typedef struct{
 	int informe_coordinador;
 	char* sentencia_ejecutada;//REVISAR SI ES CHAR* U OTRA COSA
-} resultado_ejecucion;
+} t_resultado_ejecucion;
 
 
 //FUNCIONES
 void					iniciar_esi							();
 void					crear_log							();
 void					leer_archivo_config					();
-resultado_ejecucion 	ejecutar_proxima_sentencia			(FILE* script);
-int 					informar_resultado_al_usuario		(resultado_ejecucion informe_ejecucion);
+t_resultado_ejecucion 	ejecutar_proxima_sentencia			(FILE* script);
+int 					informar_resultado_al_usuario		(t_resultado_ejecucion informe_ejecucion);
 bool					verificar_sentencias_restantes		(FILE* script);
 void					finalizar							();
 
