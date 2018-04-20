@@ -51,8 +51,6 @@ int main(void) {
 			exit(1);
 
 		}else{
-			log_trace(log, "Pase el select");
-
 			// explorar conexiones existentes en busca de datos que leer
 			for(socket = 0; socket <= fdmax; socket++) {
 				if (FD_ISSET(socket, &read_fds)) { // ¡¡tenemos datos!!
@@ -71,9 +69,7 @@ int main(void) {
 						protocolo_cliente = recibir_protocolo(socket);
 
 						if(protocolo_cliente < 0){
-							FD_CLR(socket, &master);
-							log_info(log, "Se desconecto al cliente del socket %d", socket);
-							close(socket);
+							desconectar_cliente(socket);
 						}
 
 						atender_protocolo(protocolo_cliente, socket);
