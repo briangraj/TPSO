@@ -4,6 +4,8 @@ void iniciar_planificador(){
 	log_planif = log_create("Planificador.log", "Planificador", 1, LOG_LEVEL_TRACE);
 
 	leer_archivo_config();
+
+	conectarse_a_coordinador(SOCKET_COORDINADOR);
 }
 
 void leer_archivo_config(){
@@ -13,6 +15,8 @@ void leer_archivo_config(){
 
 	IP_PLANIFICADOR = config_get_string_value(archivo_config, "IP_PLANIFICADOR");
 	PUERTO_PLANIFICADOR = config_get_int_value(archivo_config, "PUERTO_PLANIFICADOR");
+	IP_COORDINADOR = config_get_string_value(archivo_config, "IP_COORDINADOR");
+	PUERTO_COORDINADOR = config_get_int_value(archivo_config, "PUERTO_COORDINADOR");
 }
 
 
@@ -68,4 +72,10 @@ void desconectar_cliente(int cliente){
 	FD_CLR(cliente, &master);
 }
 
-
+void conectarse_a_coordinador(int socket){
+	if(conectarse_a_server("Planificador", PLANIFICADOR, "Coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, socket, log_planif) == -1){
+		log_destroy(log_planif);
+		config_destroy(archivo_config);
+		exit(1);
+	}
+}

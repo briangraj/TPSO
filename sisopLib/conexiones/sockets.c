@@ -38,7 +38,7 @@ void bindear_socket(int listener, char ip[], int puerto, t_log* log){
 	};
 }
 
-int conectarse_a_server(char* nombre_cliente, char* nombre_server, char* ip_server, int puerto_server, int socket_server, t_log* log_cliente){
+int conectarse_a_server(char* nombre_cliente, int id_cliente, char* nombre_server, char* ip_server, int puerto_server, int socket_server, t_log* log_cliente){
 	socket_server = crear_socket();
 
 	if(socket_server < 0) {
@@ -62,7 +62,7 @@ int conectarse_a_server(char* nombre_cliente, char* nombre_server, char* ip_serv
 
 	log_trace(log_cliente, "El proceso %s confirmo la conexion con el proceso %s", nombre_server, nombre_cliente);
 
-	if(realizar_handshake(ESI, socket_server) <= 0){
+	if(realizar_handshake(id_cliente, socket_server) <= 0){
 		log_error(log_cliente, "No se pudo iniciar el handshake con el proceso %s", nombre_server);
 		close(socket_server);
 		return -1;

@@ -12,13 +12,13 @@ void iniciar_esi(){
 
 	leer_archivo_config();
 
-	if(conectarse_a_server("ESI", "Coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, SOCKET_COORDINADOR, log_esi) == -1){
+	if(conectarse_a_server("ESI", ESI, "Coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, SOCKET_COORDINADOR, log_esi) == -1){
 		log_destroy(log_esi);
 		config_destroy(archivo_config);
 		exit(1);
 	}
 
-	if(conectarse_a_server("ESI", "Planificador", IP_PLANIFICADOR, PUERTO_PLANIFICADOR, SOCKET_PLANIFICADOR, log_esi)  == -1){
+	if(conectarse_a_server("ESI", ESI, "Planificador", IP_PLANIFICADOR, PUERTO_PLANIFICADOR, SOCKET_PLANIFICADOR, log_esi)  == -1){
 		close(SOCKET_COORDINADOR);
 		log_destroy(log_esi);
 		config_destroy(archivo_config);

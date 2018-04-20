@@ -101,7 +101,7 @@ void aniadir_cliente(fd_set* master, int cliente, int* fdmax){
 void atender_handshake(int socket_cliente){
 	int remitente = recibir_handshake(socket_cliente);
 
-	if(remitente != ESI){
+	if(remitente != ESI && remitente != PLANIFICADOR){
 
 		if(remitente < 0){ //Error en recv o me llego un protocolo que no era handshake
 
@@ -118,7 +118,12 @@ void atender_handshake(int socket_cliente){
 
 	} else { //El cliente es un ESI
 
-		log_trace(log, "Nuevo ESI detectado y aceptado");
+		if(remitente == ESI)
+			log_trace(log, "Se realizo el handshake con el ESI del socket %d", socket_cliente);
+
+		else
+			log_trace(log, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
+
 		informar_conexion_exitosa_a(socket_cliente);
 
 	}
