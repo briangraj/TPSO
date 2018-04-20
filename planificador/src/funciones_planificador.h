@@ -33,12 +33,12 @@ fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
 fd_set master;   // conjunto maestro de descriptores de fichero		//Por comodidad lo pongo aca
 
 // Funciones
-void iniciar_planificador();
-void leer_archivo_config();
-void conectarse_a_coordinador(int socket);
-void aniadir_cliente(fd_set* master, int cliente, int* fdmax);
-void atender_handshake(int socket_cliente);
-void atender_protocolo(int protocolo, int socket_cliente);
-void desconectar_cliente(int cliente);
+void			iniciar_planificador			();
+void			leer_archivo_config				();
+int				conectarse_a_coordinador		();
+void			aniadir_cliente					(fd_set* master, int cliente, int* fdmax);
+void			atender_handshake				(int socket_cliente);
+void			atender_protocolo				(int protocolo, int socket_cliente);
+void			desconectar_cliente				(int cliente);
 
 #endif /* FUNCIONES_PLANIFICADOR_H_ */

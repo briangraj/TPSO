@@ -5,7 +5,8 @@ void iniciar_planificador(){
 
 	leer_archivo_config();
 
-	conectarse_a_coordinador(SOCKET_COORDINADOR);
+	if((SOCKET_COORDINADOR = conectarse_a_coordinador(SOCKET_COORDINADOR)) == -1)
+		exit(1);
 }
 
 void leer_archivo_config(){
@@ -61,7 +62,7 @@ void atender_handshake(int socket_cliente){
 }
 
 void atender_protocolo(int protocolo, int socket_cliente){
-	log_trace(log_planif, "Llegamos hasta atender protocolo!!! Recibi el protocolo %d", protocolo);
+	log_debug(log_planif, "Llegamos hasta atender protocolo!!! Recibi el protocolo %d, por el socket %d", protocolo, socket_cliente);
 }
 
 void desconectar_cliente(int cliente){
@@ -72,10 +73,15 @@ void desconectar_cliente(int cliente){
 	FD_CLR(cliente, &master);
 }
 
-void conectarse_a_coordinador(int socket){
-	if(conectarse_a_server("Planificador", PLANIFICADOR, "Coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, socket, log_planif) == -1){
+int conectarse_a_coordinador(){
+
+	int socket;
+
+	if((socket = conectarse_a_server("Planificador", PLANIFICADOR, "Coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, log_planif)) == -1){
 		log_destroy(log_planif);
 		config_destroy(archivo_config);
-		exit(1);
+		return -1;
 	}
+
+	return socket;
 }

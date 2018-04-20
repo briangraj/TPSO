@@ -68,11 +68,11 @@ int main(void) {
 						// GESTIONO PETICIONES DE LOS CLIENTES CONOCIDOS
 						protocolo_cliente = recibir_protocolo(socket);
 
-						if(protocolo_cliente < 0){
+						if(protocolo_cliente < 0)
 							desconectar_cliente(socket);
-						}
 
-						atender_protocolo(protocolo_cliente, socket);
+						else
+							atender_protocolo(protocolo_cliente, socket);
 
 					}
 				}
@@ -126,11 +126,15 @@ void atender_handshake(int socket_cliente){
 
 		informar_conexion_exitosa_a(socket_cliente);
 
+
+		sleep(5);
+		informar_conexion_exitosa_a(socket_cliente);
+
 	}
 }
 
 void atender_protocolo(int protocolo, int socket_cliente){
-	log_trace(log, "Llegamos hasta atender protocolo!!! Recibi el protocolo %d", protocolo);
+	log_debug(log, "Llegamos hasta atender protocolo!!! Recibi el protocolo %d", protocolo);
 }
 
 void desconectar_cliente(int cliente){

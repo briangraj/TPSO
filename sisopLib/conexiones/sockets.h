@@ -26,6 +26,6 @@ int crear_socket();
 int conectar_socket_a(char ip[], int puerto, int sockfd);
 void bindear_socket(int listener, char ip[], int puerto, t_log* log);
 struct sockaddr_in cargar_direccion(char ip[], int puerto);
-int conectarse_a_server(char* nombre_cliente, int id_cliente, char* nombre_server, char* ip_server, int puerto_server, int socket_server, t_log* log_cliente);
+int conectarse_a_server(char* nombre_cliente, int id_cliente, char* nombre_server, char* ip_server, int puerto_server, t_log* log_cliente);
 
 #endif /* SOCKETS_H_ */

@@ -47,6 +47,10 @@ int main(void) {
 	// seguir la pista del descriptor de fichero mayor
 	fdmax = listener; // por ahora es éste
 
+	//AGREGO EL SOCKET DEL COORDINADOR AL SET MASTER PARA ESCUCHAR SI ME MANDA ALGÚN MENSAJE
+
+	FD_SET(SOCKET_COORDINADOR, &master);
+
 	//CICLO PRINCIPAL DE EJECUCION
 
 	for(;;) {

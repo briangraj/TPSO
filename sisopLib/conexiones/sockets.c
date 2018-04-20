@@ -38,8 +38,8 @@ void bindear_socket(int listener, char ip[], int puerto, t_log* log){
 	};
 }
 
-int conectarse_a_server(char* nombre_cliente, int id_cliente, char* nombre_server, char* ip_server, int puerto_server, int socket_server, t_log* log_cliente){
-	socket_server = crear_socket();
+int conectarse_a_server(char* nombre_cliente, int id_cliente, char* nombre_server, char* ip_server, int puerto_server, t_log* log_cliente){
+	int socket_server = crear_socket();
 
 	if(socket_server < 0) {
 		log_error(log_cliente, "No se pudo crear el socket para conectarse al proceso %s, se finaliza el proceso %s.", nombre_server, nombre_cliente);
