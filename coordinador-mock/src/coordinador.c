@@ -1,33 +1,31 @@
+#include "coordinador.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "coordinador-mock.h"
 #include <stdbool.h>
 #include "conexiones/threads.h"
 
 int main(void) {
-	struct sockaddr_in remoteaddr; // dirección del cliente
-	int listener;     // descriptor de socket a la escucha
-	int yes=1;        // para setsockopt() SO_REUSEADDR, más abajo
-	int addrlen;
-
 	log = log_create("Coordinador.log", "Coordinador", 1, LOG_LEVEL_TRACE);
 
-	// CREO SOCKET PARA ESCUCHAR CONEXIONES ENTRANTES
+	int listener = crear_socket();// creo socket para escuchar conexiones entrantes
 
-	listener = crear_socket();
+	int yes=1;// para setsockopt() SO_REUSEADDR, más abajo
 
 	if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
 		log_error(log, "Error en el setsockopt");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	bindear_socket(listener, MI_IP, MI_PUERTO, log);
 
-	// LO PONGO A ESCUCHAR LAS CONEXIONES NUEVAS Y PETICIONES DE LAS POSTERIORMENTE EXISTENTES
+	// lo pongo a escuchar conexiones nuevas
 	if (listen(listener, 10) == -1) {
-		log_error(log, "No se pudo poner el listener a escuchar");
-		exit(1);
+		log_error(log, "No se pudo poner el socket a escuchar");
+		exit(EXIT_FAILURE);
 	}
+
+	struct sockaddr_in remoteaddr; // direccion del cliente
+	int addrlen;
 
 	while(true){
 
@@ -37,9 +35,8 @@ int main(void) {
 
 		if (socket_cliente == -1)
 			log_error(log, "ERROR: no se pudo aceptar la conexion del socket %d", socket_cliente);
-		else {
+		else
 			atender_handshake(socket_cliente);
-		}
 
 	}
 
@@ -51,7 +48,6 @@ int main(void) {
 //
 //						else
 //							atender_protocolo(protocolo_cliente, socket);
-//
 
 }
 
