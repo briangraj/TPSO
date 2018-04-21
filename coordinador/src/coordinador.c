@@ -81,6 +81,7 @@ void atender_handshake(int socket_cliente){
 	default:
 //		errores
 	;
+	}
 }
 
 void atender_protocolo(int protocolo, int socket_cliente){
@@ -93,4 +94,3 @@ void desconectar_cliente(int cliente){
 
 	close(cliente); // bye!
 }
-

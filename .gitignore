@@ -54,3 +54,6 @@ dkms.conf
 # Archivos compilados
 /esi/Debug/*.o
 /planificador/Debug/*.o
+
+#logs
+*.log
