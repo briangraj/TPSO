@@ -81,11 +81,11 @@ void atender_handshake(int socket_cliente){
 
 	break;
 	case INSTANCIA:
-		log_trace(log, "Se realizo el handshake con la Instancia en el socket %d", socket_cliente);
-
 		informar_conexion_exitosa_a(socket_cliente);
 
-//		crear_hilo();
+		log_trace(log, "Se realizo el handshake con la Instancia en el socket %d", socket_cliente);
+
+		crear_hilo_instancia(socket_cliente);
 	break;
 	default:
 //		errores

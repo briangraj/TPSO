@@ -8,13 +8,15 @@
 #include "instancia.h"
 
 int main(int argc, char **argv){
+	log_data_node = log_create("DataNode.log", "DataNode", 1, LOG_LEVEL_TRACE);
+
 	leer_config();
 
 	conectar_con_coordinador();
 
-	escuchar_coordinador();
+	crear_tabla_de_entradas();
 
-	close(socket_coordinador);
+	escuchar_coordinador();
 
 	return 0;
 }
@@ -26,6 +28,10 @@ void leer_config(){
 	PUERTO_COORDINADOR = config_get_int_value(archivo_config, "PUERTO_COORDINADOR");
 
 	config_destroy(archivo_config);
+}
+
+void crear_tabla_de_entradas(){
+
 }
 
 void conectar_con_coordinador(){
@@ -45,8 +51,11 @@ void escuchar_coordinador(){
 		if (protocolo <= 0) {
 			log_error(log_data_node, "se desconecto el coordinador");
 			//rutina_final();
-			exit(1);
+			break;//exit(1);
 		}
 		//leer_protocolo_dn(protocolo);
 	}
+
+	close(socket_coordinador);
+
 }

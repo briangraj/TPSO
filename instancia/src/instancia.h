@@ -14,19 +14,24 @@
 #include <conexiones/serializacion.h>
 #include <conexiones/protocolos.h>
 
-
 #define PATH_CONFIG "/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/configs/instancia.cfg"
 
-//t_config* archivo_config;// = config_create(PATH_CONFIG);
+typedef struct {
+	int nro_entrada;
+	char clave[40];
+	int tamanio_clave;
+}t_entrada;
+
 char* IP_COORDINADOR;
 int PUERTO_COORDINADOR;
-
-t_log* log_data_node = log_create("DataNode.log", "DataNode", 1, LOG_LEVEL_TRACE);
-
 int socket_coordinador;
+
+t_log* log_data_node;
+
 
 void leer_config();
 void conectar_con_coordinador();
+void crear_tabla_de_entradas();
 void escuchar_coordinador();
 
 #endif /* SRC_INSTANCIA_H_ */
