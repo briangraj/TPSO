@@ -58,18 +58,27 @@ void atender_handshake(int socket_cliente){
 	switch(remitente){
 
 	case ESI:
+		/**
+		 * TODO ¿Hay que validar que haya un planificador conectado?
+		 * ¿E instancias conectadas?
+		 */
+		informar_conexion_exitosa_a(socket_cliente);
+
 		log_trace(log, "Se realizo el handshake con el ESI en el socket %d", socket_cliente);
 
-		informar_conexion_exitosa_a(socket_cliente);
-
-//		crear_hilo();
+		crear_hilo_esi(socket_cliente);
 	break;
 	case PLANIFICADOR:
-		log_trace(log, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
+		/**
+		 * TODO ¿El planificador puede conectarse al coordinador si no hay instancias conectadas? ¿Cuantas instancias?
+		 */
 
 		informar_conexion_exitosa_a(socket_cliente);
 
-//		crear_hilo();
+		log_trace(log, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
+
+		crear_hilo_planificador(socket_cliente); //TODO falta hacer
+
 	break;
 	case INSTANCIA:
 		log_trace(log, "Se realizo el handshake con la Instancia en el socket %d", socket_cliente);
@@ -84,13 +93,7 @@ void atender_handshake(int socket_cliente){
 	}
 }
 
-void atender_protocolo(int protocolo, int socket_cliente){
-	log_debug(log, "Llegamos hasta atender protocolo!!! Recibi el protocolo %d", protocolo);
-}
-
 void desconectar_cliente(int cliente){
-	//error o conexión cerrada por el cliente
 	log_trace(log, "Se desconecto el cliente %d", cliente);
-
-	close(cliente); // bye!
+	close(cliente);
 }

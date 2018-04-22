@@ -11,6 +11,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/select.h>
+#include "hilo_planificador.h"
+#include "hilo_esi.h"
 
 char* MI_IP = "127.0.0.1";
 int MI_PUERTO = 5051;
