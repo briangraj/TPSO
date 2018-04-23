@@ -16,12 +16,12 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/select.h>
-#include "hilo_planifador.h"
+#include "hilo_planificador.h"
 #include "hilo_esi.h"
 #include "hilo_instancia.h"
 
-int CANTIDAD_ENTRADAS = 20;
-int TAMANIO_ENTRADA = 100;
+int CANTIDAD_ENTRADAS;
+int TAMANIO_ENTRADA;
 char* ip_coord;
 int puerto_coord;
 t_log* log_coord;
@@ -29,6 +29,7 @@ t_log* log_coord;
 t_list* instancias;
 
 // Funciones
+void leer_config();
 void aniadir_cliente(fd_set* master, int cliente, int* fdmax);
 void atender_handshake(int socket_cliente);
 void atender_protocolo(int protocolo, int socket_cliente);

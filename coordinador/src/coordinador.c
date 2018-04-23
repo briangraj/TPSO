@@ -16,6 +16,8 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 
+	leer_config();
+
 	bindear_socket(listener, ip_coord, puerto_coord, log_coord);
 
 	// lo pongo a escuchar conexiones nuevas
@@ -35,8 +37,10 @@ int main(void) {
 
 		if (socket_cliente == -1)
 			log_error(log_coord, "ERROR: no se pudo aceptar la conexion del socket %d", socket_cliente);
-		else
+		else {
+			informar_conexion_exitosa_a(socket_cliente);
 			atender_handshake(socket_cliente);
+		}
 
 	}
 
@@ -51,6 +55,10 @@ int main(void) {
 
 }
 
+void leer_config(){
+	ip_coord= "127.0.0.1";
+	puerto_coord = 5051;
+}
 
 void atender_handshake(int socket_cliente){
 	int remitente = recibir_handshake(socket_cliente);
