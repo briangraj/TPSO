@@ -5,22 +5,22 @@
 #include "conexiones/threads.h"
 
 int main(void) {
-	log = log_create("Coordinador.log", "Coordinador", 1, LOG_LEVEL_TRACE);
+	log_coord = log_create("Coordinador.log", "Coordinador", 1, LOG_LEVEL_TRACE);
 
 	int listener = crear_socket();// creo socket para escuchar conexiones entrantes
 
 	int yes=1;// para setsockopt() SO_REUSEADDR, más abajo
 
 	if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-		log_error(log, "Error en el setsockopt");
+		log_error(log_coord, "Error en el setsockopt");
 		exit(EXIT_FAILURE);
 	}
 
-	bindear_socket(listener, MI_IP, MI_PUERTO, log);
+	bindear_socket(listener, ip_coord, puerto_coord, log_coord);
 
 	// lo pongo a escuchar conexiones nuevas
 	if (listen(listener, 10) == -1) {
-		log_error(log, "No se pudo poner el socket a escuchar");
+		log_error(log_coord, "No se pudo poner el socket a escuchar");
 		exit(EXIT_FAILURE);
 	}
 
@@ -34,7 +34,7 @@ int main(void) {
 		int socket_cliente = accept(listener, (struct sockaddr *) &remoteaddr, &addrlen);
 
 		if (socket_cliente == -1)
-			log_error(log, "ERROR: no se pudo aceptar la conexion del socket %d", socket_cliente);
+			log_error(log_coord, "ERROR: no se pudo aceptar la conexion del socket %d", socket_cliente);
 		else
 			atender_handshake(socket_cliente);
 
@@ -64,7 +64,7 @@ void atender_handshake(int socket_cliente){
 		 */
 		informar_conexion_exitosa_a(socket_cliente);
 
-		log_trace(log, "Se realizo el handshake con el ESI en el socket %d", socket_cliente);
+		log_trace(log_coord, "Se realizo el handshake con el ESI en el socket %d", socket_cliente);
 
 		crear_hilo_esi(socket_cliente);
 	break;
@@ -75,7 +75,7 @@ void atender_handshake(int socket_cliente){
 
 		informar_conexion_exitosa_a(socket_cliente);
 
-		log_trace(log, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
+		log_trace(log_coord, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
 
 		crear_hilo_planificador(socket_cliente); //TODO falta hacer
 
@@ -83,7 +83,7 @@ void atender_handshake(int socket_cliente){
 	case INSTANCIA:
 		informar_conexion_exitosa_a(socket_cliente);
 
-		log_trace(log, "Se realizo el handshake con la Instancia en el socket %d", socket_cliente);
+		log_trace(log_coord, "Se realizo el handshake con la Instancia en el socket %d", socket_cliente);
 
 		crear_hilo_instancia(socket_cliente);
 	break;
@@ -94,6 +94,6 @@ void atender_handshake(int socket_cliente){
 }
 
 void desconectar_cliente(int cliente){
-	log_trace(log, "Se desconecto el cliente %d", cliente);
+	log_trace(log_coord, "Se desconecto el cliente %d", cliente);
 	close(cliente);
 }

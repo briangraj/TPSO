@@ -19,6 +19,9 @@ typedef enum {
 	FALLO_EN_EJECUCION,
 
 	//ESI - COORDINADOR
+	GET,
+	SET,
+	STORE,
 	ERROR_TAMANIO_CLAVE,
 	ERROR_CLAVE_NO_IDENTIFICADA,
 	ERROR_DE_COMUNICACION,
@@ -29,6 +32,7 @@ typedef enum {
 
 
 } t_protocolo;
+
 
 typedef enum {
 	ESI,
