@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include "coordinador-mock.h"
 
+int no_main(void){
+	elegir_opcion();
+}
+
 int main(void) {
 	struct sockaddr_in remoteaddr; // dirección del cliente
 	int fdmax;        // número máximo de descriptores de fichero
@@ -125,12 +129,94 @@ void atender_handshake(int socket_cliente){
 			log_trace(log, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
 
 		informar_conexion_exitosa_a(socket_cliente);
-
 	}
 }
 
 void atender_protocolo(int protocolo, int socket_cliente){
-	log_debug(log, "Llegamos hasta atender protocolo!!! Recibi el protocolo %d", protocolo);
+	switch (protocolo){
+
+	case SET:
+		atender_operacion("SET",socket_cliente);
+		break;
+
+	case GET:
+		atender_operacion("GET",socket_cliente);
+		break;
+
+	case STORE:
+		atender_operacion("STORE",socket_cliente);
+		break;
+
+	default:
+		desconectar_cliente(socket_cliente);
+	}
+}
+
+void atender_operacion(char* operacion, int socket){
+	log_info(log, "Se recibio la operacion %s del esi en el socket %d", operacion, socket); // FIXME : Debe mutar a mostrar el ID del ESI
+
+	int opcion_elegida = elegir_opcion();
+
+	enviar_paquete(opcion_elegida, socket, 0, NULL);
+}
+
+int elegir_opcion(){
+
+	mostrar_menu();
+
+	int opcion;
+
+	scanf("%d", &opcion);
+
+	switch (opcion){
+		case 1: // EJECUCION_EXITOSA
+//			 log_trace(log, "Se va a enviar EJECUCION_EXITOSA");
+
+			 return EJECUCION_EXITOSA;
+
+		case 2: // ERROR_TAMANIO_CLAVE
+			 log_trace(log, "Se va a enviar ERROR_TAMANIO_CLAVE");
+
+			 return ERROR_TAMANIO_CLAVE;
+
+		case 3: // ERROR_CLAVE_NO_IDENTIFICADA
+			log_trace(log, "Se va a enviar ERROR_CLAVE_NO_IDENTIFICADA");
+
+			return ERROR_CLAVE_NO_IDENTIFICADA;
+
+		case 4: // ERROR_DE_COMUNICACION
+			log_trace(log, "Se va a enviar ERROR_DE_COMUNICACION");
+
+			return ERROR_DE_COMUNICACION;
+
+		case 5: // ERROR_CLAVE_INEXISTENTE
+			log_trace(log, "Se va a enviar ERROR_CLAVE_INEXISTENTE");
+
+			return ERROR_CLAVE_INEXISTENTE;
+
+		default: return -1;
+	}
+}
+
+
+void mostrar_menu(){
+
+	char* opciones[] = {
+			"1: EJECUCION_EXITOSA",
+			"2: ERROR_TAMANIO_CLAVE",
+			"3: ERROR_CLAVE_NO_IDENTIFICADA",
+			"4: ERROR_DE_COMUNICACION",
+			"5: ERROR_CLAVE_INEXISTENTE",
+			NULL
+	};
+
+	int i;
+
+	for(i=0; opciones[i]; i++){
+		printf("%s\n", opciones[i]);
+		fflush(stdout);
+	}
+
 }
 
 void desconectar_cliente(int cliente){

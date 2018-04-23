@@ -25,5 +25,10 @@ void aniadir_cliente(fd_set* master, int cliente, int* fdmax);
 void atender_handshake(int socket_cliente);
 void atender_protocolo(int protocolo, int socket_cliente);
 void desconectar_cliente(int cliente);
+void atender_operacion(char* operacion, int socket);
+int elegir_opcion();
+void mostrar_menu();
+
+int no_main(void);
 
 #endif /* COORDINADOR_MOCK_H_ */

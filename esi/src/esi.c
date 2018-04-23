@@ -11,7 +11,8 @@
 
 #include "funciones_esi.h"
 
-int main(int argc, char** argv) { // falta que el esi reciba la ruta del archivo del script como parametro
+int main(int argc, char** argv) {
+	//TODO: falta definir como y en que momento mandamos el ID del esi con los chicos (inmediatamente despues del handshake)
 
 	if(argc != 2){
 		fflush(stdout);
