@@ -15,6 +15,7 @@
 #include <conexiones/sockets.h>
 #include <conexiones/serializacion.h>
 #include <commons/log.h>
+#include <parsi/parser.h>
 
 //VARIABLES GLOBALES
 char* IP_PLANIFICADOR;

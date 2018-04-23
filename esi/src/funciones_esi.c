@@ -24,9 +24,6 @@ void iniciar_esi(){
 		config_destroy(archivo_config);
 		exit(1);
 	}
-
-
-
 }
 
 void crear_log(){
@@ -36,7 +33,6 @@ void crear_log(){
 		printf("No se pudo crear el archivo de log del esi. Se finaliza el mismo.");
 		exit(1);
 	}
-
 
 	log_trace(log_esi, "El archivo de log se creo correctamente.");
 
@@ -55,17 +51,51 @@ void leer_archivo_config(){
 }
 
 t_resultado_ejecucion ejecutar_proxima_sentencia(FILE* script){
-	t_resultado_ejecucion resultado = {.sentencia_ejecutada = string_new()};
+	t_resultado_ejecucion resultado; // TODO = Asigna en null ??????
 
+	char* linea = leer_linea(script);
+
+	if(linea == NULL){
+		resultado.informe_coordinador = ERROR_LECTURA_SCRIPT;
+		return resultado;
+	}
+
+	resultado.sentencia_ejecutada = strdup(linea);
+
+    t_esi_operacion operacion = parse(linea);
+
+	if(operacion.valido){
+		switch(operacion.keyword){
+			case GET:
+				resultado.informe_coordinador = operacion_get_al_coordinador(operacion.argumentos.GET.clave);
+
+				break;
+			case SET:
+				resultado.informe_coordinador = operacion_set_al_coordinador(operacion.argumentos.SET.clave, operacion.argumentos.SET.valor);
+
+				break;
+			case STORE:
+				resultado.informe_coordinador = operacion_store_al_coordinador(operacion.argumentos.STORE.clave);
+
+				break;
+			default:
+				resultado.informe_coordinador = ERROR_INTERPRETACION_SENTENCIA;
+		}
+	}
+
+	destruir_operacion(operacion);
+
+	free(linea);
 
 	return resultado;
 }
 
 int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion){
 
-	log_debug(log_esi, "Se intento ejecutar la sentencia %s", informe_ejecucion.sentencia_ejecutada);
-
-	free(informe_ejecucion.sentencia_ejecutada);
+	if(informe_ejecucion.sentencia_ejecutada != NULL){
+		log_debug(log_esi, "Se intento ejecutar la sentencia %s", informe_ejecucion.sentencia_ejecutada);
+		free(informe_ejecucion.sentencia_ejecutada);
+	}
 
 	switch (informe_ejecucion.informe_coordinador){
 
@@ -85,12 +115,22 @@ int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion){
 			 return FALLO_EN_EJECUCION;
 
 		case ERROR_DE_COMUNICACION: //Este case contempla los casos de desconexion entre coordinador-planificador y coordinador-instancia
-			 log_error(log_esi, "El coordinador tuvo un problema de comunicacion con otro proceso crucial");
+			 log_error(log_esi, "El coordinador tuvo un problema de comunicacion con un proceso crucial");
 
 			 return FALLO_EN_EJECUCION;
 
 		case ERROR_CLAVE_INEXISTENTE:
 			 log_error(log_esi, "Se intento acceder a una clave inexistente en el sistema");//FIXME: ver diferencia con CLAVE_NO_IDENTIFICADA
+
+			 return FALLO_EN_EJECUCION;
+
+		case ERROR_LECTURA_SCRIPT:
+			log_error(log_esi, "No se pudo leer la ultima linea solicitada del script.");
+
+			 return FALLO_EN_EJECUCION;
+
+		case ERROR_INTERPRETACION_SENTENCIA:
+			log_error(log_esi, "No se pudo interpretar la ultima linea solicitada del script, no corresponde a una operacion valida.");
 
 			 return FALLO_EN_EJECUCION;
 
@@ -101,6 +141,84 @@ int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion){
 
 	}
 
+}
+
+int operacion_get_al_coordinador(char * clave){
+	int tamanio_clave = strlen(clave) + 1;
+	int tamanio_paquete = sizeof(int) + tamanio_clave;
+
+	void* paquete = malloc(tamanio_paquete);
+
+	memcpy(paquete, &tamanio_clave, sizeof(int));
+
+	int offset = sizeof(int);
+
+	memcpy(paquete + offset, clave, tamanio_clave);
+
+	if(enviar_paquete(GET, SOCKET_COORDINADOR, tamanio_paquete, paquete) == -1){
+		free(paquete);
+		return -1;
+	}
+
+	free(paquete);
+
+	return recibir_protocolo(SOCKET_COORDINADOR);
+}
+
+int operacion_set_al_coordinador(char * clave, char* valor){
+	int tamanio_clave = strlen(clave) + 1;
+
+	int tamanio_valor = strlen(valor) + 1;
+
+	int tamanio_paquete = tamanio_clave + tamanio_valor + 2*sizeof(int);
+
+	void* paquete = malloc(tamanio_paquete);
+
+	memcpy(paquete, &tamanio_clave, sizeof(int));
+
+	int offset = sizeof(int);
+
+	memcpy(paquete + offset, clave, tamanio_clave);
+
+	offset += tamanio_clave;
+
+	memcpy(paquete + offset, &tamanio_valor, sizeof(int));
+
+	offset += sizeof(int);
+
+	memcpy(paquete + offset, valor, tamanio_valor);
+
+	if(enviar_paquete(SET, SOCKET_COORDINADOR, tamanio_paquete, paquete) == -1){
+		free(paquete);
+		return -1;
+	}
+
+	free(paquete);
+
+	return recibir_protocolo(SOCKET_COORDINADOR);
+}
+
+
+int operacion_store_al_coordinador(char * clave){
+	int tamanio_clave = strlen(clave) + 1;
+	int tamanio_paquete = sizeof(int) + tamanio_clave;
+
+	void* paquete = malloc(tamanio_paquete);
+
+	memcpy(paquete, &tamanio_clave, sizeof(int));
+
+	int offset = sizeof(int);
+
+	memcpy(paquete + offset, clave, tamanio_clave);
+
+	if(enviar_paquete(STORE, SOCKET_COORDINADOR, tamanio_paquete, paquete) == -1){
+		free(paquete);
+		return -1;
+	}
+
+	free(paquete);
+
+	return recibir_protocolo(SOCKET_COORDINADOR);
 }
 
 bool verificar_sentencias_restantes(FILE* script){

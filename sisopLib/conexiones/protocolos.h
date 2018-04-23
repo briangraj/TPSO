@@ -19,9 +19,9 @@ typedef enum {
 	FALLO_EN_EJECUCION,
 
 	//ESI - COORDINADOR
-	GET,
-	SET,
-	STORE,
+	GET, // Envio: [protocolo, tamanio_clave, clave] , clave es char*, incluye el /0 y esta considerado en el tamanio
+	SET, // Envio: [protocolo, tamanio_clave, clave, tamanio_valor, valor] , clave y valor son char*, incluye el /0 y esta considerado en los tamanios
+	STORE, // Envio: [protocolo, tamanio_clave, clave] , clave es char*, incluye el /0 y esta considerado en el tamanio
 	ERROR_TAMANIO_CLAVE,
 	ERROR_CLAVE_NO_IDENTIFICADA,
 	ERROR_DE_COMUNICACION,
@@ -29,6 +29,8 @@ typedef enum {
 
 	//ESI GENERAL
 	EJECUCION_EXITOSA,
+	ERROR_LECTURA_SCRIPT,
+	ERROR_INTERPRETACION_SENTENCIA,
 
 	//COORDINADOR - INSTANCIA
 	CONFIGURACION_ENTRADAS
