@@ -45,6 +45,10 @@ t_resultado_ejecucion 	ejecutar_proxima_sentencia			(FILE* script);
 int 					informar_resultado_al_usuario		(t_resultado_ejecucion informe_ejecucion);
 bool					verificar_sentencias_restantes		(FILE* script);
 void					finalizar							();
+int 					operacion_get_al_coordinador		(char * clave);
+int 					operacion_set_al_coordinador		(char * clave, char* valor);
+int 					operacion_store_al_coordinador		(char * clave);
+
 
 
 
