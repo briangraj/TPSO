@@ -38,6 +38,27 @@ void conectar_con_coordinador(){
 	}
 }
 
+void configuracion_entradas(){
+	recv(socket_coordinador, &CANTIDAD_ENTRADAS, sizeof(CANTIDAD_ENTRADAS), MSG_WAITALL);
+	recv(socket_coordinador, &TAMANIO_ENTRADA, sizeof(TAMANIO_ENTRADA), MSG_WAITALL);
+
+	crear_tabla_de_entradas();
+}
+
+void crear_tabla_de_entradas(){
+	tabla_de_entradas = list_create();
+	int nro_entrada;
+	t_entrada* entrada;
+
+	for(nro_entrada = 0; nro_entrada < CANTIDAD_ENTRADAS; nro_entrada++){
+		entrada = malloc(sizeof(t_entrada));
+		entrada->nro_entrada = nro_entrada;
+		list_add(tabla_de_entradas, entrada);
+	}
+
+	log_trace(log, "cree tabla de entradas");
+}
+
 void escuchar_coordinador(){
 	int protocolo;
 
@@ -61,26 +82,5 @@ void leer_protocolo(int protocolo){
 	case CONFIGURACION_ENTRADAS:
 		configuracion_entradas();
 	}
-}
-
-void configuracion_entradas(){
-	recv(socket_coordinador, &CANTIDAD_ENTRADAS, sizeof(CANTIDAD_ENTRADAS), MSG_WAITALL);
-	recv(socket_coordinador, &TAMANIO_ENTRADA, sizeof(TAMANIO_ENTRADA), MSG_WAITALL);
-
-	crear_tabla_de_entradas();
-}
-
-void crear_tabla_de_entradas(){
-	tabla_de_entradas = list_create();
-	int nro_entrada;
-	t_entrada* entrada;
-
-	for(nro_entrada = 0; nro_entrada < CANTIDAD_ENTRADAS; nro_entrada++){
-		entrada = malloc(sizeof(t_entrada));
-		entrada->nro_entrada = nro_entrada;
-		list_add(tabla_de_entradas, entrada);
-	}
-
-	log_trace(log, "cree tabla de entradas");
 }
 

@@ -8,7 +8,7 @@
 #ifndef HILO_INSTANCIA_H_
 #define HILO_INSTANCIA_H_
 
-#include "conexiones/threads.h"
+#include "coordinador.h"
 
 void crear_hilo_instancia(int socket_instancia);
 
