@@ -57,7 +57,6 @@ void leer_archivo_config(){
 t_resultado_ejecucion ejecutar_proxima_sentencia(FILE* script){
 	t_resultado_ejecucion resultado = {.sentencia_ejecutada = string_new()};
 
-	//TODO: parsear y enviar sentencia al coordinador
 
 	return resultado;
 }

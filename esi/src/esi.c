@@ -59,6 +59,12 @@ int main(int argc, char** argv) { // falta que el esi reciba la ruta del archivo
 				break;
 			}
 
+			default:
+				log_error(log_esi, "Se perdio la conexion con el planificador, el proceso ESI va a finalizar");
+
+				fclose(script);
+
+				finalizar();
 		}
 
 
