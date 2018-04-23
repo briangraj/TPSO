@@ -3,10 +3,15 @@
 #ifndef COORDINADOR_H_
 #define COORDINADOR_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include <conexiones/protocolos.h>
 #include <conexiones/serializacion.h>
 #include <conexiones/sockets.h>
+#include <conexiones/threads.h>
 #include <commons/log.h>
+#include <commons/collections/list.h>
 #include <netdb.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -15,15 +20,13 @@
 #include "hilo_esi.h"
 #include "hilo_instancia.h"
 
-char* MI_IP = "127.0.0.1";
-int MI_PUERTO = 5051;
 int CANTIDAD_ENTRADAS = 20;
 int TAMANIO_ENTRADA = 100;
+char* ip_coord;
+int puerto_coord;
+t_log* log_coord;
 
-t_log* log;
-
-fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
-fd_set master;   // conjunto maestro de descriptores de fichero		//Por comodidad lo pongo aca
+t_list* instancias;
 
 // Funciones
 void aniadir_cliente(fd_set* master, int cliente, int* fdmax);
