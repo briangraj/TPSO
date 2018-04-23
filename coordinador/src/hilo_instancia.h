@@ -14,4 +14,6 @@ void crear_hilo_instancia(int socket_instancia);
 
 void* atender_instancia(void* socket_instancia);
 
+void enviar_configuracion_instancia(int socket_instancia);
+
 #endif /* HILO_INSTANCIA_H_ */
