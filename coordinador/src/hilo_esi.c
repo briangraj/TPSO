@@ -18,6 +18,7 @@ void* atender_esi(void* socket_esi){
 		t_solicitud* solicitud = recibir_solicitud_esi((int) socket_esi);
 		distribuir(solicitud); //todo chequear si necesita error
 	}
+
 	return 0;
 }
 
@@ -32,7 +33,7 @@ void enviar_solicitud(t_solicitud* solicitud, t_instancia* instancia){//TODO moc
 	void* mensaje;
 
 	switch(solicitud->instruccion){
-	case SET:{
+	case OPERACION_SET:{
 		int tam_clave = strlen(solicitud->clave) + 1;
 		int tam_valor = strlen(solicitud->valor) + 1;
 
@@ -57,7 +58,7 @@ void enviar_solicitud(t_solicitud* solicitud, t_instancia* instancia){//TODO moc
 
 		break;
 	}
-	case STORE:
+	case OPERACION_STORE:
 		break;
 	default:
 		;
@@ -82,11 +83,11 @@ t_solicitud* recibir_solicitud_esi(int socket){
 
 	switch(protocolo){
 
-	case GET:
+	case OPERACION_GET:
 		return crear_get(socket);
-	case SET:
+	case OPERACION_SET:
 		return crear_set(socket);
-	case STORE:
+	case OPERACION_STORE:
 		return crear_store(socket);
 	default:
 		log_error(log_coord, "El protocolo %d no existe", protocolo);
@@ -99,7 +100,7 @@ t_solicitud* recibir_solicitud_esi(int socket){
 t_solicitud* crear_get(int socket){
 	t_solicitud* solicitud = malloc(sizeof(t_solicitud));
 
-	solicitud->instruccion = GET;
+	solicitud->instruccion = OPERACION_GET;
 	solicitud->clave = recibir_string(socket);
 
 	return solicitud;
@@ -108,7 +109,7 @@ t_solicitud* crear_get(int socket){
 t_solicitud* crear_set(int socket){
 	t_solicitud* solicitud = malloc(sizeof(t_solicitud));
 
-	solicitud->instruccion = SET;
+	solicitud->instruccion = OPERACION_SET;
 	solicitud->clave = recibir_string(socket);
 	solicitud->valor = recibir_string(socket);
 
@@ -118,7 +119,7 @@ t_solicitud* crear_set(int socket){
 t_solicitud* crear_store(int socket){
 	t_solicitud* solicitud = malloc(sizeof(t_solicitud));
 
-	solicitud->instruccion = GET;
+	solicitud->instruccion = OPERACION_GET;
 	solicitud->clave = recibir_string(socket);
 
 	return solicitud;

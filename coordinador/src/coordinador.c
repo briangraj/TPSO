@@ -78,17 +78,20 @@ void atender_handshake(int socket_cliente){
 	break;
 	case PLANIFICADOR:
 		/**
-		 * TODO ¿El planificador puede conectarse al coordinador si no hay instancias conectadas? ¿Cuantas instancias?
+		 * TODO ¿El planificador puede conectarse al coordinador si no hay instancias conectadas?
+		 * ¿Cuantas instancias?
 		 */
-
 		informar_conexion_exitosa_a(socket_cliente);
 
 		log_trace(log_coord, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
 
 		crear_hilo_planificador(socket_cliente); //TODO falta hacer
-
 	break;
 	case INSTANCIA:
+		/**
+		 * TODO acordarse de pedirle el id a la instancia
+		 * y agregarla a la lista de instancias
+		 */
 		informar_conexion_exitosa_a(socket_cliente);
 
 		log_trace(log_coord, "Se realizo el handshake con la Instancia en el socket %d", socket_cliente);

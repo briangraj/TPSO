@@ -10,17 +10,6 @@
 
 #include "coordinador.h"
 
-typedef struct solicitud {
-	int instruccion;
-	char* clave;
-	char* valor;
-} t_solicitud;
-
-typedef struct instancia {
-	int id;
-	int socket;
-} t_instancia;
-
 void 		 crear_hilo_esi		   (int socket_cliente);
 void* 		 atender_esi		   (void* socket_esi);
 t_solicitud* recibir_solicitud_esi (int socket);
