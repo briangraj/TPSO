@@ -95,7 +95,8 @@ void atender_protocolo(int protocolo, int socket_cliente){
 	log_debug(log_planif, "Llegamos hasta atender protocolo!!! Recibi el protocolo %d, por el socket %d", protocolo, socket_cliente);
 
 //	// SOLO PARA PROBAR QUE ANDE EL ESI
-//	if(protocolo == EJECUCION_EXITOSA)
+	if(protocolo == EJECUCION_EXITOSA)
+		mandar_a_ejecutar();
 //		ejecutar_mock(socket_cliente);
 }
 
@@ -154,6 +155,59 @@ void planificar(t_ready* esi_ready){
 
 void mandar_a_ejecutar(){//Enviar orden de ejecucion al primer ESI de la cola de listos
 	//TODO setear en 0 el tiempo de espera del que va a ejecutar y sumar 1 al resto
+
+	t_ready* esi_ejecucion = list_get(cola_de_listos, 0);
+
+	log_trace(log_planif, "Se le va a dar la orden de ejecucion al ESI de ID %d", esi_ejecucion->ID);
+
+	if(enviar_paquete(EJECUTAR_SENTENCIA, esi_ejecucion->socket, 0, NULL) == -1){
+		mover_a_finalizados(esi_ejecucion, "Error en la comunicacion ESI-Planificador");
+		mandar_a_ejecutar();
+	} else {
+
+		actualizar_esperas();
+
+	}
+}
+
+void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){
+
+	t_ended* esi_finalizado = (t_ended*) malloc(sizeof(t_ended));
+
+	esi_finalizado->ID = esi_ejecucion->ID;
+	esi_finalizado->exit_text = strdup(exit_text);
+
+	bool coincide_el_id(void* elemento){
+		t_ready* esi = (t_ready*) elemento;
+
+		return esi->ID == esi_finalizado->ID;
+	}
+
+	void funcion_al_pedo(void* esi){}
+
+	list_remove_and_destroy_by_condition(cola_de_listos, coincide_el_id, funcion_al_pedo);
+
+	//TODO: mandar a liberar recursos por id
+
+}
+
+void actualizar_esperas(){
+
+	t_ready* primer_esi = list_remove(cola_de_listos, 0);
+
+	primer_esi->tiempo_espera = 0.0;
+	primer_esi->ultima_rafaga_real += 1.0;
+
+	void aumentar_espera(void* elemento){
+		t_ready* esi = (t_ready*) elemento;
+
+		esi->tiempo_espera += 1.0;
+	}
+
+	list_iterate(cola_de_listos, aumentar_espera);
+
+	list_add_in_index(cola_de_listos, 0, primer_esi);//TODO: REVISAR SI ESTO HACE LO QUE QUEREMOS
+
 }
 
 void insertar_ordenado(t_ready* esi_ready){

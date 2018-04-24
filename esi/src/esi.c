@@ -38,6 +38,8 @@ int main(int argc, char** argv) {
 		switch(orden){
 			case FINALIZAR_PROCESO:
 
+				log_debug(log_esi, "El planificador decidió abortar la ejecucion de este proceso");
+
 				fclose(script);
 				finalizar();
 
@@ -70,6 +72,8 @@ int main(int argc, char** argv) {
 
 
 	}
+
+	log_trace(log_esi, "Se ejecutaron todas las sentencias correctamente. Congratulaciones!");
 
 	fclose(script);
 

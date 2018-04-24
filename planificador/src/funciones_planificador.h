@@ -64,7 +64,8 @@ typedef struct{
 }t_blocked;
 
 typedef struct{
-
+	int ID;
+	char* exit_text;
 }t_ended;
 
 typedef struct{
@@ -84,6 +85,8 @@ void 			aniadir_a_listos				(t_ready esi);
 t_ready* 		duplicar_esi_ready				(t_ready esi);
 void 			planificar						(t_ready* esi_ready);
 void 			mandar_a_ejecutar				();
+void 			mover_a_finalizados				(t_ready* esi_ejecucion, char* exit_text);
+void 			actualizar_esperas				();
 void 			insertar_ordenado				(t_ready* esi_ready);
 float 			estimacion						(t_ready* esi_ready);
 void 			comparar_desde					(int indice_comparacion, bool (*funcion_comparacion)(void*, void*), t_ready* esi_ready);

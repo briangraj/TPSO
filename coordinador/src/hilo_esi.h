@@ -9,6 +9,7 @@
 #define HILO_ESI_H_
 
 #include "coordinador.h"
+#include "conexiones/estructuras_coord.h"
 
 void 		 crear_hilo_esi		   (int socket_cliente);
 void* 		 atender_esi		   (void* socket_esi);
