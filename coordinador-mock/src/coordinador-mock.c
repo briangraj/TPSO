@@ -5,6 +5,8 @@
 
 int no_main(void){
 	elegir_opcion();
+
+	return 0;
 }
 
 int main(void) {
@@ -135,16 +137,16 @@ void atender_handshake(int socket_cliente){
 void atender_protocolo(int protocolo, int socket_cliente){
 	switch (protocolo){
 
-	case SET:
-		atender_operacion("SET",socket_cliente);
+	case OPERACION_SET:
+		atender_set(socket_cliente);
 		break;
 
-	case GET:
-		atender_operacion("GET",socket_cliente);
+	case OPERACION_GET:
+		atender_get(socket_cliente);
 		break;
 
-	case STORE:
-		atender_operacion("STORE",socket_cliente);
+	case OPERACION_STORE:
+		atender_store(socket_cliente);
 		break;
 
 	default:
@@ -152,10 +154,66 @@ void atender_protocolo(int protocolo, int socket_cliente){
 	}
 }
 
-void atender_operacion(char* operacion, int socket){
-	log_info(log, "Se recibio la operacion %s del esi en el socket %d", operacion, socket); // FIXME : Debe mutar a mostrar el ID del ESI
+void atender_get(int socket){
+	int tamanio;
+
+	recv(socket, &tamanio, sizeof(int), MSG_WAITALL);
+
+	char* clave = string_new();
+
+	recv(socket, clave, tamanio, MSG_WAITALL);
+
+	log_info(log, "Se recibio la operacion GET sobre la clave %s del esi en el socket %d", clave, socket); // FIXME : Debe mutar a mostrar el ID del ESI
 
 	int opcion_elegida = elegir_opcion();
+
+	free(clave);
+
+	enviar_paquete(opcion_elegida, socket, 0, NULL);
+}
+
+void atender_store(int socket){
+	int tamanio;
+
+	recv(socket, &tamanio, sizeof(int), MSG_WAITALL);
+
+	char* clave = string_new();
+
+	recv(socket, clave, tamanio, MSG_WAITALL);
+
+	log_info(log, "Se recibio la operacion STORE sobre la clave %s del esi en el socket %d", clave, socket); // FIXME : Debe mutar a mostrar el ID del ESI
+
+	int opcion_elegida = elegir_opcion();
+
+	free(clave);
+
+	enviar_paquete(opcion_elegida, socket, 0, NULL);
+}
+
+void atender_set(int socket){
+	int tamanio_clave;
+
+	recv(socket, &tamanio_clave, sizeof(int), MSG_WAITALL);
+
+	char* clave = string_new();
+
+	recv(socket, clave, tamanio_clave, MSG_WAITALL);
+
+	int tamanio_valor;
+
+	recv(socket, &tamanio_valor, sizeof(int), MSG_WAITALL);
+
+	char* valor = string_new();
+
+	recv(socket, valor, tamanio_valor, MSG_WAITALL);
+
+	log_info(log, "Se recibio la operacion STORE sobre la clave %s con el valor %s del esi en el socket %d", clave, valor, socket); // FIXME : Debe mutar a mostrar el ID del ESI
+
+	int opcion_elegida = elegir_opcion();
+
+	free(clave);
+
+	free(valor);
 
 	enviar_paquete(opcion_elegida, socket, 0, NULL);
 }

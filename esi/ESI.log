@@ -1,3 +1,30 @@
 [TRACE] 20:01:50:945 Esi/(4745:4745): El archivo de log se creo correctamente.
 [INFO] 20:01:50:945 Esi/(4745:4745): IP COORDINADOR: "127.0.0.1"
 [INFO] 20:01:50:945 Esi/(4745:4745): PUERTO COORDINADOR: 5051
+[TRACE] 22:56:14:896 Esi/(14231:14231): El archivo de log se creo correctamente.
+[TRACE] 22:56:14:904 Esi/(14231:14231): El proceso ESI se conecto al proceso Coordinador con exito
+[TRACE] 22:56:14:907 Esi/(14231:14231): El proceso Coordinador confirmo la conexion con el proceso ESI
+[TRACE] 22:56:14:922 Esi/(14231:14231): Se inicio el handshake con el proceso Coordinador
+[TRACE] 22:56:14:924 Esi/(14231:14231): Se completo el handshake con el proceso Coordinador
+[TRACE] 22:56:14:927 Esi/(14231:14231): El proceso ESI se conecto al proceso Planificador con exito
+[TRACE] 22:56:14:928 Esi/(14231:14231): El proceso Planificador confirmo la conexion con el proceso ESI
+[TRACE] 22:56:14:931 Esi/(14231:14231): Se inicio el handshake con el proceso Planificador
+[TRACE] 22:56:14:932 Esi/(14231:14231): Se completo el handshake con el proceso Planificador
+[DEBUG] 22:56:56:686 Esi/(14231:14231): Se intento ejecutar la sentencia GET jugador
+
+[TRACE] 22:56:56:689 Esi/(14231:14231): Se ejecuto correctamente la sentencia
+[DEBUG] 22:58:49:72 Esi/(14231:14231): Se intento ejecutar la sentencia     SET jugador messi
+
+[TRACE] 22:58:49:78 Esi/(14231:14231): Se ejecuto correctamente la sentencia
+[DEBUG] 22:58:59:120 Esi/(14231:14231): Se intento ejecutar la sentencia     STORE jugador       
+
+[ERROR] 22:58:59:122 Esi/(14231:14231): Se perdio la conexion con el coordinador
+[TRACE] 23:01:28:471 Esi/(14343:14343): El archivo de log se creo correctamente.
+[TRACE] 23:01:28:491 Esi/(14343:14343): El proceso ESI se conecto al proceso Coordinador con exito
+[TRACE] 23:01:28:493 Esi/(14343:14343): El proceso Coordinador confirmo la conexion con el proceso ESI
+[TRACE] 23:01:28:497 Esi/(14343:14343): Se inicio el handshake con el proceso Coordinador
+[TRACE] 23:01:28:504 Esi/(14343:14343): Se completo el handshake con el proceso Coordinador
+[TRACE] 23:01:28:515 Esi/(14343:14343): El proceso ESI se conecto al proceso Planificador con exito
+[TRACE] 23:01:28:516 Esi/(14343:14343): El proceso Planificador confirmo la conexion con el proceso ESI
+[TRACE] 23:01:28:522 Esi/(14343:14343): Se inicio el handshake con el proceso Planificador
+[TRACE] 23:01:28:523 Esi/(14343:14343): Se completo el handshake con el proceso Planificador

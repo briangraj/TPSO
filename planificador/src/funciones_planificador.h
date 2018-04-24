@@ -43,4 +43,8 @@ void			atender_protocolo				(int protocolo, int socket_cliente);
 void			desconectar_cliente				(int cliente);
 void 			finalizar						();
 
+// Funciones MOCK
+
+void 			ejecutar_mock					(int socket_cliente);
+
 #endif /* FUNCIONES_PLANIFICADOR_H_ */

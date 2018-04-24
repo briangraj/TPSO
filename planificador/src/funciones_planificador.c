@@ -57,11 +57,21 @@ void atender_handshake(int socket_cliente){
 		log_trace(log_planif, "Nuevo ESI detectado y aceptado");
 		informar_conexion_exitosa_a(socket_cliente);
 
+		// SOLO PARA PROBAR QUE ESTE ANDANDO EL ESI
+
+		ejecutar_mock(socket_cliente);
+
 	}
+
+
 }
 
 void atender_protocolo(int protocolo, int socket_cliente){
 	log_debug(log_planif, "Llegamos hasta atender protocolo!!! Recibi el protocolo %d, por el socket %d", protocolo, socket_cliente);
+
+	// SOLO PARA PROBAR QUE ANDE EL ESI
+	if(protocolo == EJECUCION_EXITOSA)
+		ejecutar_mock(socket_cliente);
 }
 
 void desconectar_cliente(int cliente){
@@ -94,7 +104,13 @@ void finalizar(){
 }
 
 
+// MOCKS
 
+void ejecutar_mock(int socket_cliente){
+
+	enviar_paquete(EJECUTAR_SENTENCIA, socket_cliente, 0 , NULL);
+
+}
 
 
 

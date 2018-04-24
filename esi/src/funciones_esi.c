@@ -53,7 +53,11 @@ void leer_archivo_config(){
 t_resultado_ejecucion ejecutar_proxima_sentencia(FILE* script){
 	t_resultado_ejecucion resultado; // TODO = Asigna en null ??????
 
-	char* linea = leer_linea(script);
+	char* linea = string_new();
+
+	int tamanio_de_lo_leido = 1;
+
+	getline(&linea, &tamanio_de_lo_leido, script);
 
 	if(linea == NULL){
 		resultado.informe_coordinador = ERROR_LECTURA_SCRIPT;
@@ -155,7 +159,7 @@ int operacion_get_al_coordinador(char * clave){
 
 	memcpy(paquete + offset, clave, tamanio_clave);
 
-	if(enviar_paquete(GET, SOCKET_COORDINADOR, tamanio_paquete, paquete) == -1){
+	if(enviar_paquete(OPERACION_GET, SOCKET_COORDINADOR, tamanio_paquete, paquete) == -1){
 		free(paquete);
 		return -1;
 	}
@@ -188,7 +192,7 @@ int operacion_set_al_coordinador(char * clave, char* valor){
 
 	memcpy(paquete + offset, valor, tamanio_valor);
 
-	if(enviar_paquete(SET, SOCKET_COORDINADOR, tamanio_paquete, paquete) == -1){
+	if(enviar_paquete(OPERACION_SET, SOCKET_COORDINADOR, tamanio_paquete, paquete) == -1){
 		free(paquete);
 		return -1;
 	}
@@ -211,7 +215,7 @@ int operacion_store_al_coordinador(char * clave){
 
 	memcpy(paquete + offset, clave, tamanio_clave);
 
-	if(enviar_paquete(STORE, SOCKET_COORDINADOR, tamanio_paquete, paquete) == -1){
+	if(enviar_paquete(OPERACION_STORE, SOCKET_COORDINADOR, tamanio_paquete, paquete) == -1){
 		free(paquete);
 		return -1;
 	}
