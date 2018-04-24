@@ -92,11 +92,23 @@ void atender_handshake(int socket_cliente){
 		 * TODO acordarse de pedirle el id a la instancia
 		 * y agregarla a la lista de instancias
 		 */
-		informar_conexion_exitosa_a(socket_cliente);
+
+		int id = recibir_id(socket_cliente);
+
+		if(id <= 0){
+			log_error(log_coord, "No se pudo recibir el id de la instancia conectada en el socket %d", socket_cliente);
+			return;
+		}
+		else
+			informar_conexion_exitosa_a(socket_cliente);
+
+		t_instancia* instancia = crear_instancia(id, socket_cliente);
+
+		list_add(instancias, (void*) instancia);
 
 		log_trace(log_coord, "Se realizo el handshake con la Instancia en el socket %d", socket_cliente);
 
-		crear_hilo_instancia(socket_cliente);
+		crear_hilo_instancia(instancia);
 	break;
 	default:
 //		errores
