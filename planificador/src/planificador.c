@@ -11,7 +11,7 @@
 #include "funciones_planificador.h"
 #include "funciones_consola.h"
 
-int main(void) {
+int main(int argc, char* argv[]) {
 	struct sockaddr_in remoteaddr; // dirección del cliente
 	int fdmax;        // número máximo de descriptores de fichero
 	int listener;     // descriptor de socket a la escucha
@@ -24,11 +24,16 @@ int main(void) {
 	FD_ZERO(&master);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);
 
-	iniciar_planificador();
+	proximo_id = 1;
 
-	if(crear_hilo(levantar_consola, NULL) != 0){
-		log_error(log_planif, "No se pudo levantar el hilo de la consola");
-		finalizar();
+	iniciar_planificador(argc > 1);
+
+	if(argc < 2){
+		if(crear_hilo((void*)levantar_consola, NULL) != 0){
+			log_error(log_planif, "No se pudo levantar el hilo de la consola");
+			finalizar();
+		}
+
 	}
 
 
@@ -79,6 +84,17 @@ int main(void) {
 							log_error(log_planif, "ERROR: no se pudo aceptar la conexion del socket");
 						} else {
 							aniadir_cliente(&master, newfd, &fdmax);
+
+							t_ready nuevo_esi = {
+									.ID = proximo_id,
+									.socket = newfd,
+									.tiempo_espera = 0.0,
+									.ultima_estimacion = ESTIMACION_INICIAL,
+									.ultima_rafaga_real = 0.0,
+									.estimacion_actual = 0.0
+							};
+
+							aniadir_a_listos(nuevo_esi);
 						}
 
 					} else {

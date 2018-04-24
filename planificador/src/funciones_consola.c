@@ -14,7 +14,7 @@ void levantar_consola(void * param){
 	  char * linea;
 
 	  while(1) {
-	    linea = readline(">");
+	    linea = readline("Consola > ");
 
 	    linea = stripwhite(linea);
 
