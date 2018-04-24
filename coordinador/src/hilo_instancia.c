@@ -7,21 +7,40 @@
 
 #include "hilo_instancia.h"
 
-void crear_hilo_instancia(int socket_instancia){
+void crear_hilo_instancia(t_instancia* instancia){
 	CANTIDAD_ENTRADAS = 20;
 	TAMANIO_ENTRADA = 100;
 
-	void* socket_in = malloc(sizeof(int));
+	crear_hilo(atender_instancia, (void*) instancia);
+}
 
-	memcpy(socket_in, &socket_instancia, sizeof(int));
+void crear_instancia(int id, int socket){
+	t_instancia* instancia = malloc(sizeof(t_instancia));
 
-	crear_hilo(atender_instancia, socket_in);
+	instancia->id = id;
+	instancia->pedidos = list_create();
+	sem_init(&instancia->sem, 0, 0);
+	instancia->socket = socket;
+	instancia->esta_conectado = true;
+}
+
+int recibir_id(int socket){
+	int id;
+
+	if(recv(socket, &id, sizeof(int), MSG_WAITALL) <= 0)
+		return -1;
+
+	return id;
 }
 
 void* atender_instancia(void* socket_instancia){
 	int socket = *((int*)socket_instancia);
 
 	enviar_configuracion_instancia(socket);
+
+	while(true) {
+
+	}
 
 	return NULL;
 }
