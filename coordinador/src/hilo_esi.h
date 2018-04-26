@@ -17,9 +17,8 @@ t_solicitud* recibir_solicitud_esi (int socket);
 t_solicitud* crear_get			   (int socket);
 t_solicitud* crear_set			   (int socket);
 t_solicitud* crear_store		   (int socket);
-char* 		 recibir_string		   (int socket);
 t_instancia* elegir_instancia	   (t_solicitud* solicitud);
-void 		 enviar_solicitud	   (t_solicitud* solicitud, t_instancia* instancia);
 void 		 distribuir			   (t_solicitud* solicitud);
+void		 agregar_pedido		   (t_instancia* instancia, t_solicitud* solicitud);
 
 #endif /* HILO_ESI_H_ */

@@ -17,8 +17,8 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
 #include <commons/log.h>
+#include <arpa/inet.h>
 
 #include "protocolos.h"
 

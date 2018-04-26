@@ -18,8 +18,8 @@
 #include <sys/select.h>
 #include "hilo_planificador.h"
 #include "hilo_esi.h"
-#include "hilo_instancia.h"
 #include <conexiones/estructuras_coord.h>
+#include "hilo_instancia.h"
 
 int CANTIDAD_ENTRADAS;
 int TAMANIO_ENTRADA;
