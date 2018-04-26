@@ -47,6 +47,7 @@ t_list* cola_de_listos;
 t_list* colas_de_bloqueados;
 t_list* cola_finalizados;
 
+int id_esi_activo;
 int proximo_id;
 
 // Estructuras
@@ -96,6 +97,7 @@ float			ratio							(t_ready* esi);
 void 			ordenar_hrrn					(t_ready* esi_ready);
 void 			finalizar						();
 void 			clave_destroyer					(void* elemento);
+t_ready*		esi_activo						();
 
 // Funciones MOCK
 

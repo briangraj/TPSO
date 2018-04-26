@@ -35,6 +35,7 @@ int main(void) {
 
 	bindear_socket(listener, MI_IP, MI_PUERTO, log);
 
+	lista_esis = list_create();
 
 	// LO PONGO A ESCUCHAR LAS CONEXIONES NUEVAS Y PETICIONES DE LAS POSTERIORMENTE EXISTENTES
 	if (listen(listener, 10) == -1) {
@@ -134,9 +135,36 @@ void atender_handshake(int socket_cliente){
 	}
 }
 
+void armar_nuevo_esi(int socket){
+	int id;
+
+	if(recv(socket, &id, sizeof(int), MSG_WAITALL) < 0){
+		log_error(log, "Fallo la recepcion del ID del esi conectado al socket %d", socket);
+		desconectar_cliente(socket);
+		return;
+	}
+
+	log_info(log, "Se recibio el ID (%d) del ESI conectado en el socket %d", id, socket);
+
+	t_esi* nuevo_esi = (t_esi*)malloc(sizeof(t_esi));
+
+	nuevo_esi->id = id;
+	nuevo_esi->socket = socket;
+
+	list_add(lista_esis, nuevo_esi);
+}
+
 void atender_protocolo(int protocolo, int socket_cliente){
+	int id = obtener_id_desde_socket(socket_cliente);
+
+	if(id != -1)
+		log_info(log, "Se recibio un mensaje del ESI de ID %d", id);
+
 	switch (protocolo){
 
+	case ENVIO_ID:
+		armar_nuevo_esi(socket_cliente);
+		break;
 	case OPERACION_SET:
 		atender_set(socket_cliente);
 		break;
@@ -152,6 +180,22 @@ void atender_protocolo(int protocolo, int socket_cliente){
 	default:
 		desconectar_cliente(socket_cliente);
 	}
+}
+
+int obtener_id_desde_socket(int socket){
+	bool esi_de_socket_buscado(void* elem){
+		t_esi* esi = (t_esi*)elem;
+
+		return esi->socket == socket;
+	}
+
+	t_esi* esi = list_find(lista_esis, esi_de_socket_buscado);
+
+	if(esi!=NULL){
+		return esi->id;
+	}
+
+	return -1;
 }
 
 void atender_get(int socket){
@@ -280,6 +324,16 @@ void mostrar_menu(){
 void desconectar_cliente(int cliente){
 	//error o conexión cerrada por el cliente
 	log_trace(log, "Se desconecto el cliente %d", cliente);
+
+	void funcion_al_pedo(void* esi){};
+
+	bool es_un_esi(void* elem){
+		t_esi* esi = (t_esi*)elem;
+
+		return esi->socket == cliente;
+	}
+
+	list_remove_and_destroy_by_condition(lista_esis, es_un_esi, funcion_al_pedo);
 
 	close(cliente); // bye!
 	FD_CLR(cliente, &master);

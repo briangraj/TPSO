@@ -25,6 +25,7 @@ int PUERTO_COORDINADOR;
 
 int SOCKET_PLANIFICADOR;
 int SOCKET_COORDINADOR;
+int MI_ID;
 
 t_log* log_esi;
 t_config* archivo_config;

@@ -82,6 +82,8 @@ void atender_handshake(int socket_cliente){
 		log_trace(log_planif, "Nuevo ESI detectado y aceptado");
 		informar_conexion_exitosa_a(socket_cliente);
 
+		enviar_paquete(ENVIO_ID, socket_cliente, sizeof(int), &proximo_id);
+
 //		// SOLO PARA PROBAR QUE ESTE ANDANDO EL ESI
 //
 //		ejecutar_mock(socket_cliente);
@@ -92,12 +94,30 @@ void atender_handshake(int socket_cliente){
 }
 
 void atender_protocolo(int protocolo, int socket_cliente){
-	log_debug(log_planif, "Llegamos hasta atender protocolo!!! Recibi el protocolo %d, por el socket %d", protocolo, socket_cliente);
-
 //	// SOLO PARA PROBAR QUE ANDE EL ESI
-	if(protocolo == EJECUCION_EXITOSA)
-		mandar_a_ejecutar();
+	switch (protocolo){
+		case EJECUCION_EXITOSA:
+			mandar_a_ejecutar();
+			break;
+		case FALLO_EN_EJECUCION:
+			mover_a_finalizados(esi_activo(), "Fallo en la ejecucion de una instruccion del script");
+			break;
+		case FIN_DEL_SCRIPT:
+			mover_a_finalizados(esi_activo(), "Finalizado con exito");
+			break;
+	}
+
 //		ejecutar_mock(socket_cliente);
+}
+
+t_ready* esi_activo(){
+	bool es_el_que_esta_ejecutando(void* elem) {
+		t_ready* esi = (t_ready*)elem;
+
+		return esi->ID == id_esi_activo;
+	}
+
+	return list_find(cola_de_listos, es_el_que_esta_ejecutando);
 }
 
 void desconectar_cliente(int cliente){
@@ -154,7 +174,11 @@ void planificar(t_ready* esi_ready){
 }
 
 void mandar_a_ejecutar(){//Enviar orden de ejecucion al primer ESI de la cola de listos
-	//TODO setear en 0 el tiempo de espera del que va a ejecutar y sumar 1 al resto
+
+	if(list_is_empty(cola_de_listos)){
+		id_esi_activo = 0;
+		return;
+	}
 
 	t_ready* esi_ejecucion = list_get(cola_de_listos, 0);
 
@@ -164,10 +188,10 @@ void mandar_a_ejecutar(){//Enviar orden de ejecucion al primer ESI de la cola de
 		mover_a_finalizados(esi_ejecucion, "Error en la comunicacion ESI-Planificador");
 		mandar_a_ejecutar();
 	} else {
-
+		id_esi_activo = esi_ejecucion->ID;
 		actualizar_esperas();
-
 	}
+
 }
 
 void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){

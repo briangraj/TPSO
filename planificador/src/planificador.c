@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
 	FD_ZERO(&read_fds);
 
 	proximo_id = 1;
+	id_esi_activo = 0;
 
 	iniciar_planificador(argc > 1);
 

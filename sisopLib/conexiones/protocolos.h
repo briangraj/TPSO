@@ -17,6 +17,7 @@ typedef enum {
 	EJECUTAR_SENTENCIA,
 	FINALIZAR_PROCESO,
 	FALLO_EN_EJECUCION,
+	FIN_DEL_SCRIPT,
 
 	//ESI - COORDINADOR
 	OPERACION_GET, // Envio: [protocolo, tamanio_clave, clave] , clave es char*, incluye el /0 y esta considerado en el tamanio
@@ -31,6 +32,7 @@ typedef enum {
 	EJECUCION_EXITOSA,
 	ERROR_LECTURA_SCRIPT,
 	ERROR_INTERPRETACION_SENTENCIA,
+	ENVIO_ID,
 
 	//COORDINADOR - INSTANCIA
 	CONFIGURACION_ENTRADAS

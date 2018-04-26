@@ -46,6 +46,8 @@ int main(int argc, char** argv) {
 				break;
 
 			case EJECUTAR_SENTENCIA:{
+				log_debug(log_esi, "Se recibio la orden de ejecucion de una instruccion.");
+
 				t_resultado_ejecucion informe_ejecucion = ejecutar_proxima_sentencia(script);
 
 				int resultado = informar_resultado_al_usuario(informe_ejecucion);
@@ -74,6 +76,8 @@ int main(int argc, char** argv) {
 	}
 
 	log_trace(log_esi, "Se ejecutaron todas las sentencias correctamente. Congratulaciones!");
+
+	enviar_paquete(FIN_DEL_SCRIPT, SOCKET_PLANIFICADOR, 0, NULL);
 
 	fclose(script);
 

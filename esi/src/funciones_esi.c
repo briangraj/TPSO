@@ -12,18 +12,42 @@ void iniciar_esi(){
 
 	leer_archivo_config();
 
-	if((SOCKET_COORDINADOR = conectarse_a_server("ESI", ESI, "Coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, log_esi)) == -1){
+	if((SOCKET_PLANIFICADOR = conectarse_a_server("ESI", ESI, "Planificador", IP_PLANIFICADOR, PUERTO_PLANIFICADOR, log_esi))  == -1){
 		log_destroy(log_esi);
 		config_destroy(archivo_config);
 		exit(1);
 	}
 
-	if((SOCKET_PLANIFICADOR = conectarse_a_server("ESI", ESI, "Planificador", IP_PLANIFICADOR, PUERTO_PLANIFICADOR, log_esi))  == -1){
-		close(SOCKET_COORDINADOR);
+	if(recibir_protocolo(SOCKET_PLANIFICADOR)!= ENVIO_ID){
+		log_error(log_esi, "No se recibio el ID del Planificador");
+		close(SOCKET_PLANIFICADOR);
 		log_destroy(log_esi);
 		config_destroy(archivo_config);
 		exit(1);
 	}
+
+	if(recv(SOCKET_PLANIFICADOR, &MI_ID, sizeof(int), MSG_WAITALL) < 0){
+		log_error(log_esi, "No se recibio el ID del Planificador");
+		close(SOCKET_PLANIFICADOR);
+		log_destroy(log_esi);
+		config_destroy(archivo_config);
+		exit(1);
+	}
+
+	if((SOCKET_COORDINADOR = conectarse_a_server("ESI", ESI, "Coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, log_esi)) == -1){
+		close(SOCKET_PLANIFICADOR);
+		log_destroy(log_esi);
+		config_destroy(archivo_config);
+		exit(1);
+	}
+
+	if(enviar_paquete(ENVIO_ID, SOCKET_COORDINADOR, sizeof(int), &MI_ID) == -1) {
+		log_error(log_esi, "Se perdio la conexion con el coordinador a la hora de enviarle el ID");
+		close(SOCKET_PLANIFICADOR);
+		finalizar();
+	}
+
+	log_info(log_esi, "ESI %d iniciado con exito", MI_ID);
 }
 
 void crear_log(){
