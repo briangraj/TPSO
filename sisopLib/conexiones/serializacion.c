@@ -114,6 +114,17 @@ t_ruta deserializar_ruta (int socket_cliente){
 	return ruta_recibida;//Acordarse de hacer un free despues de usarse
 }
 
+char* recibir_string(int socket){
+	int tam_clave;
+
+	recv(socket, &tam_clave, sizeof(int), MSG_WAITALL);
+
+	char* clave = malloc(tam_clave);
+
+	recv(socket, clave, tam_clave, MSG_WAITALL);
+
+	return clave;
+}
 
 int informar_resultado_de_operacion(int socket, int resultado_operacion){
 	return enviar_paquete(resultado_operacion, socket, 0, NULL);

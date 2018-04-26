@@ -8,9 +8,9 @@
 #ifndef SRC_INSTANCIA_H_
 #define SRC_INSTANCIA_H_
 
-#include <commons/log.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
+#include <commons/log.h>
 #include <conexiones/sockets.h>
 #include <conexiones/serializacion.h>
 #include <conexiones/protocolos.h>
@@ -19,7 +19,7 @@
 
 typedef struct {
 	int nro_entrada;
-	char clave[40];
+	char* clave;
 	int tamanio_clave;
 }t_entrada;
 
@@ -27,6 +27,7 @@ char* IP_COORDINADOR;
 int PUERTO_COORDINADOR;
 int CANTIDAD_ENTRADAS;
 int TAMANIO_ENTRADA;
+int MI_ID;
 int socket_coordinador;
 
 t_log* log;
@@ -39,5 +40,6 @@ void escuchar_coordinador();
 void leer_protocolo(int protocolo);
 void configuracion_entradas();
 void crear_tabla_de_entradas();
+void recibir_set();
 
 #endif /* SRC_INSTANCIA_H_ */

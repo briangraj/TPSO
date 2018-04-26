@@ -15,7 +15,7 @@ int main(void) {
 		log_error(log_coord, "Error en el setsockopt");
 		exit(EXIT_FAILURE);
 	}
-
+	instancias = list_create();
 	leer_config();
 
 	bindear_socket(listener, ip_coord, puerto_coord, log_coord);
@@ -87,11 +87,13 @@ void atender_handshake(int socket_cliente){
 
 		crear_hilo_planificador(socket_cliente); //TODO falta hacer
 	break;
-	case INSTANCIA:
+	case INSTANCIA: {
 		/**
 		 * TODO acordarse de pedirle el id a la instancia
 		 * y agregarla a la lista de instancias
 		 */
+
+		informar_conexion_exitosa_a(socket_cliente);
 
 		int id = recibir_id(socket_cliente);
 
@@ -99,8 +101,6 @@ void atender_handshake(int socket_cliente){
 			log_error(log_coord, "No se pudo recibir el id de la instancia conectada en el socket %d", socket_cliente);
 			return;
 		}
-		else
-			informar_conexion_exitosa_a(socket_cliente);
 
 		t_instancia* instancia = crear_instancia(id, socket_cliente);
 
@@ -109,6 +109,7 @@ void atender_handshake(int socket_cliente){
 		log_trace(log_coord, "Se realizo el handshake con la Instancia en el socket %d", socket_cliente);
 
 		crear_hilo_instancia(instancia);
+	}
 	break;
 	default:
 //		errores

@@ -28,48 +28,17 @@ t_instancia* elegir_instancia(t_solicitud* solicitud){//TODO mock
 	return instancia;
 }
 
-void enviar_solicitud(t_solicitud* solicitud, t_instancia* instancia){//TODO mock
-	int tam_mensaje, tam_header = sizeof(int);
-	void* mensaje;
-
-	switch(solicitud->instruccion){
-	case OPERACION_SET:{
-		int tam_clave = strlen(solicitud->clave) + 1;
-		int tam_valor = strlen(solicitud->valor) + 1;
-
-		tam_mensaje = tam_header + sizeof(int) + tam_clave + sizeof(int) + tam_valor;
-
-		void* mensaje = malloc(tam_mensaje);
-		char* aux = mensaje;
-
-		memcpy(aux, &solicitud->instruccion, tam_header);
-		aux += tam_header;
-
-		memcpy(aux, &tam_clave, sizeof(int));
-		aux += sizeof(int);
-
-		memcpy(aux, solicitud->clave, tam_clave);
-		aux += tam_clave;
-
-		memcpy(aux, &tam_valor, sizeof(int));
-		aux += sizeof(int);
-
-		memcpy(aux, solicitud->valor, tam_valor);
-
-		break;
-	}
-	case OPERACION_STORE:
-		break;
-	default:
-		;
-	}
-
-	send_all(instancia->socket, (void*) mensaje, tam_mensaje);
-}
-
 void distribuir(t_solicitud* solicitud){
 	t_instancia* instancia = elegir_instancia(solicitud);//TODO mock
-	enviar_solicitud(solicitud, instancia);//TODO mock
+
+	agregar_pedido(instancia, solicitud);
+	sem_post(&instancia->sem);
+	//enviar_solicitud(solicitud, instancia);//TODO mock
+}
+
+void agregar_pedido(t_instancia* instancia, t_solicitud* solicitud){
+	//faltarian semaforos
+	list_add(instancia->pedidos, solicitud);
 }
 
 t_solicitud* recibir_solicitud_esi(int socket){
@@ -125,17 +94,7 @@ t_solicitud* crear_store(int socket){
 	return solicitud;
 }
 
-char* recibir_string(int socket){
-	int tam_clave;
 
-	recv(socket, &tam_clave, sizeof(int), MSG_WAITALL);
-
-	char* clave = malloc(tam_clave);
-
-	recv(socket, clave, tam_clave, MSG_WAITALL);
-
-	return clave;
-}
 
 
 
