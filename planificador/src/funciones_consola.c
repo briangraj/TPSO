@@ -160,6 +160,7 @@ int	com_pausar(char* parametro){
 
 	return 0;
 }
+
 int	com_continuar(char* parametro){
 
 	pthread_mutex_unlock(&semaforo_pausa);
@@ -168,6 +169,7 @@ int	com_continuar(char* parametro){
 
 	return 0;
 }
+
 int	com_bloquear(char* parametro){
 
 	char** parametros = controlar_y_obtener_parametros(parametro, 2);
@@ -182,13 +184,13 @@ int	com_bloquear(char* parametro){
 	char* clave = strdup(parametros[0]);
 	int id_esi = atoi(parametros[1]);
 
+	liberar_parametros(parametros, 2);
+
 	bool coincide_el_id(void* elemento){
 		t_ready* esi = (t_ready*) elemento;
 
 		return esi->ID == id_esi;
 	}
-
-	liberar_parametros(parametros, 2);
 
 	pthread_mutex_lock(&semaforo_cola_listos);
 	t_ready* info_ejecucion_esi = list_find(cola_de_listos, coincide_el_id);
@@ -222,6 +224,8 @@ int	com_bloquear(char* parametro){
 
 	pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
+	imprimir_cola_bloqueados(bloqueados_por_clave->clave);
+
 	//Ahora sacamos al ESI de la cola de listos
 
 	pthread_mutex_lock(&semaforo_cola_listos);
@@ -236,18 +240,122 @@ int	com_bloquear(char* parametro){
 
 	return 0;
 }
+
 int	com_desbloquear(char* parametro){
+
+	char** parametros = controlar_y_obtener_parametros(parametro, 1);
+
+	if(!parametros){
+		imprimir("Cantidad incorrecta de parámetros para el comando 'desbloquear'");
+		imprimir("El unico parametro del comando es la 'clave'");
+
+		return 0;
+	}
+
+	char* clave = strdup(parametros[0]);
+
+	liberar_parametros(parametros, 1);
+
+	t_bloqueados_por_clave* bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
+
+	if(!bloqueados_por_clave)
+		imprimir("La clave ingresada no posee ESIs a la espera de su liberacion");
+
+	else{
+
+		bool esta_bloqueado_por_consola(void* elem){
+			t_blocked* esi_block = (t_blocked*) elem;
+
+			return esi_block->bloqueado_por_consola;
+		}
+
+		pthread_mutex_lock(&semaforo_cola_bloqueados);
+		t_blocked* esi_bloqueado = list_find(bloqueados_por_clave->bloqueados, esta_bloqueado_por_consola);//Buscamos al primer bloqueado por consola
+		pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+
+		//Chequear que se haya encontrado algun ESI bloqueado por consola
+		if(!esi_bloqueado){
+			imprimir("No hay ningun ESI desloqueable por consola para la clave solicitada");
+			free(clave);
+			return 0;
+		}
+
+
+		int id_esi = esi_bloqueado->info_ejecucion->ID;
+		char* informe = string_new();
+
+		if(esi_bloqueado->bloqueado_por_ejecucion){
+
+			esi_bloqueado->bloqueado_por_consola = false;
+
+			informe = string_from_format("Se removio el flag 'bloqueado por consola' al ESI %d pero no se desbloqueo ya que esta bloqueado por ejecucion propia", id_esi);
+			imprimir(informe);
+
+		}else{
+
+			aniadir_a_listos(*(esi_bloqueado->info_ejecucion));
+
+			eliminar_de_bloqueados(esi_bloqueado->info_ejecucion);
+
+			bool es_el_recurso(void* elem){
+				t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
+
+				return string_equals_ignore_case(bloq->clave, clave);
+			}
+
+			pthread_mutex_lock(&semaforo_cola_bloqueados);
+
+			if(list_is_empty(bloqueados_por_clave->bloqueados) && bloqueados_por_clave->id_proximo_esi == 0)
+				list_remove_and_destroy_by_condition(colas_de_bloqueados, es_el_recurso, clave_destroyer);
+
+			pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+			informe = string_from_format("Se logro desbloquear al ESI %d para la clave solicitada", id_esi);
+			imprimir(informe);
+
+		}
+
+		free(informe);
+	}
+
+	free(clave);
+
 	return 0;
 }
+
 int	com_listar(char* parametro){
+
+	char** parametros = controlar_y_obtener_parametros(parametro, 1);
+
+	if(!parametros){
+		imprimir("Cantidad incorrecta de parámetros para el comando 'listar'");
+		imprimir("El unico parametro del comando es la 'clave'");
+
+		return 0;
+	}
+
+	char* clave = strdup(parametros[0]);
+
+	liberar_parametros(parametros, 1);
+
+	//TODO: Verificar si existe la clave solicitada
+
+	imprimir_cola_bloqueados(clave);
+
+	free(clave);
+
 	return 0;
 }
+
 int	com_kill(char* parametro){
 	return 0;
 }
+
 int	com_status(char* parametro){
 	return 0;
 }
+
 int	com_deadlock(char* parametro){
 	return 0;
 }
@@ -276,6 +384,40 @@ void liberar_parametros(char** parametros, int cantidad_parametros){
 
 	free(parametros);
 }
+
+void imprimir_cola_bloqueados(char* clave){
+
+	imprimir("El estado de la cola de bloqueados para la clave solicitada es:");
+
+	void imprimir_bloqueado(void* elem){
+		t_blocked* esi = (t_blocked*) elem;
+
+		char* string = string_from_format("ESI %d", esi->info_ejecucion->ID);
+
+		imprimir(string);
+
+		free(string);
+	}
+
+	bool es_la_clave(void* elem){
+		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
+
+		return bloqueados_por_clave->clave == clave;
+	}
+
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
+
+	t_bloqueados_por_clave* resultado = list_find(colas_de_bloqueados, es_la_clave);
+
+	list_iterate(resultado->bloqueados, imprimir_bloqueado);
+
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+}
+
+
+
+
 
 
 

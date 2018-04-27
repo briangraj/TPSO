@@ -427,7 +427,10 @@ void eliminar_de_bloqueados(t_ready* esi){
 	bool es_el_recurso_que_lo_tiene(void* elem){
 		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
 
-		return list_any_satisfy(bloqueados_por_clave->bloqueados, es_el_esi);
+		bool resultado = list_any_satisfy(bloqueados_por_clave->bloqueados, es_el_esi);
+
+		return resultado;
+
 	}
 
 	pthread_mutex_lock(&semaforo_cola_bloqueados);
@@ -436,7 +439,9 @@ void eliminar_de_bloqueados(t_ready* esi){
 
 	if(bloqueados_por_clave == NULL) return;
 
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
 	list_remove_and_destroy_by_condition(bloqueados_por_clave->bloqueados, es_el_esi, blocked_destroyer);
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
 }
 
