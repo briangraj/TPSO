@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 
 				t_resultado_ejecucion informe_ejecucion = ejecutar_proxima_sentencia(script);
 
-				int resultado = informar_resultado_al_usuario(informe_ejecucion);
+				int resultado = informar_resultado_al_usuario(informe_ejecucion, script);
 
 				quedan_sentencias_por_ejecutar = verificar_sentencias_restantes(script);
 

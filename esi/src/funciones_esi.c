@@ -118,23 +118,32 @@ t_resultado_ejecucion ejecutar_proxima_sentencia(FILE* script){
 	return resultado;
 }
 
-int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion){
+int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion, FILE* script){
 
-	if(informe_ejecucion.sentencia_ejecutada != NULL){
+	if(informe_ejecucion.sentencia_ejecutada != NULL)
 		log_debug(log_esi, "Se intento ejecutar la sentencia %s", informe_ejecucion.sentencia_ejecutada);
-		free(informe_ejecucion.sentencia_ejecutada);
-	}
 
 	switch (informe_ejecucion.informe_coordinador){
 
 		case EJECUCION_EXITOSA:
 			 log_trace(log_esi, "Se ejecuto correctamente la sentencia");
+			 free(informe_ejecucion.sentencia_ejecutada);
+			 return EJECUCION_EXITOSA;
 
+		case GET_EXITOSO:
+			 log_trace(log_esi, "Se ejecuto correctamente la sentencia");
+			 free(informe_ejecucion.sentencia_ejecutada);
+			 return EJECUCION_EXITOSA;
+
+		case GET_BLOQUEANTE:
+			 log_trace(log_esi, "La clave que se quiso tomar ya estaba tomada. Espero mi turno");
+			 rollbackear_ultima_sentencia(informe_ejecucion.sentencia_ejecutada, script);
+			 free(informe_ejecucion.sentencia_ejecutada);
 			 return EJECUCION_EXITOSA;
 
 		case ERROR_TAMANIO_CLAVE:
 			 log_error(log_esi, "Se excedio el tamanio maximo de 40 caracteres para la clave");
-
+			 free(informe_ejecucion.sentencia_ejecutada);
 			 return FALLO_EN_EJECUCION;
 
 		case ERROR_CLAVE_NO_IDENTIFICADA:
@@ -144,12 +153,12 @@ int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion){
 
 		case ERROR_DE_COMUNICACION: //Este case contempla los casos de desconexion entre coordinador-planificador y coordinador-instancia
 			 log_error(log_esi, "El coordinador tuvo un problema de comunicacion con un proceso crucial");
-
+			 free(informe_ejecucion.sentencia_ejecutada);
 			 return FALLO_EN_EJECUCION;
 
 		case ERROR_CLAVE_INEXISTENTE:
 			 log_error(log_esi, "Se intento acceder a una clave inexistente en el sistema");//FIXME: ver diferencia con CLAVE_NO_IDENTIFICADA
-
+			 free(informe_ejecucion.sentencia_ejecutada);
 			 return FALLO_EN_EJECUCION;
 
 		case ERROR_LECTURA_SCRIPT:
@@ -159,16 +168,20 @@ int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion){
 
 		case ERROR_INTERPRETACION_SENTENCIA:
 			log_error(log_esi, "No se pudo interpretar la ultima linea solicitada del script, no corresponde a una operacion valida.");
-
+			free(informe_ejecucion.sentencia_ejecutada);
 			 return FALLO_EN_EJECUCION;
 
 		default:
 			 log_error(log_esi, "Se perdio la conexion con el coordinador");
-
+			 free(informe_ejecucion.sentencia_ejecutada);
 			 return FALLO_EN_EJECUCION;
 
 	}
 
+}
+
+void rollbackear_ultima_sentencia(char* sentencia_ejecutada, FILE* script){
+	fseek(script, - (strlen(sentencia_ejecutada)), SEEK_CUR);
 }
 
 int operacion_get_al_coordinador(char * clave){

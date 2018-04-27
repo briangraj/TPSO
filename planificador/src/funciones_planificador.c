@@ -105,9 +105,34 @@ void atender_protocolo(int protocolo, int socket_cliente){
 		case FIN_DEL_SCRIPT:
 			mover_a_finalizados(esi_activo(), "Finalizado con exito");
 			break;
+		case GET_CLAVE:
+			atender_get_clave();
+			break;
 	}
 
-//		ejecutar_mock(socket_cliente);
+}
+
+void atender_get_clave(){
+	int id_esi, tamanio_clave;
+	if(recv(SOCKET_COORDINADOR, &id_esi, sizeof(int), MSG_WAITALL)){
+		log_error(log_planif, "Se perdio la conexion con el coordinador");
+		finalizar();
+	}
+
+	if(recv(SOCKET_COORDINADOR, &tamanio_clave, sizeof(int), MSG_WAITALL)){
+		log_error(log_planif, "Se perdio la conexion con el coordinador");
+		finalizar();
+	}
+
+	char* clave = (char*) malloc(tamanio_clave);
+
+	if(recv(SOCKET_COORDINADOR, clave, tamanio_clave, MSG_WAITALL)){
+		log_error(log_planif, "Se perdio la conexion con el coordinador");
+		finalizar();
+	}
+
+	//TODO: Terminar!! Revisar anotaciones
+
 }
 
 t_ready* esi_activo(){

@@ -128,8 +128,10 @@ void atender_handshake(int socket_cliente){
 		if(remitente == ESI)
 			log_trace(log, "Se realizo el handshake con el ESI del socket %d", socket_cliente);
 
-		else
+		else{
 			log_trace(log, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
+			SOCKET_PLANIFICADOR = socket_cliente;
+		}
 
 		informar_conexion_exitosa_a(socket_cliente);
 	}
@@ -205,11 +207,46 @@ void atender_get(int socket, int id_esi){
 
 	log_info(log, "Se recibio la operacion GET sobre la clave %s del esi de id %d", clave, id_esi);
 
-	int opcion_elegida = elegir_opcion();
+	//MOCK
+//	int opcion_elegida = elegir_opcion();
+//
+//	free(clave);
+//
+//	enviar_paquete(opcion_elegida, socket, 0, NULL);
+	//FIN MOCK
 
+	int tam_paquete = 2* sizeof(int) + tamanio;
+	void* paquete = malloc(tam_paquete);
+
+	memcpy(paquete, &id_esi, sizeof(int));
+	memcpy(paquete + sizeof(int), &tamanio, sizeof(int));
+	memcpy(paquete + (2* sizeof(int)), clave, tamanio);
+
+	if(enviar_paquete(GET_CLAVE, SOCKET_PLANIFICADOR, tam_paquete, paquete) == -1){
+		log_error(log, "Se perdio la conexion con el planificador");
+		enviar_paquete(ERROR_DE_COMUNICACION, socket, 0, NULL);
+		close(SOCKET_PLANIFICADOR);
+
+		free(paquete);
+		free(clave);
+
+		return;
+	}
+
+	free(paquete);
 	free(clave);
 
-	enviar_paquete(opcion_elegida, socket, 0, NULL);
+	int protocolo = recibir_protocolo(SOCKET_PLANIFICADOR);
+
+	if(protocolo == -1){
+		log_error(log, "Se perdio la conexion con el planificador");
+		enviar_paquete(ERROR_DE_COMUNICACION, socket, 0, NULL);
+		close(SOCKET_PLANIFICADOR);
+		return;
+	}
+
+	enviar_paquete(protocolo, socket, 0, NULL);
+
 }
 
 void atender_store(int socket, int id_esi){

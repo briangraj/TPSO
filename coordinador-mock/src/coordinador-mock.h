@@ -16,6 +16,8 @@
 char* MI_IP = "127.0.0.1";
 int MI_PUERTO = 5051;
 
+int SOCKET_PLANIFICADOR;
+
 t_log* log;
 t_list* lista_esis;
 

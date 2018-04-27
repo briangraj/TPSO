@@ -61,7 +61,9 @@ typedef struct{
 }t_ready;
 
 typedef struct{
-
+	t_ready* info_ejecucion;
+	bool bloqueado_por_consola;
+	bool bloqueado_por_ejecucion;
 }t_blocked;
 
 typedef struct{
@@ -71,6 +73,7 @@ typedef struct{
 
 typedef struct{
 	char* clave;
+	int id_proximo_esi;
 	t_list* bloqueados;
 }t_bloqueados_por_clave;
 
