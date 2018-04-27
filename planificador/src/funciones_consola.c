@@ -169,6 +169,71 @@ int	com_continuar(char* parametro){
 	return 0;
 }
 int	com_bloquear(char* parametro){
+
+	char** parametros = controlar_y_obtener_parametros(parametro, 2);
+
+	if(!parametros){
+		imprimir("Cantidad incorrecta de parámetros para el comando 'bloquear'");
+		imprimir("Los parámetros son: 'clave' y 'ID ESI");
+
+		return 0;
+	}
+
+	char* clave = strdup(parametros[0]);
+	int id_esi = atoi(parametros[1]);
+
+	bool coincide_el_id(void* elemento){
+		t_ready* esi = (t_ready*) elemento;
+
+		return esi->ID == id_esi;
+	}
+
+	liberar_parametros(parametros, 2);
+
+	pthread_mutex_lock(&semaforo_cola_listos);
+	t_ready* info_ejecucion_esi = list_find(cola_de_listos, coincide_el_id);
+	pthread_mutex_unlock(&semaforo_cola_listos);
+
+	if(!info_ejecucion_esi){
+		imprimir("El ESI que se pidio bloquear no está activo en el sistema");
+		free(clave);
+		return 0;
+	}
+
+	t_blocked* esi_bloqueado = (t_blocked*) malloc(sizeof(t_blocked));
+
+	esi_bloqueado->info_ejecucion = duplicar_esi_ready(*info_ejecucion_esi);
+	esi_bloqueado->bloqueado_por_ejecucion = false;
+	esi_bloqueado->bloqueado_por_consola = true;
+
+	t_bloqueados_por_clave* bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
+
+	if(!bloqueados_por_clave){//Si no existe la cola de bloqueados, la creamos dejandola libre para que sea tomada por cualquiera (menos el bloqueado por consola)
+		crear_entrada_bloqueados_del_recurso(0, clave);
+		bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
+
+	}else{
+		//TODO: Si el ESI bloqueado por este comando ya tenía esta clave asignada, se la desalojamos dandosela al siguiente ESI en la cola de bloqueados
+	}
+
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
+
+	list_add(bloqueados_por_clave->bloqueados, esi_bloqueado);
+
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+	//Ahora sacamos al ESI de la cola de listos
+
+	pthread_mutex_lock(&semaforo_cola_listos);
+
+	list_remove_and_destroy_by_condition(cola_de_listos, coincide_el_id, funcion_al_pedo);
+
+	pthread_mutex_unlock(&semaforo_cola_listos);
+
+	free(clave);
+
+	imprimir("El ESI se bloqueo exitosamente");
+
 	return 0;
 }
 int	com_desbloquear(char* parametro){
@@ -187,9 +252,30 @@ int	com_deadlock(char* parametro){
 	return 0;
 }
 
+char** controlar_y_obtener_parametros(char* parametro, int cantidad_parametros){
+	char** parametros = string_split(stripwhite(parametro), " ");
 
+	int indice = 0;
+	while(parametros[indice]){
+		indice ++;
+	}
 
+	if(cantidad_parametros == indice)
+		return parametros;
 
+	liberar_parametros(parametros, indice);
+	return NULL;
+}
+
+void liberar_parametros(char** parametros, int cantidad_parametros){
+
+	int indice;
+	for(indice = 0; indice < cantidad_parametros; indice++){
+		free(parametros[indice]);
+	}
+
+	free(parametros);
+}
 
 
 

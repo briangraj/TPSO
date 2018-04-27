@@ -50,6 +50,8 @@ char*			stripwhite						(char* string);
 int 			ejecutar_linea					(char* linea);
 t_comando*		find_command					(char* nombre);
 void 			imprimir						(char* cadena);
+char** 			controlar_y_obtener_parametros	(char* parametro, int cantidad_parametros);
+void 			liberar_parametros				(char** parametros, int cantidad_parametros);
 
 
 

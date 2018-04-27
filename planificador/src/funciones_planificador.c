@@ -21,6 +21,8 @@ void iniciar_planificador(int loggear){
 	colas_de_asignaciones = list_create();
 
 	pthread_mutex_init(&semaforo_pausa, NULL);
+	pthread_mutex_init(&semaforo_cola_bloqueados, NULL);
+	pthread_mutex_init(&semaforo_cola_listos, NULL);
 
 	PLANIFICADOR_PID = getpid();
 }
@@ -184,16 +186,12 @@ void atender_get_clave(){
 
 int intentar_asignar(int id_esi, char* recurso){
 
-	bool es_el_recurso(void* elem){
-		t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
-
-		return string_equals_ignore_case(bloq->clave, recurso);
-	}
-
-	t_bloqueados_por_clave* bloqueados_por_clave = list_find(colas_de_bloqueados, es_el_recurso);
+	t_bloqueados_por_clave* bloqueados_por_clave = encontrar_bloqueados_para_la_clave(recurso);
 
 	if(bloqueados_por_clave == NULL){
-		crear_entrada_y_asignar(id_esi, recurso);
+		crear_entrada_bloqueados_del_recurso(id_esi, recurso);
+
+		asignar_recurso_al_esi(id_esi, recurso);
 
 		return GET_EXITOSO;
 	}
@@ -209,21 +207,24 @@ int intentar_asignar(int id_esi, char* recurso){
 
 	list_add(bloqueados_por_clave->bloqueados, crear_t_bloqueado(esi));
 
+	pthread_mutex_lock(&semaforo_cola_listos);
 	list_remove_and_destroy_element(cola_de_listos, 0, funcion_al_pedo);
+	pthread_mutex_unlock(&semaforo_cola_listos);
 
 	return GET_BLOQUEANTE;
 }
 
-void crear_entrada_y_asignar(int id_esi, char* recurso){
+void crear_entrada_bloqueados_del_recurso(int id_esi, char* recurso){
 	t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) malloc(sizeof(t_bloqueados_por_clave));
 
 	bloqueados_por_clave->bloqueados = list_create();
 	bloqueados_por_clave->clave = recurso;
 	bloqueados_por_clave->id_proximo_esi = id_esi;
 
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
 	list_add(colas_de_bloqueados, bloqueados_por_clave);
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
-	asignar_recurso_al_esi(id_esi, recurso);
 }
 
 void asignar_recurso_al_esi(int id_esi, char* recurso){
@@ -260,7 +261,11 @@ t_ready* esi_activo(){
 		return esi->ID == id_esi_activo;
 	}
 
-	return list_find(cola_de_listos, es_el_que_esta_ejecutando);
+	pthread_mutex_lock(&semaforo_cola_listos);
+	t_ready* esi_resultado = list_find(cola_de_listos, es_el_que_esta_ejecutando);
+	pthread_mutex_unlock(&semaforo_cola_listos);
+
+	return esi_resultado;
 }
 
 void atender_store(){
@@ -304,6 +309,22 @@ void aniadir_a_listos(t_ready esi){
 	//Cuando finaliza esta funcion.... que pasa con esi_ready? se pierde? porque se quedaría basura en la lista
 }
 
+void imprimir_estado_cola_listos(){
+
+	log_info(log_planif, "El estado de la cola de listos es:");
+
+	void imprimir_listo(void* elem){
+		t_ready* esi = (t_ready*) elem;
+
+		log_debug(log_planif, "ESI %d", esi->ID);
+	}
+
+	pthread_mutex_lock(&semaforo_cola_listos);
+	list_iterate(cola_de_listos, imprimir_listo);
+	pthread_mutex_unlock(&semaforo_cola_listos);
+
+}
+
 t_ready* duplicar_esi_ready(t_ready esi){
 	t_ready* resultado = (t_ready*) malloc(sizeof(t_ready));
 
@@ -319,27 +340,41 @@ t_ready* duplicar_esi_ready(t_ready esi){
 
 void planificar(t_ready* esi_ready){
 
-	if(cola_de_listos->elements_count == 0){
+	pthread_mutex_lock(&semaforo_cola_listos);
+	int cant_listos = cola_de_listos->elements_count;
+	pthread_mutex_unlock(&semaforo_cola_listos);
 
+	if(cant_listos == 0){
+
+		pthread_mutex_lock(&semaforo_cola_listos);
 		list_add(cola_de_listos, esi_ready);
+		pthread_mutex_unlock(&semaforo_cola_listos);
+
+		imprimir_estado_cola_listos();
 		mandar_a_ejecutar();
 
 	} else
 		insertar_ordenado(esi_ready);
 
+//	imprimir_estado_cola_listos();
 }
 
 void mandar_a_ejecutar(){//Enviar orden de ejecucion al primer ESI de la cola de listos
 
+
 	pthread_mutex_lock(&semaforo_pausa);
 	pthread_mutex_unlock(&semaforo_pausa);
 
+	pthread_mutex_lock(&semaforo_cola_listos);
 	if(list_is_empty(cola_de_listos)){
+		log_debug(log_planif, "La cola de listos esta vacia");
 		id_esi_activo = 0;
+		pthread_mutex_unlock(&semaforo_cola_listos);
 		return;
 	}
 
 	t_ready* esi_ejecucion = list_get(cola_de_listos, 0);
+	pthread_mutex_unlock(&semaforo_cola_listos);
 
 	log_trace(log_planif, "Se le va a dar la orden de ejecucion al ESI de ID %d", esi_ejecucion->ID);
 
@@ -369,7 +404,9 @@ void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){
 	desconectar_cliente(esi_ejecucion->socket);
 
 	// si esta en la cola de ready pasa esto
+	pthread_mutex_lock(&semaforo_cola_listos);
 	list_remove_and_destroy_by_condition(cola_de_listos, coincide_el_id, funcion_al_pedo);
+	pthread_mutex_unlock(&semaforo_cola_listos);
 
 	// si esta en la cola de bloqueados pasa esto
 	eliminar_de_bloqueados(esi_ejecucion);
@@ -393,7 +430,9 @@ void eliminar_de_bloqueados(t_ready* esi){
 		return list_any_satisfy(bloqueados_por_clave->bloqueados, es_el_esi);
 	}
 
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
 	t_bloqueados_por_clave* bloqueados_por_clave = list_find(colas_de_bloqueados, es_el_recurso_que_lo_tiene);
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
 	if(bloqueados_por_clave == NULL) return;
 
@@ -425,7 +464,7 @@ void actualizar_disponibilidad_recursos(int id_esi){
 	list_iterate(recursos_por_esi->recursos_asignados, actualizar_proximo_con_derecho);
 }
 
-int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
+t_bloqueados_por_clave* encontrar_bloqueados_para_la_clave(char* recurso){
 
 	bool es_el_recurso(void* elem){
 		t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
@@ -433,7 +472,17 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 		return string_equals_ignore_case(bloq->clave, recurso);
 	}
 
-	t_bloqueados_por_clave* bloqueados_de_la_clave = list_find(colas_de_bloqueados, es_el_recurso);
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
+	t_bloqueados_por_clave* resultado = list_find(colas_de_bloqueados, es_el_recurso);
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+	return resultado;
+}
+
+int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
+
+
+	t_bloqueados_por_clave* bloqueados_de_la_clave = encontrar_bloqueados_para_la_clave(recurso);
 
 	if(bloqueados_de_la_clave == NULL){
 		log_error(log_planif, "No se encontro la lista del recurso %s, wtf", recurso);
@@ -463,9 +512,19 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 
 	list_remove_and_destroy_by_condition(recursos_del_esi->recursos_asignados, es_el_recurso_asignado, funcion_al_pedo);
 
+	bool es_el_recurso(void* elem){
+		t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
+
+		return string_equals_ignore_case(bloq->clave, recurso);
+	}
+
 	if(id_esi_que_lo_libero == bloqueados_de_la_clave->id_proximo_esi
 			&& list_is_empty(bloqueados_de_la_clave->bloqueados)){
+
+		pthread_mutex_lock(&semaforo_cola_bloqueados);
 		list_remove_and_destroy_by_condition(colas_de_bloqueados, es_el_recurso, clave_destroyer);
+		pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
 	}else{
 		actualizar_privilegiado(bloqueados_de_la_clave);
 	}
@@ -510,7 +569,9 @@ void blocked_destroyer(void* elem){
 
 void actualizar_esperas(){
 
+	pthread_mutex_lock(&semaforo_cola_listos);
 	t_ready* primer_esi = list_remove(cola_de_listos, 0);
+	pthread_mutex_unlock(&semaforo_cola_listos);
 
 	primer_esi->tiempo_espera = 0.0;
 	primer_esi->ultima_rafaga_real += 1.0;
@@ -521,9 +582,11 @@ void actualizar_esperas(){
 		esi->tiempo_espera += 1.0;
 	}
 
+	pthread_mutex_lock(&semaforo_cola_listos);
 	list_iterate(cola_de_listos, aumentar_espera);
 
 	list_add_in_index(cola_de_listos, 0, primer_esi);//TODO: REVISAR SI ESTO HACE LO QUE QUEREMOS
+	pthread_mutex_unlock(&semaforo_cola_listos);
 
 }
 
@@ -561,6 +624,8 @@ float estimacion(t_ready* esi_ready){
 
 void comparar_desde(int indice_comparacion, bool (*funcion_comparacion)(void*, void*), t_ready* esi_ready){
 
+	pthread_mutex_lock(&semaforo_cola_listos);
+
 	list_add(cola_de_listos, esi_ready);
 
 	if(indice_comparacion == 0)
@@ -573,6 +638,7 @@ void comparar_desde(int indice_comparacion, bool (*funcion_comparacion)(void*, v
 		list_add_in_index(cola_de_listos, 0, primer_esi);//TODO: REVISAR SI ESTO HACE LO QUE QUEREMOS
 
 	}
+	pthread_mutex_unlock(&semaforo_cola_listos);
 
 }
 
@@ -599,12 +665,21 @@ void finalizar(){
 	log_destroy(log_planif);
 	config_destroy(archivo_config);
 
+	pthread_mutex_lock(&semaforo_cola_listos);
 	list_destroy(cola_de_listos);
+	pthread_mutex_unlock(&semaforo_cola_listos);
+
 	list_destroy(cola_finalizados);
+
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
 	list_destroy_and_destroy_elements(colas_de_bloqueados, clave_destroyer);
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
 	list_destroy_and_destroy_elements(colas_de_asignaciones, asignacion_destroyer);
 
 	pthread_mutex_destroy(&semaforo_pausa);
+	pthread_mutex_destroy(&semaforo_cola_bloqueados);
+	pthread_mutex_destroy(&semaforo_cola_listos);
 
 	exit(1);
 }
