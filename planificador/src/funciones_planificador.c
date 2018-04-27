@@ -260,7 +260,10 @@ void insertar_ordenado(t_ready* esi_ready){
 }
 
 float estimacion(t_ready* esi_ready){
-	return 0.0;//FIXME
+
+	//Estimacion actual = estimacion anterior * alfa + ( 1 - alfa) * real anterior
+
+	return esi_ready->ultima_estimacion * ALFA_PLANIFICACION + (1 - ALFA_PLANIFICACION) * esi_ready->ultima_rafaga_real;
 }
 
 void comparar_desde(int indice_comparacion, bool (*funcion_comparacion)(void*, void*), t_ready* esi_ready){
