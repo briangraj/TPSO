@@ -52,14 +52,22 @@ int main(int argc, char** argv) {
 
 				int resultado = informar_resultado_al_usuario(informe_ejecucion);
 
+				quedan_sentencias_por_ejecutar = verificar_sentencias_restantes(script);
+
+				if(!quedan_sentencias_por_ejecutar && resultado != FALLO_EN_EJECUCION){
+					log_trace(log_esi, "Se ejecutaron todas las sentencias correctamente. Congratulaciones!");
+
+					enviar_paquete(FIN_DEL_SCRIPT, SOCKET_PLANIFICADOR, 0, NULL);
+
+					break;
+				}
+
 				enviar_paquete(resultado, SOCKET_PLANIFICADOR, 0, NULL);
 
 				if(resultado == FALLO_EN_EJECUCION){
 					fclose(script);
 					finalizar();
 				}
-
-				quedan_sentencias_por_ejecutar = verificar_sentencias_restantes(script);
 
 				break;
 			}
@@ -74,10 +82,6 @@ int main(int argc, char** argv) {
 
 
 	}
-
-	log_trace(log_esi, "Se ejecutaron todas las sentencias correctamente. Congratulaciones!");
-
-	enviar_paquete(FIN_DEL_SCRIPT, SOCKET_PLANIFICADOR, 0, NULL);
 
 	fclose(script);
 
