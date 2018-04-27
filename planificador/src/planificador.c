@@ -37,8 +37,6 @@ int main(int argc, char* argv[]) {
 
 	}
 
-
-
 	// CREO SOCKET PARA ESCUCHAR CONEXIONES ENTRANTES
 
 	listener = crear_socket();
@@ -103,7 +101,11 @@ int main(int argc, char* argv[]) {
 						protocolo_cliente = recibir_protocolo(socket);
 
 						if(protocolo_cliente < 0){
+							if(socket == SOCKET_COORDINADOR){
+								log_error(log_planif, "Se perdio la conexion con el coordinador.");
 
+								finalizar();
+							}
 							desconectar_cliente(socket);
 						} else {
 
