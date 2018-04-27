@@ -157,28 +157,24 @@ void armar_nuevo_esi(int socket){
 void atender_protocolo(int protocolo, int socket_cliente){
 	int id = obtener_id_desde_socket(socket_cliente);
 
-	if(id != -1)
-		log_info(log, "Se recibio un mensaje del ESI de ID %d", id);
-
 	switch (protocolo){
+		case ENVIO_ID:
+			armar_nuevo_esi(socket_cliente);
+			break;
+		case OPERACION_SET:
+			atender_set(socket_cliente, id);
+			break;
 
-	case ENVIO_ID:
-		armar_nuevo_esi(socket_cliente);
-		break;
-	case OPERACION_SET:
-		atender_set(socket_cliente);
-		break;
+		case OPERACION_GET:
+			atender_get(socket_cliente, id);
+			break;
 
-	case OPERACION_GET:
-		atender_get(socket_cliente);
-		break;
+		case OPERACION_STORE:
+			atender_store(socket_cliente, id);
+			break;
 
-	case OPERACION_STORE:
-		atender_store(socket_cliente);
-		break;
-
-	default:
-		desconectar_cliente(socket_cliente);
+		default:
+			desconectar_cliente(socket_cliente);
 	}
 }
 
@@ -198,7 +194,7 @@ int obtener_id_desde_socket(int socket){
 	return -1;
 }
 
-void atender_get(int socket){
+void atender_get(int socket, int id_esi){
 	int tamanio;
 
 	recv(socket, &tamanio, sizeof(int), MSG_WAITALL);
@@ -207,7 +203,7 @@ void atender_get(int socket){
 
 	recv(socket, clave, tamanio, MSG_WAITALL);
 
-	log_info(log, "Se recibio la operacion GET sobre la clave %s del esi en el socket %d", clave, socket); // FIXME : Debe mutar a mostrar el ID del ESI
+	log_info(log, "Se recibio la operacion GET sobre la clave %s del esi de id %d", clave, id_esi);
 
 	int opcion_elegida = elegir_opcion();
 
@@ -216,7 +212,7 @@ void atender_get(int socket){
 	enviar_paquete(opcion_elegida, socket, 0, NULL);
 }
 
-void atender_store(int socket){
+void atender_store(int socket, int id_esi){
 	int tamanio;
 
 	recv(socket, &tamanio, sizeof(int), MSG_WAITALL);
@@ -225,7 +221,7 @@ void atender_store(int socket){
 
 	recv(socket, clave, tamanio, MSG_WAITALL);
 
-	log_info(log, "Se recibio la operacion STORE sobre la clave %s del esi en el socket %d", clave, socket); // FIXME : Debe mutar a mostrar el ID del ESI
+	log_info(log, "Se recibio la operacion STORE sobre la clave %s del esi de id %d", clave, id_esi);
 
 	int opcion_elegida = elegir_opcion();
 
@@ -234,7 +230,7 @@ void atender_store(int socket){
 	enviar_paquete(opcion_elegida, socket, 0, NULL);
 }
 
-void atender_set(int socket){
+void atender_set(int socket, int id_esi){
 	int tamanio_clave;
 
 	recv(socket, &tamanio_clave, sizeof(int), MSG_WAITALL);
@@ -251,7 +247,7 @@ void atender_set(int socket){
 
 	recv(socket, valor, tamanio_valor, MSG_WAITALL);
 
-	log_info(log, "Se recibio la operacion STORE sobre la clave %s con el valor %s del esi en el socket %d", clave, valor, socket); // FIXME : Debe mutar a mostrar el ID del ESI
+	log_info(log, "Se recibio la operacion SET sobre la clave %s con el valor %s del esi de id %d", clave, valor, id_esi);
 
 	int opcion_elegida = elegir_opcion();
 
