@@ -141,6 +141,16 @@ int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion, FILE*
 			 free(informe_ejecucion.sentencia_ejecutada);
 			 return EJECUCION_EXITOSA;
 
+		case STORE_INVALIDO:
+			log_error(log_esi, "Se intento hacer store sobre una clave que no posee el ESI");
+			free(informe_ejecucion.sentencia_ejecutada);
+			return FALLO_EN_EJECUCION;
+
+		case STORE_EXITOSO:
+			 log_trace(log_esi, "Se ejecuto correctamente la sentencia");
+			 free(informe_ejecucion.sentencia_ejecutada);
+			 return EJECUCION_EXITOSA;
+
 		case ERROR_TAMANIO_CLAVE:
 			 log_error(log_esi, "Se excedio el tamanio maximo de 40 caracteres para la clave");
 			 free(informe_ejecucion.sentencia_ejecutada);

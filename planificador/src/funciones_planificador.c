@@ -109,6 +109,9 @@ void atender_protocolo(int protocolo, int socket_cliente){
 		case GET_CLAVE:
 			atender_get_clave();
 			break;
+		case STORE_CLAVE:
+			atender_store();
+			break;
 	}
 
 }
@@ -123,12 +126,19 @@ void aniadir_a_colas_de_asignaciones(t_ready nuevo_esi){
 	list_add(colas_de_asignaciones, recursos_por_esi);
 }
 
-void atender_get_clave(){
-	int id_esi, tamanio_clave;
+int recibir_id_esi(){
+	int id_esi;
+
 	if(recv(SOCKET_COORDINADOR, &id_esi, sizeof(int), MSG_WAITALL)){
 		log_error(log_planif, "Se perdio la conexion con el coordinador");
 		finalizar();
 	}
+
+	return id_esi;
+}
+
+char* recibir_clave(){
+	int tamanio_clave;
 
 	if(recv(SOCKET_COORDINADOR, &tamanio_clave, sizeof(int), MSG_WAITALL)){
 		log_error(log_planif, "Se perdio la conexion con el coordinador");
@@ -141,6 +151,13 @@ void atender_get_clave(){
 		log_error(log_planif, "Se perdio la conexion con el coordinador");
 		finalizar();
 	}
+
+	return clave;
+}
+
+void atender_get_clave(){
+	int id_esi =recibir_id_esi();
+	char* clave = recibir_clave();
 
 	int resultado_get = intentar_asignar(id_esi, clave);
 
@@ -205,8 +222,7 @@ void asignar_recurso_al_esi(int id_esi, char* recurso){
 
 	if(recursos_por_esi == NULL){
 		log_error(log_planif, "La lista de asignaciones del esi %d no esta, wtf", id_esi);
-
-		return;
+		finalizar();
 	}
 
 	list_add(recursos_por_esi->recursos_asignados, recurso);
@@ -230,6 +246,19 @@ t_ready* esi_activo(){
 	}
 
 	return list_find(cola_de_listos, es_el_que_esta_ejecutando);
+}
+
+void atender_store(){
+	int id_esi = recibir_id_esi();
+	char* clave = recibir_clave();
+
+	int resultado_store = actualizar_cola_de_bloqueados_para(id_esi, clave);
+
+	if(enviar_paquete(resultado_store, SOCKET_COORDINADOR, 0, NULL) < 0){
+		log_error(log_planif, "Se perdio la conexion con el Coordinador");
+		finalizar();
+	}
+
 }
 
 void desconectar_cliente(int cliente){
@@ -364,8 +393,7 @@ void actualizar_disponibilidad_recursos(int id_esi){
 
 	if(recursos_por_esi == NULL){
 		log_error(log_planif, "No se encontro al esi %d en la cola de asignaciones, wtf", id_esi);
-
-		return;
+		finalizar();
 	}
 
 	void actualizar_proximo_con_derecho(void* elem){
@@ -377,7 +405,7 @@ void actualizar_disponibilidad_recursos(int id_esi){
 	list_iterate(recursos_por_esi->recursos_asignados, actualizar_proximo_con_derecho);
 }
 
-void actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
+int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 
 	bool es_el_recurso(void* elem){
 		t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
@@ -389,27 +417,25 @@ void actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso)
 
 	if(bloqueados_de_la_clave == NULL){
 		log_error(log_planif, "No se encontro la lista del recurso %s, wtf", recurso);
-
-		return;
+		finalizar();
 	}
 
 	if(id_esi_que_lo_libero == bloqueados_de_la_clave->id_proximo_esi
 			&& list_is_empty(bloqueados_de_la_clave->bloqueados)){
 		list_remove_and_destroy_by_condition(colas_de_bloqueados, es_el_recurso, clave_destroyer);
-		return;
+		return STORE_EXITOSO;
 	}
 
 	// el tipo que hizo store no tiene en verdad la clave!
 	// solo se llega a este if haciendo store, sino siempre va a coincidir el id
 	if(id_esi_que_lo_libero != bloqueados_de_la_clave->id_proximo_esi){
-		if(enviar_paquete(STORE_INVALIDO, SOCKET_COORDINADOR, 0, NULL) < 0){
-			log_error(log_planif, "Se perdio la conexion con el Coordinador");
 
-			return;
-		}
+		return STORE_INVALIDO;
 	}
 
 	actualizar_privilegiado(bloqueados_de_la_clave);
+
+	return STORE_EXITOSO;
 }
 
 void actualizar_privilegiado(t_bloqueados_por_clave* bloqueados_de_la_clave){

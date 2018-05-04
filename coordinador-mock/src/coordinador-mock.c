@@ -259,12 +259,45 @@ void atender_store(int socket, int id_esi){
 	recv(socket, clave, tamanio, MSG_WAITALL);
 
 	log_info(log, "Se recibio la operacion STORE sobre la clave %s del esi de id %d", clave, id_esi);
+	//MOCK
+//	int opcion_elegida = elegir_opcion();
+//
+//	free(clave);
+//
+//	enviar_paquete(opcion_elegida, socket, 0, NULL);
+	//FIN MOCK
 
-	int opcion_elegida = elegir_opcion();
+	int tam_paquete = 2* sizeof(int) + tamanio;
+	void* paquete = malloc(tam_paquete);
 
+	memcpy(paquete, &id_esi, sizeof(int));
+	memcpy(paquete + sizeof(int), &tamanio, sizeof(int));
+	memcpy(paquete + (2* sizeof(int)), clave, tamanio);
+
+	if(enviar_paquete(STORE_CLAVE, SOCKET_PLANIFICADOR, tam_paquete, paquete) == -1){
+		log_error(log, "Se perdio la conexion con el planificador");
+		enviar_paquete(ERROR_DE_COMUNICACION, socket, 0, NULL);
+		close(SOCKET_PLANIFICADOR);
+
+		free(paquete);
+		free(clave);
+
+		return;
+	}
+
+	free(paquete);
 	free(clave);
 
-	enviar_paquete(opcion_elegida, socket, 0, NULL);
+	int protocolo = recibir_protocolo(SOCKET_PLANIFICADOR);
+
+	if(protocolo == -1){
+		log_error(log, "Se perdio la conexion con el planificador");
+		enviar_paquete(ERROR_DE_COMUNICACION, socket, 0, NULL);
+		close(SOCKET_PLANIFICADOR);
+		return;
+	}
+
+	enviar_paquete(protocolo, socket, 0, NULL);
 }
 
 void atender_set(int socket, int id_esi){
