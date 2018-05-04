@@ -93,6 +93,10 @@ int main(int argc, char* argv[]) {
 									.estimacion_actual = 0.0
 							};
 
+							proximo_id ++;
+
+							aniadir_a_colas_de_asignaciones(nuevo_esi);
+
 							aniadir_a_listos(nuevo_esi);
 						}
 

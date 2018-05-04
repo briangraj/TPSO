@@ -46,6 +46,7 @@ fd_set master;   // conjunto maestro de descriptores de fichero		//Por comodidad
 t_list* cola_de_listos;
 t_list* colas_de_bloqueados;
 t_list* cola_finalizados;
+t_list* colas_de_asignaciones;
 
 int id_esi_activo;
 int proximo_id;
@@ -77,6 +78,11 @@ typedef struct{
 	t_list* bloqueados;
 }t_bloqueados_por_clave;
 
+typedef struct{
+	int id_esi;
+	t_list* recursos_asignados;
+}t_recursos_por_esi;
+
 // Funciones
 void			iniciar_planificador			(int loggear);
 void			leer_archivo_config				();
@@ -101,6 +107,8 @@ void 			ordenar_hrrn					(t_ready* esi_ready);
 void 			finalizar						();
 void 			clave_destroyer					(void* elemento);
 t_ready*		esi_activo						();
+void 			asignacion_destroyer			(void* elemento);
+void 			funcion_al_pedo					(void* esi);
 
 // Funciones MOCK
 

@@ -11,6 +11,7 @@ void iniciar_planificador(int loggear){
 	cola_de_listos = list_create();
 	cola_finalizados = list_create();
 	colas_de_bloqueados = list_create();
+	colas_de_asignaciones = list_create();
 
 }
 
@@ -112,6 +113,16 @@ void atender_protocolo(int protocolo, int socket_cliente){
 
 }
 
+void aniadir_a_colas_de_asignaciones(t_ready nuevo_esi){
+	t_recursos_por_esi* recursos_por_esi = (t_recursos_por_esi*) malloc(sizeof(t_recursos_por_esi));
+
+	recursos_por_esi->id_esi = nuevo_esi.ID;
+
+	recursos_por_esi->recursos_asignados = list_create();
+
+	list_add(colas_de_asignaciones, recursos_por_esi);
+}
+
 void atender_get_clave(){
 	int id_esi, tamanio_clave;
 	if(recv(SOCKET_COORDINADOR, &id_esi, sizeof(int), MSG_WAITALL)){
@@ -131,8 +142,84 @@ void atender_get_clave(){
 		finalizar();
 	}
 
-	//TODO: Terminar!! Revisar anotaciones
+	int resultado_get = intentar_asignar(id_esi, clave);
 
+	if(enviar_paquete(resultado_get, SOCKET_COORDINADOR, 0, NULL) < 0){
+		log_error(log_planif, "Se perdio la conexion con el coordinador");
+		finalizar();
+	}
+}
+
+int intentar_asignar(int id_esi, char* recurso){
+
+	bool es_el_recurso(void* elem){
+		t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
+
+		return string_equals_ignore_case(bloq->clave, recurso);
+	}
+
+	t_bloqueados_por_clave* bloqueados_por_clave = list_find(colas_de_bloqueados, es_el_recurso);
+
+	if(bloqueados_por_clave == NULL){
+		crear_entrada_y_asignar(id_esi, recurso);
+
+		return GET_EXITOSO;
+	}
+
+	// el de == 0 es el caso en donde estan todos los demas bloqueados por consola
+	if(bloqueados_por_clave->id_proximo_esi == id_esi || bloqueados_por_clave->id_proximo_esi == 0){
+		asignar_recurso_al_esi(id_esi, recurso);
+
+		return GET_EXITOSO;
+	}
+
+	t_ready* esi = esi_activo();
+
+	list_add(bloqueados_por_clave, crear_t_bloqueado(esi));
+
+	list_remove_and_destroy_element(cola_de_listos, 0, funcion_al_pedo);
+
+	return GET_BLOQUEANTE;
+}
+
+void crear_entrada_y_asignar(int id_esi, char* recurso){
+	t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) malloc(sizeof(t_bloqueados_por_clave));
+
+	bloqueados_por_clave->bloqueados = list_create();
+	bloqueados_por_clave->clave = recurso;
+	bloqueados_por_clave->id_proximo_esi = id_esi;
+
+	list_add(colas_de_bloqueados, bloqueados_por_clave);
+
+	asignar_recurso_al_esi(id_esi, recurso);
+}
+
+void asignar_recurso_al_esi(int id_esi, char* recurso){
+	bool es_del_esi(void* elem){
+		t_recursos_por_esi* rec = (t_recursos_por_esi*) elem;
+
+		return rec->id_esi == id_esi;
+	}
+
+	t_recursos_por_esi* recursos_por_esi = list_find(colas_de_asignaciones, es_del_esi);
+
+	if(recursos_por_esi == NULL){
+		log_error(log_planif, "La lista de asignaciones del esi %d no esta, wtf", id_esi);
+
+		return;
+	}
+
+	list_add(recursos_por_esi->recursos_asignados, recurso);
+}
+
+t_blocked* crear_t_bloqueado(t_ready* esi_ready){
+	t_blocked* bloqueado = (t_blocked*) malloc (sizeof(t_blocked));
+
+	bloqueado->bloqueado_por_consola = false;
+	bloqueado->bloqueado_por_ejecucion = true;
+	memcpy(bloqueado->info_ejecucion, esi_ready, sizeof(t_ready));
+
+	return bloqueado;
 }
 
 t_ready* esi_activo(){
@@ -232,12 +319,131 @@ void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){
 		return esi->ID == esi_finalizado->ID;
 	}
 
-	void funcion_al_pedo(void* esi){}
+	desconectar_cliente(esi_ejecucion->socket);
 
+	// si esta en la cola de ready pasa esto
 	list_remove_and_destroy_by_condition(cola_de_listos, coincide_el_id, funcion_al_pedo);
 
-	//TODO: mandar a liberar recursos por id
+	// si esta en la cola de bloqueados pasa esto
+	eliminar_de_bloqueados(esi_ejecucion);
 
+	actualizar_disponibilidad_recursos(esi_finalizado->ID);
+
+	list_remove_and_destroy_by_condition(colas_de_asignaciones, coincide_el_id, asignacion_destroyer);
+
+}
+
+void eliminar_de_bloqueados(t_ready* esi){
+	bool es_el_esi(void* elem){
+
+		return *elem == esi->ID;
+	}
+
+	bool es_el_recurso_que_lo_tiene(void* elem){
+		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
+
+		return list_any(bloqueados_por_clave->bloqueados, es_el_esi);
+	}
+
+	t_bloqueados_por_clave* bloqueados_por_clave = list_find(colas_de_bloqueados, es_el_recurso_que_lo_tiene);
+
+	if(bloqueados_por_clave == NULL) return;
+
+	list_remove_and_destroy_by_condition(bloqueados_por_clave->bloqueados, es_el_esi, blocked_destroyer);
+}
+
+void actualizar_disponibilidad_recursos(int id_esi){
+
+	bool es_esi_buscado(void* elem){
+		t_recursos_por_esi* recursos_por_esi = (t_recursos_por_esi*) elem;
+
+		return recursos_por_esi->id_esi == id_esi;
+	}
+
+	t_recursos_por_esi* recursos_por_esi = list_find(colas_de_asignaciones, es_esi_buscado);
+
+	if(recursos_por_esi == NULL){
+		log_error(log_planif, "No se encontro al esi %d en la cola de asignaciones, wtf", id_esi);
+
+		return;
+	}
+
+	void actualizar_proximo_con_derecho(void* elem){
+		char* recurso = (char*) elem;
+
+		actualizar_cola_de_bloqueados_para(id_esi, recurso);
+	}
+
+	list_iterate(recursos_por_esi->recursos_asignados, actualizar_proximo_con_derecho);
+}
+
+void actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
+
+	bool es_el_recurso(void* elem){
+		t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
+
+		return string_equals_ignore_case(bloq->clave, recurso);
+	}
+
+	t_bloqueados_por_clave* bloqueados_de_la_clave = list_find(colas_de_bloqueados, es_el_recurso);
+
+	if(bloqueados_de_la_clave == NULL){
+		log_error(log_planif, "No se encontro la lista del recurso %s, wtf", recurso);
+
+		return;
+	}
+
+	if(id_esi_que_lo_libero == bloqueados_de_la_clave->id_proximo_esi
+			&& list_is_empty(bloqueados_de_la_clave->bloqueados)){
+		list_remove_and_destroy_by_condition(colas_de_bloqueados, es_el_recurso, clave_destroyer);
+		return;
+	}
+
+	// el tipo que hizo store no tiene en verdad la clave!
+	// solo se llega a este if haciendo store, sino siempre va a coincidir el id
+	if(id_esi_que_lo_libero != bloqueados_de_la_clave->id_proximo_esi){
+		if(enviar_paquete(STORE_INVALIDO, SOCKET_COORDINADOR, 0, NULL) < 0){
+			log_error(log_planif, "Se perdio la conexion con el Coordinador");
+
+			return;
+		}
+	}
+
+	actualizar_privilegiado(bloqueados_de_la_clave);
+}
+
+void actualizar_privilegiado(t_bloqueados_por_clave* bloqueados_de_la_clave){
+
+	t_blocked* proximo_con_derecho = proximo_no_bloqueado_por_consola(bloqueados_de_la_clave->bloqueados);
+
+	if(proximo_con_derecho == NULL){
+		bloqueados_de_la_clave->id_proximo_esi = 0; // estan todos bloqueados por consola
+
+		return;
+	}
+
+	bloqueados_de_la_clave->id_proximo_esi = proximo_con_derecho->info_ejecucion->ID;
+
+	aniadir_a_listos(*(proximo_con_derecho->info_ejecucion));
+
+	blocked_destroyer(proximo_con_derecho);
+
+}
+
+t_blocked* proximo_no_bloqueado_por_consola(t_list* bloqueados){
+
+	bool proximo(void* elem){
+		t_blocked* proximo = (t_blocked*) elem;
+
+		return !proximo->bloqueado_por_consola;
+	}
+
+	return list_find(bloqueados, proximo);
+
+}
+
+void blocked_destroyer(t_blocked* bloqueado){
+	free(bloqueado->info_ejecucion);
 }
 
 void actualizar_esperas(){
@@ -334,8 +540,19 @@ void finalizar(){
 	list_destroy(cola_de_listos);
 	list_destroy(cola_finalizados);
 	list_destroy_and_destroy_elements(colas_de_bloqueados, clave_destroyer);
+	list_destroy_and_destroy_elements(colas_de_asignaciones, asignacion_destroyer);
 
 	exit(1);
+}
+
+void asignacion_destroyer(void* elemento){
+	t_recursos_por_esi* recursos_por_esi = (t_recursos_por_esi*) elemento;
+
+	void recursos_destroyer(void* elem){
+		free(elem);
+	}
+
+	list_destroy_and_destroy_elements(recursos_por_esi->recursos_asignados, recursos_destroyer);
 }
 
 void clave_destroyer(void* elemento){
@@ -345,6 +562,8 @@ void clave_destroyer(void* elemento){
 }
 
 
+void funcion_al_pedo(void* esi){}
+
 // MOCKS
 
 void ejecutar_mock(int socket_cliente){
@@ -352,11 +571,6 @@ void ejecutar_mock(int socket_cliente){
 	enviar_paquete(EJECUTAR_SENTENCIA, socket_cliente, 0 , NULL);
 
 }
-
-
-
-
-
 
 
 
