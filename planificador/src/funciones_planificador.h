@@ -48,6 +48,8 @@ t_list* colas_de_bloqueados;
 t_list* cola_finalizados;
 t_list* colas_de_asignaciones;
 
+pthread_mutex_t semaforo_pausa;
+
 int id_esi_activo;
 int proximo_id;
 
@@ -108,8 +110,19 @@ void 			finalizar						();
 void 			clave_destroyer					(void* elemento);
 t_ready*		esi_activo						();
 void 			asignacion_destroyer			(void* elemento);
+t_blocked* 		crear_t_bloqueado				(t_ready* esi_ready);
+void 			eliminar_de_bloqueados			(t_ready* esi);
+t_blocked* 		proximo_no_bloqueado_por_consola(t_list* bloqueados);
+void 			blocked_destroyer				(void* elem);
 void 			funcion_al_pedo					(void* esi);
-
+void 			actualizar_disponibilidad_recursos(int id_esi);
+int 			intentar_asignar				(int id_esi,char* clave);
+void 			atender_get_clave				();
+void 			atender_store					();
+void 			asignar_recurso_al_esi			(int id_esi, char* recurso);
+void 			crear_entrada_y_asignar			(int id_esi, char* recurso);
+void 			actualizar_privilegiado			(t_bloqueados_por_clave* bloqueados_de_la_clave);
+int 			actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso);
 // Funciones MOCK
 
 void 			ejecutar_mock					(int socket_cliente);

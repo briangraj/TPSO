@@ -128,6 +128,10 @@ void atender_handshake(int socket_cliente){
 		if(remitente == ESI)
 			log_trace(log, "Se realizo el handshake con el ESI del socket %d", socket_cliente);
 
+		else if(remitente == CONSOLA_PLANIFICADOR){
+			log_trace(log, "Se realizo el handshake con la consola del Planificador en el socket %d", socket_cliente);
+			SOCKET_CONSOLA_PLANIFICADOR = socket_cliente;
+		}
 		else{
 			log_trace(log, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
 			SOCKET_PLANIFICADOR = socket_cliente;
@@ -201,9 +205,13 @@ void atender_get(int socket, int id_esi){
 
 	recv(socket, &tamanio, sizeof(int), MSG_WAITALL);
 
+	log_debug(log, "Recibi el tamanio de clave %d", tamanio);
+
 	char* clave = string_new();
 
 	recv(socket, clave, tamanio, MSG_WAITALL);
+
+	log_debug(log, "Recibi la clave %s", clave);
 
 	log_info(log, "Se recibio la operacion GET sobre la clave %s del esi de id %d", clave, id_esi);
 
@@ -319,13 +327,13 @@ void atender_set(int socket, int id_esi){
 
 	log_info(log, "Se recibio la operacion SET sobre la clave %s con el valor %s del esi de id %d", clave, valor, id_esi);
 
-	int opcion_elegida = elegir_opcion();
-
-	free(clave);
-
-	free(valor);
-
-	enviar_paquete(opcion_elegida, socket, 0, NULL);
+//	int opcion_elegida = elegir_opcion();
+//
+//	free(clave);
+//
+//	free(valor);
+//
+	enviar_paquete(EJECUCION_EXITOSA, socket, 0, NULL);
 }
 
 int elegir_opcion(){

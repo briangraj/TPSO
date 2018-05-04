@@ -43,14 +43,13 @@ int				com_deadlock					(char* parametro);
 t_comando comandos[9];
 
 
-
 //FUNCIONES
 void			levantar_consola				(void* param);
 void			setear_comandos					();
 char*			stripwhite						(char* string);
 int 			ejecutar_linea					(char* linea);
 t_comando*		find_command					(char* nombre);
-
+void 			imprimir						(char* cadena);
 
 
 

@@ -50,6 +50,7 @@ typedef enum {
 typedef enum {
 	ESI,
 	PLANIFICADOR,
+	CONSOLA_PLANIFICADOR,
 	COORDINADOR,
 	INSTANCIA
 

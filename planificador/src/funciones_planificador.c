@@ -13,6 +13,7 @@ void iniciar_planificador(int loggear){
 	colas_de_bloqueados = list_create();
 	colas_de_asignaciones = list_create();
 
+	pthread_mutex_init(&semaforo_pausa, NULL);
 }
 
 void leer_archivo_config(){
@@ -96,24 +97,28 @@ void atender_handshake(int socket_cliente){
 
 void atender_protocolo(int protocolo, int socket_cliente){
 //	// SOLO PARA PROBAR QUE ANDE EL ESI
+
 	switch (protocolo){
 		case EJECUCION_EXITOSA:
 			mandar_a_ejecutar();
 			break;
 		case FALLO_EN_EJECUCION:
 			mover_a_finalizados(esi_activo(), "Fallo en la ejecucion de una instruccion del script");
+			mandar_a_ejecutar();
 			break;
 		case FIN_DEL_SCRIPT:
 			mover_a_finalizados(esi_activo(), "Finalizado con exito");
+			mandar_a_ejecutar();
 			break;
 		case GET_CLAVE:
+			log_debug(log_planif, "Recibi GET_CLAVE");
 			atender_get_clave();
 			break;
 		case STORE_CLAVE:
 			atender_store();
 			break;
+		// TODO: PREGUNTAR A LOS MUCHACHOS POR SET_CLAVE
 	}
-
 }
 
 void aniadir_a_colas_de_asignaciones(t_ready nuevo_esi){
@@ -129,7 +134,7 @@ void aniadir_a_colas_de_asignaciones(t_ready nuevo_esi){
 int recibir_id_esi(){
 	int id_esi;
 
-	if(recv(SOCKET_COORDINADOR, &id_esi, sizeof(int), MSG_WAITALL)){
+	if(recv(SOCKET_COORDINADOR, &id_esi, sizeof(int), MSG_WAITALL) < 0){
 		log_error(log_planif, "Se perdio la conexion con el coordinador");
 		finalizar();
 	}
@@ -140,14 +145,14 @@ int recibir_id_esi(){
 char* recibir_clave(){
 	int tamanio_clave;
 
-	if(recv(SOCKET_COORDINADOR, &tamanio_clave, sizeof(int), MSG_WAITALL)){
+	if(recv(SOCKET_COORDINADOR, &tamanio_clave, sizeof(int), MSG_WAITALL) < 0){
 		log_error(log_planif, "Se perdio la conexion con el coordinador");
 		finalizar();
 	}
 
 	char* clave = (char*) malloc(tamanio_clave);
 
-	if(recv(SOCKET_COORDINADOR, clave, tamanio_clave, MSG_WAITALL)){
+	if(recv(SOCKET_COORDINADOR, clave, tamanio_clave, MSG_WAITALL) < 0){
 		log_error(log_planif, "Se perdio la conexion con el coordinador");
 		finalizar();
 	}
@@ -156,7 +161,8 @@ char* recibir_clave(){
 }
 
 void atender_get_clave(){
-	int id_esi =recibir_id_esi();
+	int id_esi = recibir_id_esi();
+
 	char* clave = recibir_clave();
 
 	int resultado_get = intentar_asignar(id_esi, clave);
@@ -192,7 +198,7 @@ int intentar_asignar(int id_esi, char* recurso){
 
 	t_ready* esi = esi_activo();
 
-	list_add(bloqueados_por_clave, crear_t_bloqueado(esi));
+	list_add(bloqueados_por_clave->bloqueados, crear_t_bloqueado(esi));
 
 	list_remove_and_destroy_element(cola_de_listos, 0, funcion_al_pedo);
 
@@ -316,6 +322,9 @@ void planificar(t_ready* esi_ready){
 
 void mandar_a_ejecutar(){//Enviar orden de ejecucion al primer ESI de la cola de listos
 
+	pthread_mutex_lock(&semaforo_pausa);
+	pthread_mutex_unlock(&semaforo_pausa);
+
 	if(list_is_empty(cola_de_listos)){
 		id_esi_activo = 0;
 		return;
@@ -364,14 +373,15 @@ void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){
 
 void eliminar_de_bloqueados(t_ready* esi){
 	bool es_el_esi(void* elem){
+		int* p_id = (int*) elem;
 
-		return *elem == esi->ID;
+		return *p_id == esi->ID;
 	}
 
 	bool es_el_recurso_que_lo_tiene(void* elem){
 		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
 
-		return list_any(bloqueados_por_clave->bloqueados, es_el_esi);
+		return list_any_satisfy(bloqueados_por_clave->bloqueados, es_el_esi);
 	}
 
 	t_bloqueados_por_clave* bloqueados_por_clave = list_find(colas_de_bloqueados, es_el_recurso_que_lo_tiene);
@@ -379,6 +389,7 @@ void eliminar_de_bloqueados(t_ready* esi){
 	if(bloqueados_por_clave == NULL) return;
 
 	list_remove_and_destroy_by_condition(bloqueados_por_clave->bloqueados, es_el_esi, blocked_destroyer);
+
 }
 
 void actualizar_disponibilidad_recursos(int id_esi){
@@ -420,12 +431,6 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 		finalizar();
 	}
 
-	if(id_esi_que_lo_libero == bloqueados_de_la_clave->id_proximo_esi
-			&& list_is_empty(bloqueados_de_la_clave->bloqueados)){
-		list_remove_and_destroy_by_condition(colas_de_bloqueados, es_el_recurso, clave_destroyer);
-		return STORE_EXITOSO;
-	}
-
 	// el tipo que hizo store no tiene en verdad la clave!
 	// solo se llega a este if haciendo store, sino siempre va a coincidir el id
 	if(id_esi_que_lo_libero != bloqueados_de_la_clave->id_proximo_esi){
@@ -433,7 +438,28 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 		return STORE_INVALIDO;
 	}
 
-	actualizar_privilegiado(bloqueados_de_la_clave);
+	bool es_el_esi_con_el_recurso(void* elem){
+		t_recursos_por_esi* rec = (t_recursos_por_esi*)elem;
+
+		return rec->id_esi == id_esi_que_lo_libero;
+	}
+
+	t_recursos_por_esi* recursos_del_esi = list_find(colas_de_asignaciones, es_el_esi_con_el_recurso);
+
+	bool es_el_recurso_asignado(void* elem){
+		char* clave = (char*)elem;
+
+		return string_equals_ignore_case(clave, recurso);
+	}
+
+	list_remove_and_destroy_by_condition(recursos_del_esi->recursos_asignados, es_el_recurso_asignado, funcion_al_pedo);
+
+	if(id_esi_que_lo_libero == bloqueados_de_la_clave->id_proximo_esi
+			&& list_is_empty(bloqueados_de_la_clave->bloqueados)){
+		list_remove_and_destroy_by_condition(colas_de_bloqueados, es_el_recurso, clave_destroyer);
+	}else{
+		actualizar_privilegiado(bloqueados_de_la_clave);
+	}
 
 	return STORE_EXITOSO;
 }
@@ -468,7 +494,8 @@ t_blocked* proximo_no_bloqueado_por_consola(t_list* bloqueados){
 
 }
 
-void blocked_destroyer(t_blocked* bloqueado){
+void blocked_destroyer(void* elem){
+	t_blocked* bloqueado = (t_blocked*) elem;
 	free(bloqueado->info_ejecucion);
 }
 
@@ -568,17 +595,15 @@ void finalizar(){
 	list_destroy_and_destroy_elements(colas_de_bloqueados, clave_destroyer);
 	list_destroy_and_destroy_elements(colas_de_asignaciones, asignacion_destroyer);
 
+	pthread_mutex_destroy(&semaforo_pausa);
+
 	exit(1);
 }
 
 void asignacion_destroyer(void* elemento){
 	t_recursos_por_esi* recursos_por_esi = (t_recursos_por_esi*) elemento;
 
-	void recursos_destroyer(void* elem){
-		free(elem);
-	}
-
-	list_destroy_and_destroy_elements(recursos_por_esi->recursos_asignados, recursos_destroyer);
+	list_destroy_and_destroy_elements(recursos_por_esi->recursos_asignados, funcion_al_pedo);
 }
 
 void clave_destroyer(void* elemento){

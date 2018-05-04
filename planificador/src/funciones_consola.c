@@ -144,14 +144,27 @@ t_comando* find_command (char* nombre){
   return ((t_comando *) NULL);
 }
 
+void imprimir(char* cadena){
+	printf("%s\n", cadena);
+	fflush(stdout);
+}
 
 //COMANDOS
 
 int	com_pausar(char* parametro){
-	printf("El comando pausar recibió como parametro %s \n", parametro);
+
+	pthread_mutex_lock(&semaforo_pausa);
+
+	imprimir("El planificador esta en pausa, escriba continuar para reanudar su ejecucion.");
+
 	return 0;
 }
 int	com_continuar(char* parametro){
+
+	pthread_mutex_unlock(&semaforo_pausa);
+
+	imprimir("El planificador reanudo su ejecucion.");
+
 	return 0;
 }
 int	com_bloquear(char* parametro){
