@@ -1,5 +1,12 @@
 #include "funciones_planificador.h"
 
+void signal_handler(int sig_num){
+	if(sig_num == SIGUSR1){
+		log_warning(log_planif, "Se recibió la señal para finalizar el planificador");
+		finalizar();
+	}
+}
+
 void iniciar_planificador(int loggear){
 	log_planif = log_create("Planificador.log", "Planificador", loggear, LOG_LEVEL_TRACE);
 
@@ -14,6 +21,8 @@ void iniciar_planificador(int loggear){
 	colas_de_asignaciones = list_create();
 
 	pthread_mutex_init(&semaforo_pausa, NULL);
+
+	PLANIFICADOR_PID = getpid();
 }
 
 void leer_archivo_config(){

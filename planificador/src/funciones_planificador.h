@@ -21,6 +21,8 @@
 #include <sys/types.h>
 #include <sys/select.h>
 #include <conexiones/threads.h>
+#include <sys/types.h>
+#include <signal.h>
 
 typedef enum{
 	SJF_SD,
@@ -35,6 +37,8 @@ int PUERTO_COORDINADOR;
 int SOCKET_COORDINADOR;
 int ESTIMACION_INICIAL;
 int ALFA_PLANIFICACION;
+int PLANIFICADOR_PID;
+
 t_algoritmo ALGORITMO_PLANIFICACION;
 
 t_log* log_planif;
@@ -86,6 +90,7 @@ typedef struct{
 }t_recursos_por_esi;
 
 // Funciones
+void 			signal_handler					(int sig_num);
 void			iniciar_planificador			(int loggear);
 void			leer_archivo_config				();
 void			aniadir_cliente					(fd_set* master, int cliente, int* fdmax);

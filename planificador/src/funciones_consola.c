@@ -19,6 +19,7 @@ void levantar_consola(void * param){
 	    linea = stripwhite(linea);
 
 	    if(!strncmp(linea, "exit", 4)) {
+	       kill(PLANIFICADOR_PID, SIGUSR1);
 	       free(linea);
 	       break;
 	    }
