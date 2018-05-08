@@ -21,6 +21,7 @@ typedef struct {
 	int nro_entrada;
 	char* clave;
 	int tamanio_clave;
+	void* valor;//se deberia levantar con mmap
 }t_entrada;
 
 char* IP_COORDINADOR;
@@ -30,10 +31,17 @@ int TAMANIO_ENTRADA;
 int MI_ID;
 int socket_coordinador;
 
+void (*almacenar_clave)(char*, char*);
+
+//para reemplazo circular
+t_entrada* entrada_a_reemplazar;
+
 t_log* log;
 t_list* tabla_de_entradas;
 
+void inicializar();
 void leer_config();
+void cargar_tabla();
 void conectar_con_coordinador();
 void configuracion_entradas();
 void escuchar_coordinador();
@@ -41,5 +49,6 @@ void leer_protocolo(int protocolo);
 void configuracion_entradas();
 void crear_tabla_de_entradas();
 void recibir_set();
+void circular(char* clave, char* valor);
 
 #endif /* SRC_INSTANCIA_H_ */

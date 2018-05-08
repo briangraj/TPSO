@@ -8,9 +8,7 @@
 #include "instancia.h"
 
 int main(int argc, char **argv){
-	log = log_create("DataNode.log", "DataNode", 1, LOG_LEVEL_TRACE);
-
-	leer_config();
+	inicializar();
 
 	conectar_con_coordinador();
 
@@ -21,13 +19,30 @@ int main(int argc, char **argv){
 	return 0;
 }
 
+void inicializar(){
+	log = log_create("DataNode.log", "DataNode", 1, LOG_LEVEL_TRACE);
+
+	leer_config();
+
+	cargar_tabla();
+}
+
 void leer_config(){
 	t_config* archivo_config = config_create(PATH_CONFIG);
 	IP_COORDINADOR= string_new();
 	string_append(&IP_COORDINADOR, config_get_string_value(archivo_config, "IP_COORDINADOR"));
 	PUERTO_COORDINADOR = config_get_int_value(archivo_config, "PUERTO_COORDINADOR");
 	MI_ID = config_get_int_value(archivo_config, "ID");
+
+	//TODO esto hay que hacerlo que extraerlo
+	almacenar_clave = &circular;
+	entrada_a_reemplazar = list_get(tabla_de_entradas, 0);//TODO hay que ver donde va
+
 	config_destroy(archivo_config);
+}
+
+void cargar_tabla(){
+	//TODO cuando deberia leer de disco?
 }
 
 void conectar_con_coordinador(){
@@ -92,7 +107,20 @@ void crear_tabla_de_entradas(){
 void recibir_set(){
 	char* clave = recibir_string(socket_coordinador);
 	char* valor = recibir_string(socket_coordinador);
-	//falta decidir como guardar la clave
+	// TODO decidir como guardar la clave
+	almacenar_clave(clave, valor);
 }
 
+void circular(char* clave, char* valor){
+	//TODO faltan verificaciones: tamaño clave, espacio suficiente para almacenar valor
+	entrada_a_reemplazar->clave;
+	//TODO ver si el valor quepa en una entrada, sino hay que dividirlo
+	int tamanio_valor = string_length(valor);
+	entrada_a_reemplazar->tamanio_clave = tamanio_valor;
+	memcpy(entrada_a_reemplazar, valor, tamanio_valor);
 
+	int entradas_ocupadas = tamanio_valor / TAMANIO_ENTRADA;
+	//TODO falta redondear
+
+	entrada_a_reemplazar = list_get(tabla_de_entradas, entrada_a_reemplazar->nro_entrada + entradas_ocupadas);
+}
