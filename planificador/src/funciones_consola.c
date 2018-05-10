@@ -224,8 +224,6 @@ int	com_bloquear(char* parametro){
 
 	pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
-	imprimir_cola_bloqueados(bloqueados_por_clave->clave);
-
 	//Ahora sacamos al ESI de la cola de listos
 
 	pthread_mutex_lock(&semaforo_cola_listos);
@@ -339,7 +337,17 @@ int	com_listar(char* parametro){
 
 	liberar_parametros(parametros, 1);
 
-	//TODO: Verificar si existe la clave solicitada
+	bool es_la_clave(void* elem){
+		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
+
+		return string_equals_ignore_case(bloqueados_por_clave->clave, clave);
+	}
+
+	if(!list_any_satisfy(colas_de_bloqueados, es_la_clave)){
+		imprimir("No se encontro la clave solicitada");
+		free(clave);
+		return 0;
+	}
 
 	imprimir_cola_bloqueados(clave);
 
@@ -402,7 +410,7 @@ void imprimir_cola_bloqueados(char* clave){
 	bool es_la_clave(void* elem){
 		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
 
-		return bloqueados_por_clave->clave == clave;
+		return string_equals_ignore_case(bloqueados_por_clave->clave, clave);
 	}
 
 	pthread_mutex_lock(&semaforo_cola_bloqueados);
