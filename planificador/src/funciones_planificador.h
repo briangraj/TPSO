@@ -57,6 +57,7 @@ t_list* colas_de_asignaciones;
 pthread_mutex_t semaforo_pausa;
 pthread_mutex_t semaforo_cola_bloqueados;
 pthread_mutex_t semaforo_cola_listos;
+pthread_mutex_t semaforo_asignaciones;
 
 int id_esi_activo;
 int proximo_id;
@@ -135,6 +136,8 @@ void 						actualizar_privilegiado						(t_bloqueados_por_clave* bloqueados_de_l
 int 						actualizar_cola_de_bloqueados_para			(int id_esi_que_lo_libero, char* recurso);
 t_bloqueados_por_clave* 	encontrar_bloqueados_para_la_clave			(char* recurso);
 void 						imprimir_estado_cola_listos					();
+bool 						verificar_tenencia_de_la_clave				(int id_esi, char* clave);
+void 						atender_set									();
 
 // Funciones MOCK
 

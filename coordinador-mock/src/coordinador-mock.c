@@ -327,13 +327,37 @@ void atender_set(int socket, int id_esi){
 
 	log_info(log, "Se recibio la operacion SET sobre la clave %s con el valor %s del esi de id %d", clave, valor, id_esi);
 
-//	int opcion_elegida = elegir_opcion();
-//
-//	free(clave);
-//
-//	free(valor);
-//
-	enviar_paquete(EJECUCION_EXITOSA, socket, 0, NULL);
+	int tam_paquete = 2* sizeof(int) + tamanio_clave;
+	void* paquete = malloc(tam_paquete);
+
+	memcpy(paquete, &id_esi, sizeof(int));
+	memcpy(paquete + sizeof(int), &tamanio_clave, sizeof(int));
+	memcpy(paquete + (2* sizeof(int)), clave, tamanio_clave);
+
+	if(enviar_paquete(SET_CLAVE, SOCKET_PLANIFICADOR, tam_paquete, paquete) == -1){
+		log_error(log, "Se perdio la conexion con el planificador");
+		enviar_paquete(ERROR_DE_COMUNICACION, socket, 0, NULL);
+		close(SOCKET_PLANIFICADOR);
+
+		free(paquete);
+		free(clave);
+
+		return;
+	}
+
+	free(paquete);
+	free(clave);
+
+	int protocolo = recibir_protocolo(SOCKET_PLANIFICADOR);
+
+	if(protocolo == -1){
+		log_error(log, "Se perdio la conexion con el planificador");
+		enviar_paquete(ERROR_DE_COMUNICACION, socket, 0, NULL);
+		close(SOCKET_PLANIFICADOR);
+		return;
+	}
+
+	enviar_paquete(protocolo, socket, 0, NULL);
 }
 
 int elegir_opcion(){
