@@ -17,7 +17,7 @@
 #include <readline/rltypedefs.h>
 #include <readline/chardefs.h>
 #include "funciones_planificador.h"
-
+#include <conexiones/estructuras_coord.h>
 
 //ESTRUCTURAS
 typedef struct {
@@ -26,6 +26,8 @@ typedef struct {
 	char* descripcion;
 }t_comando;
 
+//VARIABLES GLOBALES
+int SOCKET_COORDINADOR_CONSOLA;
 
 
 //COMANDOS
@@ -53,6 +55,8 @@ void 			imprimir						(char* cadena);
 char** 			controlar_y_obtener_parametros	(char* parametro, int cantidad_parametros);
 void 			liberar_parametros				(char** parametros, int cantidad_parametros);
 void 			imprimir_cola_bloqueados		(char* clave);
+t_info_status* 	recibir_info_status				();
+void 			mostrar_info_status				(t_info_status* info_status);
 
 
 #endif /* FUNCIONES_CONSOLA_H_ */

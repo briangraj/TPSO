@@ -44,6 +44,7 @@ typedef enum {
 	SET_CLAVE,
 	SET_EXITOSO,
 	SET_INVALIDO,
+	STATUS, // Envio: [protocolo, tamanio_clave, clave] , clave es char*, incluye el /0 y esta considerado en el tamanio
 
 	//COORDINADOR - INSTANCIA
 	CONFIGURACION_ENTRADAS

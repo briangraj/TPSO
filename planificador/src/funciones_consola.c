@@ -9,6 +9,15 @@
 
 void levantar_consola(void * param){
 
+	if((SOCKET_COORDINADOR_CONSOLA = conectarse_a_coordinador(SOCKET_COORDINADOR_CONSOLA)) == -1){
+		imprimir("No se pudo conectar la consola al coordinador");
+
+		kill(PLANIFICADOR_PID, SIGUSR1);
+
+		exit(1);
+	}
+
+
 	setear_comandos();
 
 	  char * linea;
@@ -19,8 +28,9 @@ void levantar_consola(void * param){
 	    linea = stripwhite(linea);
 
 	    if(!strncmp(linea, "exit", 4)) {
-	       kill(PLANIFICADOR_PID, SIGUSR1);
 	       free(linea);
+	       kill(PLANIFICADOR_PID, SIGUSR1);
+	       close(SOCKET_COORDINADOR_CONSOLA);
 	       break;
 	    }
 
@@ -360,6 +370,13 @@ int	com_kill(char* parametro){
 
 	char** parametros = controlar_y_obtener_parametros(parametro, 1);
 
+	if(!parametros){
+		imprimir("Cantidad incorrecta de parámetros para el comando 'kill'");
+		imprimir("El unico parametro del comando es el 'id del esi'");
+
+		return 0;
+	}
+
 	int id_esi = atoi(parametros[0]);
 
 	liberar_parametros(parametros, 1);
@@ -381,6 +398,68 @@ int	com_kill(char* parametro){
 }
 
 int	com_status(char* parametro){
+	char** parametros = controlar_y_obtener_parametros(parametro, 1);
+
+	if(!parametros){
+		imprimir("Cantidad incorrecta de parámetros para el comando 'status'");
+		imprimir("El unico parametro del comando es la 'clave'");
+
+		return 0;
+	}
+
+	char* clave = strdup(parametros[0]);
+
+	liberar_parametros(parametros, 1);
+
+	int tamanio_clave = strlen(clave) + 1;
+
+	int tamanio_paquete = sizeof(int) + tamanio_clave;
+
+	void* paquete = malloc(tamanio_paquete);
+
+	memcpy(paquete, &tamanio_clave, sizeof(int));
+
+	memcpy(paquete + sizeof(int), clave, tamanio_clave);
+
+	if(enviar_paquete(STATUS, SOCKET_COORDINADOR, tamanio_paquete, paquete) < 0){
+		free(parametro); // que es free(linea);
+
+		imprimir("Se perdio la conexion con el coordinador");
+
+		log_error(log_planif, "Se perdio la conexion con el coordinador");
+
+		kill(PLANIFICADOR_PID, SIGUSR1);
+
+		close(SOCKET_COORDINADOR_CONSOLA);
+
+		exit(1);
+	}
+
+	t_info_status* info_status = recibir_info_status();
+
+	if(!info_status){
+		free(parametro); // que es free(linea);
+
+		imprimir("Se perdio la conexion con el coordinador");
+
+		log_error(log_planif, "Se perdio la conexion con el coordinador");
+
+		kill(PLANIFICADOR_PID, SIGUSR1);
+
+		close(SOCKET_COORDINADOR_CONSOLA);
+
+		exit(1);
+	}
+
+	mostrar_info_status(info_status);
+
+	imprimir_cola_bloqueados(clave);
+
+	free(clave);
+
+	free(info_status->mensaje);
+	free(info_status);
+
 	return 0;
 }
 
@@ -411,6 +490,60 @@ void liberar_parametros(char** parametros, int cantidad_parametros){
 	}
 
 	free(parametros);
+}
+
+t_info_status* recibir_info_status(){
+	int tamanio_mensaje;
+
+	if(recv(SOCKET_COORDINADOR_CONSOLA, &tamanio_mensaje, sizeof(int), MSG_WAITALL) < 0)
+		return NULL;
+
+	char* mensaje = malloc(tamanio_mensaje);
+
+	if(recv(SOCKET_COORDINADOR_CONSOLA, mensaje, tamanio_mensaje, MSG_WAITALL) < 0)
+		return NULL;
+
+	int id_instancia_actual;
+
+	if(recv(SOCKET_COORDINADOR_CONSOLA, &id_instancia_actual, sizeof(int), MSG_WAITALL) < 0)
+		return NULL;
+
+	int id_instancia_posible;
+
+	if(recv(SOCKET_COORDINADOR_CONSOLA, &id_instancia_posible, sizeof(int), MSG_WAITALL) < 0)
+		return NULL;
+
+	t_info_status* info_status = malloc(sizeof(t_info_status));
+
+	info_status->id_instancia_actual = id_instancia_actual;
+	info_status->id_instancia_posible = id_instancia_posible;
+	info_status->mensaje = mensaje;
+	info_status->tamanio_mensaje = tamanio_mensaje;
+
+	return info_status;
+}
+
+void mostrar_info_status(t_info_status* info_status){
+	char* mensaje = string_from_format("Valor : %s", info_status->mensaje);
+
+	imprimir(mensaje);
+
+	free(mensaje);
+
+	if(info_status->id_instancia_actual == -1)
+		mensaje = string_from_format("la clave no se encuentra actualmente en ninguna instancia.");
+	else
+		mensaje = string_from_format("La instancia actual en la que se encuentra tiene el ID : %d", info_status->id_instancia_actual );
+
+	imprimir(mensaje);
+
+	free(mensaje);
+
+	mensaje = string_from_format("La instancia donde se guardaria tiene el ID : %d", info_status->id_instancia_posible);
+
+	imprimir(mensaje);
+
+	free(mensaje);
 }
 
 void imprimir_cola_bloqueados(char* clave){
