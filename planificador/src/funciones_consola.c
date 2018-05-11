@@ -9,7 +9,7 @@
 
 void levantar_consola(void * param){
 
-	if((SOCKET_COORDINADOR_CONSOLA = conectarse_a_coordinador(SOCKET_COORDINADOR_CONSOLA)) == -1){
+	if((SOCKET_COORDINADOR_CONSOLA = conectarse_a_coordinador(CONSOLA_PLANIFICADOR)) == -1){
 		imprimir("No se pudo conectar la consola al coordinador");
 
 		kill(PLANIFICADOR_PID, SIGUSR1);
@@ -421,8 +421,8 @@ int	com_status(char* parametro){
 
 	memcpy(paquete + sizeof(int), clave, tamanio_clave);
 
-	if(enviar_paquete(STATUS, SOCKET_COORDINADOR, tamanio_paquete, paquete) < 0){
-		free(parametro); // que es free(linea);
+	if(enviar_paquete(STATUS, SOCKET_COORDINADOR_CONSOLA, tamanio_paquete, paquete) < 0){
+//		free(parametro); // que es free(linea);
 
 		imprimir("Se perdio la conexion con el coordinador");
 
@@ -438,7 +438,7 @@ int	com_status(char* parametro){
 	t_info_status* info_status = recibir_info_status();
 
 	if(!info_status){
-		free(parametro); // que es free(linea);
+//		free(parametro); // que es free(linea);
 
 		imprimir("Se perdio la conexion con el coordinador");
 
@@ -551,8 +551,6 @@ void mostrar_info_status(t_info_status* info_status){
 
 void imprimir_cola_bloqueados(char* clave){
 
-	imprimir("El estado de la cola de bloqueados para la clave solicitada es:");
-
 	void imprimir_bloqueado(void* elem){
 		t_blocked* esi = (t_blocked*) elem;
 
@@ -570,11 +568,20 @@ void imprimir_cola_bloqueados(char* clave){
 	}
 
 	pthread_mutex_lock(&semaforo_cola_bloqueados);
-
 	t_bloqueados_por_clave* resultado = list_find(colas_de_bloqueados, es_la_clave);
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
+	if(!resultado){
+		imprimir("No existe una cola de bloqueados para la clave solicitada");
+		return;
+	}
+
+	imprimir("El estado de la cola de bloqueados para la clave solicitada es:");
+
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
+	if(list_is_empty(resultado->bloqueados))
+		imprimir("La cola de bloqueados esta vacia");
 	list_iterate(resultado->bloqueados, imprimir_bloqueado);
-
 	pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
 }

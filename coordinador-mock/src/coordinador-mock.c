@@ -108,13 +108,13 @@ void aniadir_cliente(fd_set* master, int cliente, int* fdmax){
 void atender_handshake(int socket_cliente){
 	int remitente = recibir_handshake(socket_cliente);
 
-	if(remitente != ESI && remitente != PLANIFICADOR){
+	if(remitente != ESI && remitente != PLANIFICADOR && remitente != CONSOLA_PLANIFICADOR){
 
 		if(remitente < 0){ //Error en recv o me llego un protocolo que no era handshake
 
 			log_trace(log, "Error en el handshake");
 
-		}else { //El cliente no es ESI ni un error en recv
+		}else { //El cliente no es ninguno de los esperados ni un error en recv
 
 			log_trace(log, "Cliente desconocido detectado y rechazado");
 			informar_desconexion(socket_cliente);	//No me interesa catchear el error del send
@@ -132,7 +132,7 @@ void atender_handshake(int socket_cliente){
 			log_trace(log, "Se realizo el handshake con la consola del Planificador en el socket %d", socket_cliente);
 			SOCKET_CONSOLA_PLANIFICADOR = socket_cliente;
 		}
-		else{
+		else {
 			log_trace(log, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
 			SOCKET_PLANIFICADOR = socket_cliente;
 		}
@@ -365,20 +365,44 @@ void atender_set(int socket, int id_esi){
 
 void atender_status(){
 
-	t_info_status* info_status = malloc(sizeof(t_info_status));
+	log_info(log, "Estoy por atender el status");
 
-	string_from_format("Esto es el valor de la clave");
+	int tamanio_clave;
+
+	if(recv(SOCKET_CONSOLA_PLANIFICADOR, &tamanio_clave, sizeof(int), MSG_WAITALL) < 0){
+		log_error(log, "Se perdio la conexion con la consola del planificador");
+
+		desconectar_cliente(SOCKET_CONSOLA_PLANIFICADOR);
+	}
+
+	log_info(log, "Recibi el tamanio de clave %d ", tamanio_clave);
+
+	char* clave = malloc(sizeof(tamanio_clave));
+
+	if(recv(SOCKET_CONSOLA_PLANIFICADOR, clave, tamanio_clave, MSG_WAITALL ) < 0){
+		log_error(log, "Se perdio la conexion con la consola del planificador");
+
+		desconectar_cliente(SOCKET_CONSOLA_PLANIFICADOR);
+	}
+
+	log_info(log, "Recibi la clave %s de tamanio %d", clave, tamanio_clave);
+
+	t_info_status* info_status = malloc(sizeof(t_info_status));
 
 	info_status->id_instancia_actual = 1;
 	info_status->id_instancia_posible = 1;
 	info_status->mensaje = string_from_format("Esto es el valor de la clave");
 	info_status->tamanio_mensaje = strlen(info_status->mensaje) + 1;
 
+	log_info(log ,"Info Status: tam_msg = %d | msg = %s | id_actual = %d | id_posible = %d", info_status->tamanio_mensaje, info_status->mensaje, info_status->id_instancia_actual, info_status->id_instancia_posible);
+
 	int tamanio_paquete;
 
 	void* paquete = serializar_info_status(info_status, &tamanio_paquete);
 
-	if(enviar_paquete(ENVIO_INFO_STATUS, SOCKET_CONSOLA_PLANIFICADOR, &tamanio_paquete, paquete) < 0){
+	log_info(log, "Ya serialize");
+
+	if(enviar_paquete(ENVIO_INFO_STATUS, SOCKET_CONSOLA_PLANIFICADOR, tamanio_paquete, paquete) < 0){
 		log_error(log, "Se perdio la conexion con la consola del planificador");
 
 		desconectar_cliente(SOCKET_CONSOLA_PLANIFICADOR);

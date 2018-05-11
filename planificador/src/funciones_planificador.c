@@ -12,7 +12,7 @@ void iniciar_planificador(int loggear){
 
 	leer_archivo_config();
 
-	if((SOCKET_COORDINADOR = conectarse_a_coordinador(SOCKET_COORDINADOR)) == -1)
+	if((SOCKET_COORDINADOR = conectarse_a_coordinador(PLANIFICADOR)) == -1)
 		exit(1);
 
 	cola_de_listos = list_create();
@@ -156,6 +156,8 @@ int recibir_id_esi(){
 		finalizar();
 	}
 
+	log_info(log_planif, "Recibi el id %d", id_esi);
+
 	return id_esi;
 }
 
@@ -173,6 +175,8 @@ char* recibir_clave(){
 		log_error(log_planif, "Se perdio la conexion con el coordinador");
 		finalizar();
 	}
+
+	log_info(log_planif, "Recibi la clave %s de tamanio %d", clave, tamanio_clave);
 
 	return clave;
 }
@@ -323,11 +327,11 @@ void desconectar_cliente(int cliente){
 	FD_CLR(cliente, &master);
 }
 
-int conectarse_a_coordinador(){
+int conectarse_a_coordinador(int remitente){
 
 	int socket;
 
-	if((socket = conectarse_a_server("Planificador", PLANIFICADOR, "Coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, log_planif)) == -1){
+	if((socket = conectarse_a_server("Planificador", remitente, "Coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, log_planif)) == -1){
 		log_destroy(log_planif);
 		config_destroy(archivo_config);
 		return -1;

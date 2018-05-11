@@ -102,7 +102,7 @@ void						aniadir_cliente								(fd_set* master, int cliente, int* fdmax);
 void						atender_handshake							(int socket_cliente);
 void						atender_protocolo							(int protocolo, int socket_cliente);
 void						desconectar_cliente							(int cliente);
-int							conectarse_a_coordinador					();
+int							conectarse_a_coordinador					(int remitente);
 void 						aniadir_a_listos							(t_ready esi);
 void 						aniadir_a_colas_de_asignaciones				(t_ready nuevo_esi);
 t_ready* 					duplicar_esi_ready							(t_ready esi);
