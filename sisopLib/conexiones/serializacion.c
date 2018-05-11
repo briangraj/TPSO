@@ -147,5 +147,30 @@ int informar_fallo_recv(t_log* logger, char* string){
 
 }
 
+// Hay que pasarle la direccion de un entero que representa el tamanio del paquete final
+void* serializar_info_status(t_info_status* info_status, int* tamanio_paquete){
+	*tamanio_paquete = 3* sizeof(int) + info_status->tamanio_mensaje;
+
+	void* paquete = malloc(*tamanio_paquete);
+
+	int offset = 0;
+
+	memcpy(paquete + offset, &(info_status->tamanio_mensaje), sizeof(int));
+
+	offset += sizeof(int);
+
+	memcpy(paquete + offset, info_status->mensaje, info_status->tamanio_mensaje);
+
+	offset += info_status->tamanio_mensaje;
+
+	memcpy(paquete + offset, &(info_status->id_instancia_actual), sizeof(int));
+
+	offset += sizeof(int);
+
+	memcpy(paquete + offset, &(info_status->id_instancia_posible), sizeof(int));
+
+	return paquete;
+}
+
 
 

@@ -6,6 +6,7 @@
 #include <conexiones/protocolos.h>
 #include <conexiones/serializacion.h>
 #include <conexiones/sockets.h>
+#include <conexiones/estructuras_coord.h>
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include <netdb.h>
@@ -43,5 +44,6 @@ void 				mostrar_menu					();
 void 				armar_nuevo_esi					(int socket);
 int 				obtener_id_desde_socket			(int socket);
 int 				no_main							(void);
+void 				atender_status					();
 
 #endif /* COORDINADOR_MOCK_H_ */

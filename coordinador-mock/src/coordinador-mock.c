@@ -179,6 +179,9 @@ void atender_protocolo(int protocolo, int socket_cliente){
 			atender_store(socket_cliente, id);
 			break;
 
+		case STATUS:
+			atender_status();
+			break;
 		default:
 			desconectar_cliente(socket_cliente);
 	}
@@ -358,6 +361,28 @@ void atender_set(int socket, int id_esi){
 	}
 
 	enviar_paquete(protocolo, socket, 0, NULL);
+}
+
+void atender_status(){
+
+	t_info_status* info_status = malloc(sizeof(t_info_status));
+
+	string_from_format("Esto es el valor de la clave");
+
+	info_status->id_instancia_actual = 1;
+	info_status->id_instancia_posible = 1;
+	info_status->mensaje = string_from_format("Esto es el valor de la clave");
+	info_status->tamanio_mensaje = strlen(info_status->mensaje) + 1;
+
+	int tamanio_paquete;
+
+	void* paquete = serializar_info_status(info_status, &tamanio_paquete);
+
+	if(enviar_paquete(ENVIO_INFO_STATUS, SOCKET_CONSOLA_PLANIFICADOR, &tamanio_paquete, paquete) < 0){
+		log_error(log, "Se perdio la conexion con la consola del planificador");
+
+		desconectar_cliente(SOCKET_CONSOLA_PLANIFICADOR);
+	}
 }
 
 int elegir_opcion(){

@@ -29,7 +29,7 @@ typedef struct instancia {
 
 typedef struct { // esto es lo que nos tienen que mandar cuando reciben el protocolo STATUS :D (y en este orden)
 	int tamanio_mensaje; // Puede ser quel el mensaje sea el valor de clave, peeero si la clave no esta, manden el mensaje "CLAVE SIN VALOR"
-	char* mensaje;
+	char* mensaje; // AGREGENLE EL \0 Y CONTEMPLENLO EN EL TAMANIO
 	int id_instancia_actual; // La instancia donde esta la clave que les mandamos, si no esta en ninguna instancia manden -1
 	int id_instancia_posible; // Tienen que mirar el enunciado en el comando status.
 }t_info_status;

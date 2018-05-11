@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <commons/string.h>
+#include "estructuras_coord.h"
 
 //------------- ESTRUCTURAS -------------
 typedef struct {
@@ -66,5 +67,6 @@ t_ruta	deserializar_ruta					(int socket_cliente);
 int 	informar_resultado_de_operacion		(int socket, int resultado_operacion);
 char* 	recibir_string		   				(int socket);
 int 	informar_fallo_recv					(t_log* logger, char* string);
+void* 	serializar_info_status				(t_info_status* info_status, int* tamanio_paquete);
 
 #endif /* SERIALIZACION_H_ */

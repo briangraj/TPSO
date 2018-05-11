@@ -493,6 +493,9 @@ void liberar_parametros(char** parametros, int cantidad_parametros){
 }
 
 t_info_status* recibir_info_status(){
+	if(recibir_protocolo(SOCKET_COORDINADOR_CONSOLA) != ENVIO_INFO_STATUS)
+		return NULL;
+
 	int tamanio_mensaje;
 
 	if(recv(SOCKET_COORDINADOR_CONSOLA, &tamanio_mensaje, sizeof(int), MSG_WAITALL) < 0)
