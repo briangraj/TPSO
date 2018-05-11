@@ -215,10 +215,13 @@ int intentar_asignar(int id_esi, char* recurso){
 }
 
 void crear_entrada_bloqueados_del_recurso(int id_esi, char* recurso){
+
+	char* clave = strdup(recurso);
+
 	t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) malloc(sizeof(t_bloqueados_por_clave));
 
 	bloqueados_por_clave->bloqueados = list_create();
-	bloqueados_por_clave->clave = recurso;
+	bloqueados_por_clave->clave = clave;
 	bloqueados_por_clave->id_proximo_esi = id_esi;
 
 	pthread_mutex_lock(&semaforo_cola_bloqueados);
@@ -419,9 +422,9 @@ void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){
 
 void eliminar_de_bloqueados(t_ready* esi){
 	bool es_el_esi(void* elem){
-		int* p_id = (int*) elem;
+		t_blocked* esi_bloqueado = (t_blocked*) elem;
 
-		return *p_id == esi->ID;
+		return esi_bloqueado->info_ejecucion->ID == esi->ID;
 	}
 
 	bool es_el_recurso_que_lo_tiene(void* elem){
