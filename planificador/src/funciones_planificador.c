@@ -38,7 +38,7 @@ void leer_archivo_config(){
 	IP_COORDINADOR = config_get_string_value(archivo_config, "IP_COORDINADOR");
 	PUERTO_COORDINADOR = config_get_int_value(archivo_config, "PUERTO_COORDINADOR");
 	ESTIMACION_INICIAL = config_get_int_value(archivo_config, "ESTIMACION_INICIAL");
-	ALFA_PLANIFICACION = config_get_int_value(archivo_config, "ALFA_PLANIFICACION");
+	ALFA_PLANIFICACION = config_get_int_value(archivo_config, "ALFA_PLANIFICACION") / 100;
 
 	char* algoritmo = config_get_string_value(archivo_config, "ALGORITMO_PLANIFICACION");
 

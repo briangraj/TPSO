@@ -163,6 +163,10 @@ void imprimir(char* cadena){
 //COMANDOS
 
 int	com_pausar(char* parametro){
+	if(parametro){
+		imprimir("El comando pausar no recibe parametros");
+		return 0;
+	}
 
 	pthread_mutex_lock(&semaforo_pausa);
 
@@ -172,6 +176,10 @@ int	com_pausar(char* parametro){
 }
 
 int	com_continuar(char* parametro){
+	if(parametro){
+		imprimir("El comando continuar no recibe parametros");
+		return 0;
+	}
 
 	pthread_mutex_unlock(&semaforo_pausa);
 
@@ -464,6 +472,13 @@ int	com_status(char* parametro){
 }
 
 int	com_deadlock(char* parametro){
+	if(parametro){
+		imprimir("El comando deadlock no recibe parametros");
+		return 0;
+	}
+
+
+
 	return 0;
 }
 
