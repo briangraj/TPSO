@@ -55,6 +55,4 @@ void 			liberar_parametros				(char** parametros, int cantidad_parametros);
 void 			imprimir_cola_bloqueados		(char* clave);
 
 
-
-
 #endif /* FUNCIONES_CONSOLA_H_ */

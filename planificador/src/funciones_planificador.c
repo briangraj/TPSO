@@ -435,6 +435,9 @@ void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){
 		return esi->ID == esi_finalizado->ID;
 	}
 
+	// Si no pudo enviar es porque el ESI del otro lado ya se murio (esto pasa cuando finaliza correctamente), no nos interesa controlar este caso.
+	enviar_paquete(FINALIZAR_PROCESO, esi_ejecucion->socket, 0, NULL);
+
 	desconectar_cliente(esi_ejecucion->socket);
 
 	// si esta en la cola de ready pasa esto
@@ -660,6 +663,51 @@ void actualizar_esperas(){
 	list_add_in_index(cola_de_listos, 0, primer_esi);//TODO: REVISAR SI ESTO HACE LO QUE QUEREMOS
 	pthread_mutex_unlock(&semaforo_cola_listos);
 
+}
+
+t_ready* buscar_en_bloqueados(int id_esi){
+	bool es_el_esi(void* elem){
+		t_blocked* esi_bloqueado = (t_blocked*) elem;
+
+		return esi_bloqueado->info_ejecucion->ID == id_esi;
+	}
+
+	bool es_el_recurso_que_lo_tiene(void* elem){
+		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
+
+		bool resultado = list_any_satisfy(bloqueados_por_clave->bloqueados, es_el_esi);
+
+		return resultado;
+
+	}
+
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
+	t_bloqueados_por_clave* bloqueados_por_clave = list_find(colas_de_bloqueados, es_el_recurso_que_lo_tiene);
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+	if(!bloqueados_por_clave) return bloqueados_por_clave;
+
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
+	t_blocked* esi_bloqueado = list_find(bloqueados_por_clave->bloqueados, es_el_esi);
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+	if(!esi_bloqueado) return esi_bloqueado;
+
+	return esi_bloqueado->info_ejecucion;
+}
+
+t_ready* buscar_en_ready(int id_esi){
+	bool es_el_esi(void* elem){
+		t_ready* esi_ready = (t_ready*) elem;
+
+		return esi_ready->ID == id_esi;
+	}
+
+	pthread_mutex_lock(&semaforo_cola_listos);
+	t_ready* esi_ready = list_find(cola_de_listos, es_el_esi);
+	pthread_mutex_unlock(&semaforo_cola_listos);
+
+	return esi_ready;
 }
 
 void insertar_ordenado(t_ready* esi_ready){

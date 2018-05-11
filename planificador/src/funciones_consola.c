@@ -357,6 +357,26 @@ int	com_listar(char* parametro){
 }
 
 int	com_kill(char* parametro){
+
+	char** parametros = controlar_y_obtener_parametros(parametro, 1);
+
+	int id_esi = atoi(parametros[0]);
+
+	liberar_parametros(parametros, 1);
+
+	t_ready* esi_buscado = buscar_en_bloqueados(id_esi);
+
+	if(!esi_buscado)
+		esi_buscado = buscar_en_ready(id_esi);
+
+	if(!esi_buscado){
+		imprimir("El ESI ingresado no se encuentra activo en el sistema");
+	}
+
+	mover_a_finalizados(esi_buscado, "Se envio el comando kill sobre el ESI");
+
+	imprimir("Se finalizo el ESI solicitado");
+
 	return 0;
 }
 

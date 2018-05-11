@@ -138,6 +138,8 @@ t_bloqueados_por_clave* 	encontrar_bloqueados_para_la_clave			(char* recurso);
 void 						imprimir_estado_cola_listos					();
 bool 						verificar_tenencia_de_la_clave				(int id_esi, char* clave);
 void 						atender_set									();
+t_ready* 					buscar_en_bloqueados						(int id_esi);
+t_ready* 					buscar_en_ready								(int id_esi);
 
 // Funciones MOCK
 
