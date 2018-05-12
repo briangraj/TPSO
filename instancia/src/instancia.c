@@ -23,26 +23,24 @@ void inicializar(){
 	log = log_create("DataNode.log", "DataNode", 1, LOG_LEVEL_TRACE);
 
 	leer_config();
-
-	cargar_tabla();
 }
 
 void leer_config(){
 	t_config* archivo_config = config_create(PATH_CONFIG);
-	IP_COORDINADOR= string_new();
-	string_append(&IP_COORDINADOR, config_get_string_value(archivo_config, "IP_COORDINADOR"));
+
+	IP_COORDINADOR = leer_string(archivo_config, "IP_COORDINADOR");
+
 	PUERTO_COORDINADOR = config_get_int_value(archivo_config, "PUERTO_COORDINADOR");
+
 	MI_ID = config_get_int_value(archivo_config, "ID");
 
-	//TODO esto hay que hacerlo que extraerlo
+	PUNTO_MONTAGE = leer_string(archivo_config, "PUNTO_MONTAGE");
+
+	//TODO esto hay que extraerlo
 	almacenar_clave = &circular;
 	entrada_a_reemplazar = list_get(tabla_de_entradas, 0);//TODO hay que ver donde va
 
 	config_destroy(archivo_config);
-}
-
-void cargar_tabla(){
-	//TODO cuando deberia leer de disco?
 }
 
 void conectar_con_coordinador(){
@@ -95,13 +93,36 @@ void crear_tabla_de_entradas(){
 	int nro_entrada;
 	t_entrada* entrada;
 
-	for(nro_entrada = 0; nro_entrada < CANTIDAD_ENTRADAS; nro_entrada++){
-		entrada = malloc(sizeof(t_entrada));
-		entrada->nro_entrada = nro_entrada;
-		list_add(tabla_de_entradas, entrada);
+//	for(nro_entrada = 0; nro_entrada < CANTIDAD_ENTRADAS; nro_entrada++){
+//		entrada = malloc(sizeof(t_entrada));
+//		entrada->nro_entrada = nro_entrada;
+//		list_add(tabla_de_entradas, entrada);
+//	}
+
+	DIR* d = opendir(PUNTO_MONTAGE);
+	struct dirent* dir;
+
+	while((dir = readdir(d)) != NULL){
+		if(strcmp(dir->d_name, ".")!=0 && strcmp(dir->d_name, "..")!=0 ){
+			entrada = levantar_entrada(dir->d_name);
+			list_add(tabla_de_entradas, entrada);
+		}
 	}
 
+	closedir(d);
+
 	log_trace(log, "cree tabla de entradas");
+}
+
+t_entrada* levantar_entrada(char* nombre){
+	//TODO abrir archivo para leer valor
+	t_entrada* entrada_nueva = malloc(sizeof(t_entrada));
+	entrada_nueva->clave = string_new();
+	string_append(&entrada_nueva->clave, nombre);
+
+	//TODO terminar de setear valores y actualizar bitmap, segun tamanño de entradas (que hay que agregarlo)
+
+	return entrada_nueva;
 }
 
 void recibir_set(){
