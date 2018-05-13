@@ -10,7 +10,7 @@
 
 #include <semaphore.h>
 #include <stdbool.h>
-#include <commons/collections/list.h>
+#include <commons/collections/queue.h>
 #include <unistd.h>
 
 typedef struct solicitud {
@@ -24,7 +24,7 @@ typedef struct instancia {
 	int socket;
 	sem_t sem;
 	bool esta_conectado;
-	t_list* pedidos;
+	t_queue* pedidos;
 } t_instancia;
 
 typedef struct { // esto es lo que nos tienen que mandar cuando reciben el protocolo STATUS :D (y en este orden)
