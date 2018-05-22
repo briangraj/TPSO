@@ -472,14 +472,199 @@ int	com_status(char* parametro){
 }
 
 int	com_deadlock(char* parametro){
-	if(parametro){
-		imprimir("El comando deadlock no recibe parametros");
-		return 0;
+//	if(parametro){
+//		imprimir("El comando deadlock no recibe parametros");
+//		return 0;
+//	}
+
+	int id_espera = 0;
+
+	esperas_circulares = list_create();
+
+	void buscar_espera_circular(void* elem){
+		imprimir("Voy a empezar una nueva busqueda de esperas circulares");
+
+		encontre_un_ciclo = false;
+
+		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
+
+		recurso_inicial = bloqueados_por_clave->clave;
+
+		cargar_si_recurso_forma_parte_de_un_deadlock(bloqueados_por_clave);
+
+		if(encontre_un_ciclo){
+			imprimir("Encontre un ciclo!!");
+			t_espera_circular* espera = malloc(sizeof(t_espera_circular));
+
+			espera->esis_por_recurso = list_duplicate(nueva_espera->esis_por_recurso);
+			espera->id_espera = id_espera;
+
+			id_espera++;
+
+			list_add(esperas_circulares, espera);
+
+			list_destroy_and_destroy_elements(nueva_espera->esis_por_recurso, involucrados_destroyer);
+		}
+
 	}
 
+	imprimir("Voy a pausar todo para analizar si hay deadlock");
 
+	pthread_mutex_lock(&semaforo_pausa);
+
+	list_iterate(colas_de_bloqueados, buscar_espera_circular);
+
+	imprimir_esperas_circulares();
+
+	list_destroy_and_destroy_elements(esperas_circulares, esperas_destroyer);
+
+	pthread_mutex_unlock(&semaforo_pausa);
 
 	return 0;
+}
+
+void imprimir_esperas_circulares(){
+
+	if(list_is_empty(esperas_circulares))
+		imprimir("No se encontraron esperas circulares, no hay deadlock");
+
+
+	void imprimir_espera(void* elem){
+		imprimir("Voy a imprimir una nueva espera");
+		t_espera_circular* espera = (t_espera_circular*) elem;
+
+		char* id = string_from_format("Id de la espera : %d", espera->id_espera);
+
+		imprimir(id);
+
+		free(id);
+
+		void imprimir_involucrados(void* elem2){
+			t_involucrados* involucrados = (t_involucrados*) elem2;
+
+			char* mensaje = string_from_format("El recurso %s es poseido por el ESI de id %d, y esta siendo esperado por el ESI de id %d", involucrados->recurso, involucrados->id_esi_duenio, involucrados->id_bloqueado);
+
+			imprimir(mensaje);
+
+			free(mensaje);
+		}
+
+		list_iterate(espera->esis_por_recurso, imprimir_involucrados);
+	}
+
+	list_iterate(esperas_circulares, imprimir_espera);
+
+}
+
+void esperas_destroyer(void* elem){
+	t_espera_circular* espera_circular = (t_espera_circular*) elem;
+
+	list_destroy_and_destroy_elements(espera_circular->esis_por_recurso, involucrados_destroyer);
+}
+
+void involucrados_destroyer(void* elem){
+	t_involucrados* involucrados = (t_involucrados*) elem;
+
+	free(involucrados->recurso);
+}
+
+void cargar_si_recurso_forma_parte_de_un_deadlock(t_bloqueados_por_clave* bloqueados_por_clave){
+	if(hay_que_descartarla(bloqueados_por_clave)) return;
+
+	int indice = 0;
+	t_blocked* esi;
+
+	while(!encontre_un_ciclo){
+		imprimir("Voy a analizar un nuevo esi");
+		esi = list_get(bloqueados_por_clave->bloqueados, indice);
+
+		if(!esi)
+			return;
+
+		if(list_is_empty(asignados_para_el_esi(esi->info_ejecucion->ID))){
+			imprimir("La lista de asignados para el esi esta vacia");
+			indice++;
+
+			continue;
+		}
+
+		int indice_recursos = 0;
+
+		char* recurso;
+
+		while(!encontre_un_ciclo){
+			imprimir("Voy a analizar un nuevo recurso para el esi");
+			recurso = list_get(asignados_para_el_esi(esi->info_ejecucion->ID), indice_recursos);
+
+			if(!recurso){
+				imprimir("El esi se quedo sin recursos");
+				break;
+			}
+
+
+			if(string_equals_ignore_case(recurso, recurso_inicial)){
+				imprimir("Encontre deadlock en el while !!!!!");
+
+				encontre_un_ciclo = true;
+
+				nueva_espera->esis_por_recurso = list_create();
+
+				break;
+			}
+
+			imprimir("Me voy a meter recursivamente");
+			cargar_si_recurso_forma_parte_de_un_deadlock(encontrar_bloqueados_para_la_clave(recurso));
+
+			indice_recursos++;
+		}
+
+		indice++;
+	}
+
+	imprimir("Voy a armar el t_involucrados");
+	t_involucrados* involucrados = malloc(sizeof(t_involucrados));
+
+	involucrados->id_bloqueado = esi->info_ejecucion->ID;
+	involucrados->id_esi_duenio = bloqueados_por_clave->id_proximo_esi;
+	involucrados->recurso = strdup(bloqueados_por_clave->clave);
+
+	list_add(nueva_espera->esis_por_recurso, involucrados);
+}
+
+t_list* asignados_para_el_esi(int id_esi){
+	bool es_el_esi(void* elem){
+		t_recursos_por_esi* recursos_por_esi = (t_recursos_por_esi*) elem;
+
+		return id_esi == recursos_por_esi->id_esi;
+	}
+
+	return ((t_recursos_por_esi*)list_find(colas_de_asignaciones, es_el_esi))->recursos_asignados;
+}
+
+bool hay_que_descartarla(t_bloqueados_por_clave* bloqueados_por_clave){
+	bool es_el_esi(void* elem){
+		t_ready* esi_ready = (t_ready*) elem;
+
+		return bloqueados_por_clave->id_proximo_esi == esi_ready->ID;
+	}
+
+	bool esta_en_la_espera(void* elem){
+		t_espera_circular* espera = (t_espera_circular*) elem;
+
+		bool es_la_clave(void* elem){
+			t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
+
+			return string_equals_ignore_case(bloq->clave, bloqueados_por_clave->clave);
+		}
+
+		return list_any_satisfy(espera->esis_por_recurso, es_la_clave);
+	}
+
+	pthread_mutex_lock(&semaforo_cola_listos);
+	bool esta_en_ready = list_any_satisfy(cola_de_listos, es_el_esi);
+	pthread_mutex_unlock(&semaforo_cola_listos);
+
+	return bloqueados_por_clave->id_proximo_esi == 0 || list_is_empty(bloqueados_por_clave->bloqueados) || esta_en_ready || list_any_satisfy(esperas_circulares, esta_en_la_espera);
 }
 
 char** controlar_y_obtener_parametros(char* parametro, int cantidad_parametros){

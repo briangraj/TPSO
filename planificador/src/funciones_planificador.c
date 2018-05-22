@@ -266,6 +266,7 @@ t_blocked* crear_t_bloqueado(t_ready* esi_ready){
 
 	bloqueado->bloqueado_por_consola = false;
 	bloqueado->bloqueado_por_ejecucion = true;
+	bloqueado->info_ejecucion = malloc(sizeof(t_ready));
 	memcpy(bloqueado->info_ejecucion, esi_ready, sizeof(t_ready));
 
 	return bloqueado;

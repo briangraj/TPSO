@@ -226,6 +226,8 @@ void atender_get(int socket, int id_esi){
 //	enviar_paquete(opcion_elegida, socket, 0, NULL);
 	//FIN MOCK
 
+	sleep(15);
+
 	int tam_paquete = 2* sizeof(int) + tamanio;
 	void* paquete = malloc(tam_paquete);
 
