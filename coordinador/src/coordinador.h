@@ -21,7 +21,7 @@
 #include <conexiones/estructuras_coord.h>
 #include "hilo_instancia.h"
 
-int CANTIDAD_ENTRADAS;
+int CANTIDAD_ENTRADAS_TOTALES;
 int TAMANIO_ENTRADA;
 char* ip_coord;
 int puerto_coord;

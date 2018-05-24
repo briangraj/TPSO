@@ -32,11 +32,11 @@ typedef struct {
 char* PUNTO_MONTAGE;
 char* IP_COORDINADOR;
 int PUERTO_COORDINADOR;
-int CANTIDAD_ENTRADAS;
+int CANTIDAD_ENTRADAS_TOTALES;
 int TAMANIO_ENTRADA;
 int MI_ID;
 int socket_coordinador;
-int nro_entrada;
+//int nro_entrada;
 char* clave_a_encontrar;
 
 void (*algoritmo_reemplazo)(char*, char*);
@@ -44,7 +44,7 @@ void (*algoritmo_reemplazo)(char*, char*);
 //para reemplazo circular
 t_entrada* entrada_a_reemplazar;
 
-t_log* log;
+t_log* log_instancia;
 t_list* tabla_de_entradas;
 t_bitarray* bitarray_entradas;
 
@@ -61,6 +61,8 @@ int abrir_entrada(char* nombre);
 struct stat crear_stat(int fd);
 void* mi_mmap(int fd, struct stat stat);
 int entradas_ocupadas(int tamanio);
+int entrada_para(int cant_entradas);
+void setear_bitarray(t_entrada* entrada);
 void recibir_set();
 void modificar_entrada(char* clave, char* valor);
 void reemplazo_circular(char* clave, char* valor);

@@ -114,6 +114,18 @@ t_ruta deserializar_ruta (int socket_cliente){
 	return ruta_recibida;//Acordarse de hacer un free despues de usarse
 }
 
+void serializar_string(void* payload, char* string){
+	int tamanio_string = strlen(string) + 1;
+
+	//void* payload = malloc(tamanio_string + sizeof(int));
+
+	memcpy(payload, &tamanio_string, sizeof(int));
+
+	memcpy(payload + sizeof(int), string, tamanio_string);
+
+	//return payload;
+}
+
 char* recibir_string(int socket){
 	int tam_clave;
 

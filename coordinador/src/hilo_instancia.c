@@ -8,7 +8,7 @@
 #include "hilo_instancia.h"
 
 void crear_hilo_instancia(t_instancia* instancia){
-	CANTIDAD_ENTRADAS = 20;
+	CANTIDAD_ENTRADAS_TOTALES = 20;
 	TAMANIO_ENTRADA = 100;
 
 	crear_hilo(atender_instancia, (void*) instancia);
@@ -18,7 +18,7 @@ void* crear_instancia(int id, int socket){
 	t_instancia* instancia = malloc(sizeof(t_instancia));
 
 	instancia->id = id;
-	instancia->pedidos = list_create();
+	instancia->pedidos = queue_create();
 	sem_init(&instancia->sem, 0, 0);
 	instancia->socket = socket;
 	instancia->esta_conectado = true;
@@ -42,7 +42,7 @@ void* atender_instancia(void* instancia_void){
 
 	while(true) {
 		sem_wait(&instancia->sem);
-		pedido = (t_solicitud*)list_remove(instancia->pedidos, 0);
+		pedido = (t_solicitud*)queue_pop(instancia->pedidos);
 
 		enviar_pedido(pedido, instancia->socket);
 	}
@@ -51,11 +51,11 @@ void* atender_instancia(void* instancia_void){
 }
 
 void enviar_configuracion_instancia(int socket_instancia){
-	int tamanio_payload = sizeof(CANTIDAD_ENTRADAS) + sizeof(TAMANIO_ENTRADA);
+	int tamanio_payload = sizeof(CANTIDAD_ENTRADAS_TOTALES) + sizeof(TAMANIO_ENTRADA);
 	void* payload = malloc(tamanio_payload);
 
-	memcpy(payload, &CANTIDAD_ENTRADAS, sizeof(CANTIDAD_ENTRADAS));
-	memcpy(payload + sizeof(CANTIDAD_ENTRADAS), &TAMANIO_ENTRADA, sizeof(TAMANIO_ENTRADA));
+	memcpy(payload, &CANTIDAD_ENTRADAS_TOTALES, sizeof(CANTIDAD_ENTRADAS_TOTALES));
+	memcpy(payload + sizeof(CANTIDAD_ENTRADAS_TOTALES), &TAMANIO_ENTRADA, sizeof(TAMANIO_ENTRADA));
 
 	enviar_paquete(CONFIGURACION_ENTRADAS, socket_instancia, tamanio_payload, payload);
 }
@@ -65,6 +65,7 @@ int enviar_pedido(t_solicitud* solicitud, int socket){
 	void* mensaje;
 	int protocolo;
 
+	//TODO arreglar repeticion de logica
 	switch(solicitud->instruccion){
 	case OPERACION_SET:{
 		protocolo = OPERACION_SET;
@@ -74,28 +75,36 @@ int enviar_pedido(t_solicitud* solicitud, int socket){
 		tam_mensaje = tam_header + sizeof(int) + tam_clave + sizeof(int) + tam_valor;
 
 		void* mensaje = malloc(tam_mensaje);
-		char* aux = mensaje;
+		void* aux = mensaje;
 
 		memcpy(aux, &solicitud->instruccion, tam_header);
 		aux += tam_header;
 
-		memcpy(aux, &tam_clave, sizeof(int));
-		aux += sizeof(int);
+		serializar_string(aux, solicitud->clave);
+		aux += sizeof(int) + tam_clave;
 
-		memcpy(aux, solicitud->clave, tam_clave);
-		aux += tam_clave;
-
-		memcpy(aux, &tam_valor, sizeof(int));
-		aux += sizeof(int);
-
-		memcpy(aux, solicitud->valor, tam_valor);
+		serializar_string(aux, solicitud->valor);
 
 		break;
 	}
-	case OPERACION_STORE:
+	case OPERACION_STORE:{
+		protocolo = OPERACION_SET;
+		int tam_clave = strlen(solicitud->clave) + 1;
+
+		tam_mensaje = tam_header + sizeof(int) + tam_clave;
+
+		void* mensaje = malloc(tam_mensaje);
+		void* aux = mensaje;
+
+		memcpy(aux, &solicitud->instruccion, tam_header);
+		aux += tam_header;
+
+		serializar_string(aux, solicitud->valor);
+
 		break;
+	}
 	default:
-		;
+		return -1;
 	}
 
 	return enviar_paquete(protocolo, socket, tam_mensaje, mensaje);

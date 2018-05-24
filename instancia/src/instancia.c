@@ -20,9 +20,7 @@ int main(int argc, char **argv){
 }
 
 void inicializar(){
-	log = log_create("DataNode.log", "DataNode", 1, LOG_LEVEL_TRACE);
-
-	nro_entrada = 0;
+	log_instancia = log_create("DataNode.log", "DataNode", 1, LOG_LEVEL_TRACE);
 
 	leer_config();
 }
@@ -46,7 +44,7 @@ void leer_config(){
 }
 
 void conectar_con_coordinador(){
-	socket_coordinador = conectarse_a_server("instancia", INSTANCIA, "coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, log);
+	socket_coordinador = conectarse_a_server("instancia", INSTANCIA, "coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, log_instancia);
 	if(socket_coordinador < 0){
 		//rutina_final();
 		exit(1);
@@ -62,7 +60,7 @@ void escuchar_coordinador(){
 		protocolo = recibir_protocolo(socket_coordinador);
 		printf("leer_protocolo %d\n", protocolo);
 		if (protocolo <= 0) {
-			log_error(log, "se desconecto el coordinador");
+			log_error(log_instancia, "se desconecto el coordinador");
 			//rutina_final();
 			break;//exit(1);
 		}
@@ -84,7 +82,7 @@ void leer_protocolo(int protocolo){
 }
 
 void configuracion_entradas(){
-	recv(socket_coordinador, &CANTIDAD_ENTRADAS, sizeof(CANTIDAD_ENTRADAS), MSG_WAITALL);
+	recv(socket_coordinador, &CANTIDAD_ENTRADAS_TOTALES, sizeof(CANTIDAD_ENTRADAS_TOTALES), MSG_WAITALL);
 	recv(socket_coordinador, &TAMANIO_ENTRADA, sizeof(TAMANIO_ENTRADA), MSG_WAITALL);
 
 	crear_tabla_de_entradas();
@@ -92,28 +90,21 @@ void configuracion_entradas(){
 
 void crear_tabla_de_entradas(){
 	tabla_de_entradas = list_create();
-	int nro_entrada;
 	t_entrada* entrada;
-
-//	for(nro_entrada = 0; nro_entrada < CANTIDAD_ENTRADAS; nro_entrada++){
-//		entrada = malloc(sizeof(t_entrada));
-//		entrada->nro_entrada = nro_entrada;
-//		list_add(tabla_de_entradas, entrada);
-//	}
 
 	DIR* d = opendir(PUNTO_MONTAGE);
 	struct dirent* dir;
 
 	while((dir = readdir(d)) != NULL){
 		if(strcmp(dir->d_name, ".")!=0 && strcmp(dir->d_name, "..")!=0 ){
-			entrada = levantar_entrada(dir->d_name);//FIXME decidir como levantar una entrada (si usa almacenar_entrada)
+			entrada = levantar_entrada(dir->d_name);
 			list_add(tabla_de_entradas, entrada);
 		}
 	}
 
 	closedir(d);
 
-	log_trace(log, "cree tabla de entradas");
+	log_trace(log_instancia, "cree tabla de entradas");
 }
 
 t_entrada* levantar_entrada(char* nombre){
@@ -130,13 +121,10 @@ t_entrada* levantar_entrada(char* nombre){
 
 	entrada_nueva->tamanio_entradas_clave = entradas_ocupadas(entrada_nueva->tamanio_bytes_clave);
 
-	//TODO delegarlo
-	entrada_nueva->nro_entrada = nro_entrada;
-	nro_entrada += entrada_nueva->tamanio_entradas_clave;
+	//no lo chequeo por que se usa solo en la inicializacion (no va a pasar que tenga menos espacio que un estado anterior)
+	entrada_nueva->nro_entrada = entrada_para(entrada_nueva->tamanio_entradas_clave);
 
-	int i;
-	for(i = 0; i < entrada_nueva->tamanio_entradas_clave; i++)
-		bitarray_set_bit(bitarray_entradas, entrada_nueva->nro_entrada + i);
+	setear_bitarray(entrada_nueva);
 
 	return entrada_nueva;
 }
@@ -146,7 +134,7 @@ int abrir_entrada(char* nombre){
 
 	int fd = open(aux, O_RDWR);
 	if (fd == -1) {
-		log_error(log, "ERROR: no se puedo abrir la entrada: %s", nombre);
+		log_error(log_instancia, "ERROR: no se puedo abrir la entrada: %s", nombre);
 		close(fd);
 		//rutina_final();
 		exit(1);
@@ -157,7 +145,7 @@ int abrir_entrada(char* nombre){
 struct stat crear_stat(int fd){
 	struct stat stat;
 	if(fstat(fd, &stat) < 0){
-		log_error(log, "ERROR: no se pudo cargar los atributos de una entrada");
+		log_error(log_instancia, "ERROR: no se pudo cargar los atributos de una entrada");
 		close(fd);
 		//rutina_final();
 		exit(1);
@@ -169,7 +157,7 @@ void* mi_mmap(int fd, struct stat stat){
 	void* data = mmap(0, stat.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
 	if(data == MAP_FAILED){
-		log_error(log, "ERROR: no se pudo mapear uan entrada");
+		log_error(log_instancia, "ERROR: no se pudo mapear uan entrada");
 		//perror("mmap");
 		close(fd);
 		//rutina_final();
@@ -185,6 +173,34 @@ int entradas_ocupadas(int tamanio){
 		tamanio++;
 
 	return entradas_ocupadas;
+}
+
+int entrada_para(int cant_entradas){
+	int i = 0, j;
+
+	while(i < CANTIDAD_ENTRADAS_TOTALES){
+		if(!bitarray_test_bit(bitarray_entradas, i)){
+			for(j = 0; j < cant_entradas; j++){
+				if(bitarray_test_bit(bitarray_entradas, i + j)){
+					i += j;
+					break;
+				}
+
+				if(j == cant_entradas - 1)
+					return i;
+			}
+		}
+
+		i++;
+	}
+
+	return -1;
+}
+
+void setear_bitarray(t_entrada* entrada){
+	int i;
+	for(i = entrada->nro_entrada; i < entrada->tamanio_entradas_clave; i++)
+		bitarray_set_bit(bitarray_entradas, i);
 }
 
 void recibir_set(){
@@ -222,7 +238,6 @@ void reemplazo_circular(char* clave, char* valor){
 //	list_add(tabla_de_entradas, entrada);
 
 	//TODO faltan verificaciones: tamaño clave, espacio suficiente para almacenar valor
-	entrada_a_reemplazar->clave;
 
 	int tamanio_valor = string_length(valor);
 	entrada_a_reemplazar->tamanio_bytes_clave = tamanio_valor;
@@ -230,7 +245,7 @@ void reemplazo_circular(char* clave, char* valor){
 
 	entrada_a_reemplazar->tamanio_entradas_clave = entradas_ocupadas(tamanio_valor);
 
-	entrada_a_reemplazar = list_get(tabla_de_entradas, (entrada_a_reemplazar->nro_entrada) + entradas_ocupadas);
+	//entrada_a_reemplazar = list_get(tabla_de_entradas, (entrada_a_reemplazar->nro_entrada) + entradas_ocupadas);
 }
 
 t_entrada* buscar_entrada(char* clave){

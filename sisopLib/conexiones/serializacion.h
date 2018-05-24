@@ -65,6 +65,7 @@ int 	informar_desconexion				(int socket_cliente);
 void* 	serializar_ruta						(char* fs_path);
 t_ruta	deserializar_ruta					(int socket_cliente);
 int 	informar_resultado_de_operacion		(int socket, int resultado_operacion);
+void 	serializar_string					(void* payload, char* string);
 char* 	recibir_string		   				(int socket);
 int 	informar_fallo_recv					(t_log* logger, char* string);
 void* 	serializar_info_status				(t_info_status* info_status, int* tamanio_paquete);
