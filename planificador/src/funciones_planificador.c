@@ -24,6 +24,11 @@ void iniciar_planificador(int loggear){
 	pthread_mutex_init(&semaforo_cola_bloqueados, NULL);
 	pthread_mutex_init(&semaforo_cola_listos, NULL);
 	pthread_mutex_init(&semaforo_asignaciones, NULL);
+	pthread_mutex_init(&semaforo_flag_bloqueo, NULL);
+
+	flag_bloqueo.clave_bloqueo = string_new();
+	flag_bloqueo.hay_que_bloquear_esi_activo = false;
+	flag_bloqueo.fue_bloqueado_consola = false;
 
 	PLANIFICADOR_PID = getpid();
 }
@@ -112,7 +117,20 @@ void atender_protocolo(int protocolo, int socket_cliente){
 
 	switch (protocolo){
 		case EJECUCION_EXITOSA:
+
+			pthread_mutex_lock(&semaforo_flag_bloqueo);
+			bool hay_que_bloquear = flag_bloqueo.hay_que_bloquear_esi_activo;
+			char* clave_bloqueo = strdup(flag_bloqueo.clave_bloqueo);
+			bool fue_bloqueado_por_consola = flag_bloqueo.fue_bloqueado_consola;
+			pthread_mutex_unlock(&semaforo_flag_bloqueo);
+
+			if(hay_que_bloquear)
+				bloquear_esi_activo(clave_bloqueo, fue_bloqueado_por_consola);
+
+			free(clave_bloqueo);
+
 			mandar_a_ejecutar();
+
 			break;
 		case FALLO_EN_EJECUCION:
 			mover_a_finalizados(esi_activo(), "Fallo en la ejecucion de una instruccion del script");
@@ -213,15 +231,45 @@ int intentar_asignar(int id_esi, char* recurso){
 		return GET_EXITOSO;
 	}
 
+	hay_que_bloquear_esi_activo(recurso, false);
+
+	return GET_BLOQUEANTE;
+}
+
+void hay_que_bloquear_esi_activo(char* clave, bool fue_bloqueado_por_consola){
+
+	pthread_mutex_lock(&semaforo_flag_bloqueo);
+	flag_bloqueo.hay_que_bloquear_esi_activo = true;
+	free(flag_bloqueo.clave_bloqueo);
+	flag_bloqueo.clave_bloqueo = strdup(clave);
+	flag_bloqueo.fue_bloqueado_consola = fue_bloqueado_por_consola;
+	pthread_mutex_unlock(&semaforo_flag_bloqueo);
+
+}
+
+void bloquear_esi_activo(char* clave, bool fue_bloqueado_por_consola){
 	t_ready* esi = esi_activo();
 
-	list_add(bloqueados_por_clave->bloqueados, crear_t_bloqueado(esi));
+	t_bloqueados_por_clave* bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
+
+	t_blocked* esi_bloqueado = crear_t_bloqueado(esi);
+
+	if(fue_bloqueado_por_consola){
+		esi_bloqueado->bloqueado_por_consola = true;
+		esi_bloqueado->bloqueado_por_ejecucion = false;
+	}
+
+	list_add(bloqueados_por_clave->bloqueados, esi_bloqueado);
 
 	pthread_mutex_lock(&semaforo_cola_listos);
 	list_remove_and_destroy_element(cola_de_listos, 0, funcion_al_pedo);
 	pthread_mutex_unlock(&semaforo_cola_listos);
 
-	return GET_BLOQUEANTE;
+	pthread_mutex_lock(&semaforo_flag_bloqueo);
+	flag_bloqueo.hay_que_bloquear_esi_activo = false;
+	flag_bloqueo.fue_bloqueado_consola = false;
+	pthread_mutex_unlock(&semaforo_flag_bloqueo);
+
 }
 
 void crear_entrada_bloqueados_del_recurso(int id_esi, char* recurso){
@@ -247,6 +295,12 @@ void asignar_recurso_al_esi(int id_esi, char* recurso){
 		return rec->id_esi == id_esi;
 	}
 
+	bool es_la_clave(void* elem){
+		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
+
+		return string_equals_ignore_case(bloqueados_por_clave->clave, recurso);
+	}
+
 	t_recursos_por_esi* recursos_por_esi = list_find(colas_de_asignaciones, es_del_esi);
 
 	if(recursos_por_esi == NULL){
@@ -259,6 +313,11 @@ void asignar_recurso_al_esi(int id_esi, char* recurso){
 	pthread_mutex_lock(&semaforo_asignaciones);
 	list_add(recursos_por_esi->recursos_asignados, clave);
 	pthread_mutex_unlock(&semaforo_asignaciones);
+
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
+	t_bloqueados_por_clave* bloqueados_de_la_clave = list_find(colas_de_bloqueados, es_la_clave);
+	bloqueados_de_la_clave->id_proximo_esi = id_esi;
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
 }
 
 t_blocked* crear_t_bloqueado(t_ready* esi_ready){
@@ -608,7 +667,7 @@ bool verificar_tenencia_de_la_clave(int id_esi, char* clave){
 	bool resultado = list_any_satisfy(recursos_del_esi->recursos_asignados, es_el_recurso_buscado);
 	pthread_mutex_unlock(&semaforo_asignaciones);
 
-	return true;
+	return resultado;
 }
 
 
@@ -690,13 +749,13 @@ t_ready* buscar_en_bloqueados(int id_esi){
 	t_bloqueados_por_clave* bloqueados_por_clave = list_find(colas_de_bloqueados, es_el_recurso_que_lo_tiene);
 	pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
-	if(!bloqueados_por_clave) return bloqueados_por_clave;
+	if(!bloqueados_por_clave) return NULL;
 
 	pthread_mutex_lock(&semaforo_cola_bloqueados);
 	t_blocked* esi_bloqueado = list_find(bloqueados_por_clave->bloqueados, es_el_esi);
 	pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
-	if(!esi_bloqueado) return esi_bloqueado;
+	if(!esi_bloqueado) return NULL;
 
 	return esi_bloqueado->info_ejecucion;
 }
@@ -808,6 +867,9 @@ void finalizar(){
 	pthread_mutex_destroy(&semaforo_cola_bloqueados);
 	pthread_mutex_destroy(&semaforo_cola_listos);
 	pthread_mutex_destroy(&semaforo_asignaciones);
+	pthread_mutex_destroy(&semaforo_flag_bloqueo);
+
+	free(flag_bloqueo.clave_bloqueo);
 
 
 	exit(1);

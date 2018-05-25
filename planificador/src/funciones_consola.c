@@ -236,19 +236,27 @@ int	com_bloquear(char* parametro){
 		//TODO: Si el ESI bloqueado por este comando ya tenía esta clave asignada, se la desalojamos dandosela al siguiente ESI en la cola de bloqueados
 	}
 
-	pthread_mutex_lock(&semaforo_cola_bloqueados);
 
-	list_add(bloqueados_por_clave->bloqueados, esi_bloqueado);
+	if(id_esi_activo == id_esi)
+		hay_que_bloquear_esi_activo(clave, true);
 
-	pthread_mutex_unlock(&semaforo_cola_bloqueados);
+	else {
 
-	//Ahora sacamos al ESI de la cola de listos
+		pthread_mutex_lock(&semaforo_cola_bloqueados);
 
-	pthread_mutex_lock(&semaforo_cola_listos);
+		list_add(bloqueados_por_clave->bloqueados, esi_bloqueado);
 
-	list_remove_and_destroy_by_condition(cola_de_listos, coincide_el_id, funcion_al_pedo);
+		pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
-	pthread_mutex_unlock(&semaforo_cola_listos);
+		//Ahora sacamos al ESI de la cola de listos
+
+		pthread_mutex_lock(&semaforo_cola_listos);
+
+		list_remove_and_destroy_by_condition(cola_de_listos, coincide_el_id, funcion_al_pedo);
+
+		pthread_mutex_unlock(&semaforo_cola_listos);
+
+	}
 
 	free(clave);
 

@@ -58,9 +58,16 @@ pthread_mutex_t semaforo_pausa;
 pthread_mutex_t semaforo_cola_bloqueados;
 pthread_mutex_t semaforo_cola_listos;
 pthread_mutex_t semaforo_asignaciones;
+pthread_mutex_t semaforo_flag_bloqueo;
 
 int id_esi_activo;
 int proximo_id;
+
+struct{
+	bool hay_que_bloquear_esi_activo;
+	bool fue_bloqueado_consola;
+	char* clave_bloqueo;
+}flag_bloqueo;
 
 // Estructuras
 typedef struct{
@@ -140,6 +147,8 @@ bool 						verificar_tenencia_de_la_clave				(int id_esi, char* clave);
 void 						atender_set									();
 t_ready* 					buscar_en_bloqueados						(int id_esi);
 t_ready* 					buscar_en_ready								(int id_esi);
+void 						hay_que_bloquear_esi_activo					(char* clave, bool fue_bloqueado_por_consola);
+void 						bloquear_esi_activo							(char* clave, bool fue_bloqueado_por_consola);
 
 // Funciones MOCK
 
