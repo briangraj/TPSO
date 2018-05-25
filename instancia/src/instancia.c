@@ -176,25 +176,32 @@ int entradas_ocupadas(int tamanio){
 }
 
 int entrada_para(int cant_entradas){
-	int i = 0, j;
+	int i = 0, entradas_libres;
 
 	while(i < CANTIDAD_ENTRADAS_TOTALES){
 		if(!bitarray_test_bit(bitarray_entradas, i)){
-			for(j = 0; j < cant_entradas; j++){
-				if(bitarray_test_bit(bitarray_entradas, i + j)){
-					i += j;
-					break;
-				}
+			entradas_libres = entradas_libres_desde(i, cant_entradas);
+			if(entradas_libres == cant_entradas)
+				return i;
 
-				if(j == cant_entradas - 1)
-					return i;
-			}
+			i += entradas_libres;
 		}
 
 		i++;
 	}
 
 	return -1;
+}
+
+int entradas_libres_desde(int nro_entrada, int entradas_necesarias){
+	int i;
+	for(i = 0; i < entradas_necesarias; i++){
+		if(bitarray_test_bit(bitarray_entradas, nro_entrada + i)){
+			break;
+		}
+	}
+
+	return i;
 }
 
 void setear_bitarray(t_entrada* entrada){
@@ -206,21 +213,31 @@ void setear_bitarray(t_entrada* entrada){
 void recibir_set(){
 	char* clave = recibir_string(socket_coordinador);
 	char* valor = recibir_string(socket_coordinador);
-	// TODO tiene que devolver si falla o no
-	modificar_entrada(clave, valor);
+
+	int resultado = modificar_entrada(clave, valor);
+	enviar_paquete(resultado, socket_coordinador, 0, NULL);
 }
 
-void modificar_entrada(char* clave, char* valor){
+int modificar_entrada(char* clave, char* valor){
 	t_entrada* entrada = buscar_entrada(clave);
-	if(string_length(valor) > entrada->tamanio_bytes_clave){
-		//TODO ver si hay espacio
+	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));
+	int entradas_faltantes = entradas_nuevo_valor - entrada->tamanio_entradas_clave;
+
+	if(entradas_nuevo_valor == entrada->tamanio_entradas_clave){
+		entrada->tamanio_bytes_clave = string_length(valor);
+		//todo primero habria que borrar el valor anterior
+		memcpy(entrada->valor, valor, string_length(valor));
+	} else {
+		if(entradas_nuevo_valor > entrada->tamanio_bytes_clave){
+			int entradas_libres = entradas_libres_desde(entrada->nro_entrada + entrada->tamanio_entradas_clave, entradas_faltantes);
+			if(entradas_libres != entradas_faltantes)
+				return -1;
+		}
+
+		actualizar_tamanio_entrada(entrada, valor);
 	}
 
-	//FIXME esto seria el caso ideal: la nueva clave ocupa la misma cantidad de entradas que la anterior
-	entrada->tamanio_bytes_clave = string_length(valor);
-
-	//todo primero habria que borrar el valor anterior
-	memcpy(entrada->valor, valor, string_length(valor));
+	return SET_EXITOSO;
 }
 
 void reemplazo_circular(char* clave, char* valor){

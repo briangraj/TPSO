@@ -64,7 +64,7 @@ int entradas_ocupadas(int tamanio);
 int entrada_para(int cant_entradas);
 void setear_bitarray(t_entrada* entrada);
 void recibir_set();
-void modificar_entrada(char* clave, char* valor);
+int modificar_entrada(char* clave, char* valor);
 void reemplazo_circular(char* clave, char* valor);
 t_entrada* buscar_entrada(char* clave);
 
