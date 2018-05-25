@@ -259,11 +259,19 @@ void bloquear_esi_activo(char* clave, bool fue_bloqueado_por_consola){
 		esi_bloqueado->bloqueado_por_ejecucion = false;
 	}
 
+	log_debug(log_planif, "Antes de bloquear al ESI %d", esi->ID);
+	imprimir_estado_cola_listos();
+	imprimir_estado_cola_bloqueados(clave);
+
 	list_add(bloqueados_por_clave->bloqueados, esi_bloqueado);
 
 	pthread_mutex_lock(&semaforo_cola_listos);
 	list_remove_and_destroy_element(cola_de_listos, 0, funcion_al_pedo);
 	pthread_mutex_unlock(&semaforo_cola_listos);
+
+	log_debug(log_planif, "Despues de bloquear al ESI %d", esi_bloqueado->info_ejecucion->ID);
+	imprimir_estado_cola_listos();
+	imprimir_estado_cola_bloqueados(clave);
 
 	pthread_mutex_lock(&semaforo_flag_bloqueo);
 	flag_bloqueo.hay_que_bloquear_esi_activo = false;
@@ -427,6 +435,40 @@ void imprimir_estado_cola_listos(){
 
 }
 
+void imprimir_estado_cola_bloqueados(char* clave){
+
+	void imprimir_bloqueado(void* elem){
+		t_blocked* esi = (t_blocked*) elem;
+
+		log_info(log_planif, "ESI %d", esi->info_ejecucion->ID);
+
+	}
+
+	bool es_la_clave(void* elem){
+		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
+
+		return string_equals_ignore_case(bloqueados_por_clave->clave, clave);
+	}
+
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
+	t_bloqueados_por_clave* resultado = list_find(colas_de_bloqueados, es_la_clave);
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+	if(!resultado){
+		log_error(log_planif, "No existe una cola de bloqueados para la clave solicitada");
+		return;
+	}
+
+	log_debug(log_planif, "El estado de la cola de bloqueados para la clave solicitada es:");
+
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
+	if(list_is_empty(resultado->bloqueados))
+		log_debug(log_planif, "La cola de bloqueados esta vacia");
+	list_iterate(resultado->bloqueados, imprimir_bloqueado);
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+}
+
 t_ready* duplicar_esi_ready(t_ready esi){
 	t_ready* resultado = (t_ready*) malloc(sizeof(t_ready));
 
@@ -458,7 +500,7 @@ void planificar(t_ready* esi_ready){
 	} else
 		insertar_ordenado(esi_ready);
 
-//	imprimir_estado_cola_listos();
+	imprimir_estado_cola_listos();
 }
 
 void mandar_a_ejecutar(){//Enviar orden de ejecucion al primer ESI de la cola de listos
@@ -509,6 +551,10 @@ void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){
 	desconectar_cliente(esi_ejecucion->socket);
 
 	// si esta en la cola de ready pasa esto
+	int cantidad_ocurrencias = list_count_satisfying(cola_de_listos, coincide_el_id);
+
+	log_debug(log_planif, "El esi de ID %d aparece %d veces en la cola de ready", esi_finalizado->ID, cantidad_ocurrencias);
+
 	pthread_mutex_lock(&semaforo_cola_listos);
 	list_remove_and_destroy_by_condition(cola_de_listos, coincide_el_id, funcion_al_pedo);
 	pthread_mutex_unlock(&semaforo_cola_listos);
@@ -531,25 +577,18 @@ void eliminar_de_bloqueados(t_ready* esi){
 		return esi_bloqueado->info_ejecucion->ID == esi->ID;
 	}
 
-	bool es_el_recurso_que_lo_tiene(void* elem){
-		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
+	void eliminar_si_lo_encuentra(void* elem){
+		t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
 
-		bool resultado = list_any_satisfy(bloqueados_por_clave->bloqueados, es_el_esi);
+		log_debug(log_planif, "El recurso a analizar es %s", bloq->clave);
 
-		return resultado;
-
+		if(list_any_satisfy(bloq->bloqueados, es_el_esi))
+			list_remove_and_destroy_by_condition(bloq->bloqueados, es_el_esi, blocked_destroyer);
 	}
 
 	pthread_mutex_lock(&semaforo_cola_bloqueados);
-	t_bloqueados_por_clave* bloqueados_por_clave = list_find(colas_de_bloqueados, es_el_recurso_que_lo_tiene);
+	list_iterate(colas_de_bloqueados, eliminar_si_lo_encuentra);
 	pthread_mutex_unlock(&semaforo_cola_bloqueados);
-
-	if(bloqueados_por_clave == NULL) return;
-
-	pthread_mutex_lock(&semaforo_cola_bloqueados);
-	list_remove_and_destroy_by_condition(bloqueados_por_clave->bloqueados, es_el_esi, blocked_destroyer);
-	pthread_mutex_unlock(&semaforo_cola_bloqueados);
-
 }
 
 void actualizar_disponibilidad_recursos(int id_esi){
@@ -633,6 +672,14 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 		return string_equals_ignore_case(bloq->clave, recurso);
 	}
 
+	if(list_is_empty(bloqueados_de_la_clave->bloqueados)){
+		log_debug(log_planif, "La lista de bloqueados para la clave %s esta vacia !", bloqueados_de_la_clave->clave);
+	}else {
+		log_debug(log_planif, "La lista de bloqueados para la clave %s NO esta vacia...", bloqueados_de_la_clave->clave);
+
+		imprimir_estado_cola_bloqueados(bloqueados_de_la_clave->clave);
+	}
+
 	if(id_esi_que_lo_libero == bloqueados_de_la_clave->id_proximo_esi
 			&& list_is_empty(bloqueados_de_la_clave->bloqueados)){
 
@@ -641,6 +688,10 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 		pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
 	}else{
+		if(!bloqueados_de_la_clave || !bloqueados_de_la_clave->bloqueados){
+			log_error(log_planif, "Mira, aca esta en null....... ");
+//			finalizar();
+		}
 		actualizar_privilegiado(bloqueados_de_la_clave);
 	}
 
@@ -681,10 +732,21 @@ void actualizar_privilegiado(t_bloqueados_por_clave* bloqueados_de_la_clave){
 
 	bloqueados_de_la_clave->id_proximo_esi = proximo_con_derecho->info_ejecucion->ID;
 
+	if(!proximo_con_derecho->info_ejecucion){
+			log_error(log_planif, "Proximo con derecho->info_ejecucion esta en null");
+	}
+
 	aniadir_a_listos(*(proximo_con_derecho->info_ejecucion));
+
+	if(!proximo_con_derecho){
+		log_error(log_planif, "Proximo con derecho esta en null");
+	}
 
 	blocked_destroyer(proximo_con_derecho);
 
+	log_debug(log_planif, "Pase el blocked_destroyer");
+
+	free(proximo_con_derecho);
 }
 
 t_blocked* proximo_no_bloqueado_por_consola(t_list* bloqueados){

@@ -53,6 +53,7 @@ int				com_listar											(char* parametro);
 int				com_kill											(char* parametro);
 int				com_status											(char* parametro);
 int				com_deadlock										(char* parametro);
+int 			com_check											(char* parametro);
 
 
 //VARIABLES GLOBALES
@@ -77,6 +78,7 @@ void 			involucrados_destroyer								(void* elem);
 void 			cargar_si_recurso_forma_parte_de_un_deadlock		(t_bloqueados_por_clave* bloqueados_por_clave);
 t_list* 		asignados_para_el_esi								(int id_esi);
 bool 			hay_que_descartarla									(t_bloqueados_por_clave* bloqueados_por_clave);
+t_list* 		duplicar_lista_involucrados							(t_list* involucrados);
 
 
 #endif /* FUNCIONES_CONSOLA_H_ */

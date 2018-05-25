@@ -81,9 +81,13 @@ void setear_comandos(){
 	comandos[7].funcion = com_deadlock;
 	comandos[7].descripcion = "Permitirá analizar los deadlocks que existan en el sistema y a que ESI están asociados";
 
-	comandos[8].nombre = (char *)NULL;
-	comandos[8].funcion = (Function *)NULL;
-	comandos[8].descripcion = (char *)NULL;
+	comandos[8].nombre = "check";
+	comandos[8].funcion = com_check;
+	comandos[8].descripcion = "Permitirá mostrar el estado de la cola de ready";
+
+	comandos[9].nombre = (char *)NULL;
+	comandos[9].funcion = (Function *)NULL;
+	comandos[9].descripcion = (char *)NULL;
 
 }
 
@@ -307,7 +311,6 @@ int	com_desbloquear(char* parametro){
 			return 0;
 		}
 
-
 		int id_esi = esi_bloqueado->info_ejecucion->ID;
 		char* informe = string_new();
 
@@ -506,7 +509,7 @@ int	com_deadlock(char* parametro){
 			imprimir("Encontre un ciclo!!");
 			t_espera_circular* espera = malloc(sizeof(t_espera_circular));
 
-			espera->esis_por_recurso = list_duplicate(nueva_espera->esis_por_recurso);
+			espera->esis_por_recurso = duplicar_lista_involucrados(nueva_espera->esis_por_recurso);
 			espera->id_espera = id_espera;
 
 			id_espera++;
@@ -531,6 +534,26 @@ int	com_deadlock(char* parametro){
 	pthread_mutex_unlock(&semaforo_pausa);
 
 	return 0;
+}
+
+t_list* duplicar_lista_involucrados(t_list* involucrados){
+	t_list* involucrados_copia = list_create();
+
+	void copiar(void* elem){
+		t_involucrados* originales = (t_involucrados*) elem;
+
+		t_involucrados* copia = malloc(sizeof(t_involucrados));
+
+		copia->id_bloqueado = originales->id_bloqueado;
+		copia->id_esi_duenio = originales->id_esi_duenio;
+		copia->recurso = strdup(originales->recurso);
+
+		list_add(involucrados_copia, copia);
+	}
+
+	list_iterate(involucrados, copiar);
+
+	return involucrados_copia;
 }
 
 void imprimir_esperas_circulares(){
@@ -796,7 +819,32 @@ void imprimir_cola_bloqueados(char* clave){
 
 }
 
+int com_check(char* parametro){
 
+	char* mensaje = string_from_format("El estado de la cola de listos es: [");
+
+	void imprimir_listo(void* elem){
+		t_ready* esi = (t_ready*) elem;
+
+		string_append_with_format(&mensaje, " ESI %d,", esi->ID);
+	}
+
+	pthread_mutex_lock(&semaforo_cola_listos);
+	list_iterate(cola_de_listos, imprimir_listo);
+	pthread_mutex_unlock(&semaforo_cola_listos);
+
+	char* mensaje_final = string_substring(mensaje, 0, strlen(mensaje) - 1);
+
+	free(mensaje);
+
+	string_append(&mensaje_final, "]");
+
+	imprimir(mensaje_final);
+
+	free(mensaje_final);
+
+	return 0;
+}
 
 
 
