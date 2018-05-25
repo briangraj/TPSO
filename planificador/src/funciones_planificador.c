@@ -365,7 +365,11 @@ void atender_set(){
 	char* clave = recibir_clave();
 	int resultado_set;
 
-	if(verificar_tenencia_de_la_clave(id_esi, clave))
+	pthread_mutex_lock(&semaforo_asignaciones);
+	bool tiene_la_clave = verificar_tenencia_de_la_clave(id_esi, clave);
+	pthread_mutex_unlock(&semaforo_asignaciones);
+
+	if(tiene_la_clave)
 		resultado_set = SET_EXITOSO;
 	else
 		resultado_set = SET_INVALIDO;
@@ -613,9 +617,7 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 		return rec->id_esi == id_esi_que_lo_libero;
 	}
 
-	pthread_mutex_lock(&semaforo_asignaciones);
 	t_recursos_por_esi* recursos_del_esi = list_find(colas_de_asignaciones, es_el_esi_con_el_recurso);
-	pthread_mutex_unlock(&semaforo_asignaciones);
 
 	bool es_el_recurso_asignado(void* elem){
 		char* clave = (char*)elem;
@@ -623,9 +625,7 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 		return string_equals_ignore_case(clave, recurso);
 	}
 
-	pthread_mutex_lock(&semaforo_asignaciones);
 	list_remove_and_destroy_by_condition(recursos_del_esi->recursos_asignados, es_el_recurso_asignado, funcion_al_pedo);
-	pthread_mutex_unlock(&semaforo_asignaciones);
 
 	bool es_el_recurso(void* elem){
 		t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
@@ -661,11 +661,9 @@ bool verificar_tenencia_de_la_clave(int id_esi, char* clave){
 		return recursos_del_esi->id_esi == id_esi;
 	}
 
-	pthread_mutex_lock(&semaforo_asignaciones);
 	t_recursos_por_esi* recursos_del_esi = list_find(colas_de_asignaciones, es_el_esi);
 
 	bool resultado = list_any_satisfy(recursos_del_esi->recursos_asignados, es_el_recurso_buscado);
-	pthread_mutex_unlock(&semaforo_asignaciones);
 
 	return resultado;
 }

@@ -17,6 +17,7 @@ void levantar_consola(void * param){
 		exit(1);
 	}
 
+	nueva_espera = malloc(sizeof(t_espera_circular));
 
 	setear_comandos();
 
@@ -29,6 +30,7 @@ void levantar_consola(void * param){
 
 	    if(!strncmp(linea, "exit", 4)) {
 	       free(linea);
+	       free(nueva_espera);
 	       kill(PLANIFICADOR_PID, SIGUSR1);
 	       close(SOCKET_COORDINADOR_CONSOLA);
 	       break;
@@ -660,12 +662,12 @@ bool hay_que_descartarla(t_bloqueados_por_clave* bloqueados_por_clave){
 		t_espera_circular* espera = (t_espera_circular*) elem;
 
 		bool es_la_clave(void* elem){
-			t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
+			t_involucrados* bloq = (t_involucrados*) elem;
 
-			return string_equals_ignore_case(bloq->clave, bloqueados_por_clave->clave);
+			return string_equals_ignore_case(bloq->recurso, bloqueados_por_clave->clave);
 		}
 
-		return list_any_satisfy(espera->esis_por_recurso, es_la_clave);
+		return (espera->esis_por_recurso != NULL) && list_any_satisfy(espera->esis_por_recurso, es_la_clave);
 	}
 
 	pthread_mutex_lock(&semaforo_cola_listos);
