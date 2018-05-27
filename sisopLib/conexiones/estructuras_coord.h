@@ -17,6 +17,7 @@ typedef struct solicitud {
 	int instruccion;
 	char* clave;
 	char* valor;
+	int socket_esi;
 } t_solicitud;
 
 typedef struct instancia {

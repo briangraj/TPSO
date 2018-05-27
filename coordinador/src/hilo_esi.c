@@ -71,6 +71,7 @@ t_solicitud* crear_get(int socket){
 
 	solicitud->instruccion = OPERACION_GET;
 	solicitud->clave = recibir_string(socket);
+	solicitud->socket_esi = socket;
 
 	return solicitud;
 }
@@ -81,6 +82,7 @@ t_solicitud* crear_set(int socket){
 	solicitud->instruccion = OPERACION_SET;
 	solicitud->clave = recibir_string(socket);
 	solicitud->valor = recibir_string(socket);
+	solicitud->socket_esi = socket;
 
 	return solicitud;
 }
@@ -90,6 +92,7 @@ t_solicitud* crear_store(int socket){
 
 	solicitud->instruccion = OPERACION_GET;
 	solicitud->clave = recibir_string(socket);
+	solicitud->socket_esi = socket;
 
 	return solicitud;
 }
