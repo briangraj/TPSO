@@ -10,9 +10,9 @@
 
 #include "conexiones/threads.h"
 
-void crear_hilo_planificador(int socket_cliente);
+void crear_hilo_planificador();
 
-void* atender_planificador(void* socket_cliente);
+void* atender_planificador();
 
 
 #endif /* HILO_PLANIFICADOR_H_ */

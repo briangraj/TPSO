@@ -23,11 +23,13 @@
 
 int CANTIDAD_ENTRADAS_TOTALES;
 int TAMANIO_ENTRADA;
-char* ip_coord;
-int puerto_coord;
-t_log* log_coord;
+char* IP_COORD;
+int PUERTO_COORD;
+t_log* LOG_COORD;
 
-t_list* instancias;
+t_list* INSTANCIAS;
+int SOCKET_PLANIF;
+pthread_mutex_t SEM_SOCKET_PLANIF;
 
 // Funciones
 void leer_config();

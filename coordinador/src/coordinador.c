@@ -5,24 +5,26 @@
 #include "conexiones/threads.h"
 
 int main(void) {
-	log_coord = log_create("Coordinador.log", "Coordinador", 1, LOG_LEVEL_TRACE);
+	LOG_COORD = log_create("Coordinador.log", "Coordinador", 1, LOG_LEVEL_TRACE);
 
 	int listener = crear_socket();// creo socket para escuchar conexiones entrantes
 
 	int yes=1;// para setsockopt() SO_REUSEADDR, más abajo
 
 	if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-		log_error(log_coord, "Error en el setsockopt");
+		log_error(LOG_COORD, "Error en el setsockopt");
 		exit(EXIT_FAILURE);
 	}
-	instancias = list_create();
+
+	INSTANCIAS = list_create();
+
 	leer_config();
 
-	bindear_socket(listener, ip_coord, puerto_coord, log_coord);
+	bindear_socket(listener, IP_COORD, PUERTO_COORD, LOG_COORD);
 
 	// lo pongo a escuchar conexiones nuevas
 	if (listen(listener, 10) == -1) {
-		log_error(log_coord, "No se pudo poner el socket a escuchar");
+		log_error(LOG_COORD, "No se pudo poner el socket a escuchar");
 		exit(EXIT_FAILURE);
 	}
 
@@ -36,28 +38,19 @@ int main(void) {
 		int socket_cliente = accept(listener, (struct sockaddr *) &remoteaddr, &addrlen);
 
 		if (socket_cliente == -1)
-			log_error(log_coord, "ERROR: no se pudo aceptar la conexion del socket %d", socket_cliente);
+			log_error(LOG_COORD, "ERROR: no se pudo aceptar la conexion del socket %d", socket_cliente);
 		else {
-			informar_conexion_exitosa_a(socket_cliente);
+			informar_conexion_exitosa_a(socket_cliente);//FIXME que onda con esto? le avisa que se conecto bien 2 veces?
 			atender_handshake(socket_cliente);
 		}
 
 	}
 
-//						// GESTIONO PETICIONES DE LOS CLIENTES CONOCIDOS
-//						protocolo_cliente = recibir_protocolo(socket);
-//
-//						if(protocolo_cliente < 0)
-//							desconectar_cliente(socket);
-//
-//						else
-//							atender_protocolo(protocolo_cliente, socket);
-
 }
 
 void leer_config(){
-	ip_coord= "127.0.0.1";
-	puerto_coord = 5051;
+	IP_COORD= "127.0.0.1";
+	PUERTO_COORD = 5051;
 }
 
 void atender_handshake(int socket_cliente){
@@ -72,7 +65,7 @@ void atender_handshake(int socket_cliente){
 		 */
 		informar_conexion_exitosa_a(socket_cliente);
 
-		log_trace(log_coord, "Se realizo el handshake con el ESI en el socket %d", socket_cliente);
+		log_trace(LOG_COORD, "Se realizo el handshake con el ESI en el socket %d", socket_cliente);
 
 		crear_hilo_esi(socket_cliente);
 	break;
@@ -83,9 +76,13 @@ void atender_handshake(int socket_cliente){
 		 */
 		informar_conexion_exitosa_a(socket_cliente);
 
-		log_trace(log_coord, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
+		log_trace(LOG_COORD, "Se realizo el handshake con el Planificador en el socket %d", socket_cliente);
 
-		crear_hilo_planificador(socket_cliente); //TODO falta hacer
+		pthread_mutex_init(&SEM_SOCKET_PLANIF, NULL);
+
+		SOCKET_PLANIF = socket_cliente;
+
+		crear_hilo_planificador(); //TODO falta hacer
 	break;
 	case INSTANCIA: {
 		/**
@@ -98,15 +95,15 @@ void atender_handshake(int socket_cliente){
 		int id = recibir_id(socket_cliente);
 
 		if(id <= 0){
-			log_error(log_coord, "No se pudo recibir el id de la instancia conectada en el socket %d", socket_cliente);
+			log_error(LOG_COORD, "No se pudo recibir el id de la instancia conectada en el socket %d", socket_cliente);
 			return;
 		}
 
 		t_instancia* instancia = crear_instancia(id, socket_cliente);
 
-		list_add(instancias, (void*) instancia);
+		list_add(INSTANCIAS, (void*) instancia);
 
-		log_trace(log_coord, "Se realizo el handshake con la Instancia en el socket %d", socket_cliente);
+		log_trace(LOG_COORD, "Se realizo el handshake con la Instancia en el socket %d", socket_cliente);
 
 		crear_hilo_instancia(instancia);
 	}
@@ -118,6 +115,6 @@ void atender_handshake(int socket_cliente){
 }
 
 void desconectar_cliente(int cliente){
-	log_trace(log_coord, "Se desconecto el cliente %d", cliente);
+	log_trace(LOG_COORD, "Se desconecto el cliente %d", cliente);
 	close(cliente);
 }
