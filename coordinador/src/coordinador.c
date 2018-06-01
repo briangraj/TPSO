@@ -5,22 +5,11 @@
 #include "conexiones/threads.h"
 
 int main(void) {
-	LOG_COORD = log_create("Coordinador.log", "Coordinador", 1, LOG_LEVEL_TRACE);
+	setup_coord();
 
 	int listener = crear_socket();// creo socket para escuchar conexiones entrantes
 
-	int yes=1;// para setsockopt() SO_REUSEADDR, más abajo
-
-	if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-		log_error(LOG_COORD, "Error en el setsockopt");
-		exit(EXIT_FAILURE);
-	}
-
-	INSTANCIAS = list_create();
-
-	leer_config();
-
-	bindear_socket(listener, IP_COORD, PUERTO_COORD, LOG_COORD);
+	bindear_socket_server(listener);
 
 	// lo pongo a escuchar conexiones nuevas
 	if (listen(listener, 10) == -1) {
@@ -48,9 +37,28 @@ int main(void) {
 
 }
 
+void setup_coord(){
+	LOG_COORD = log_create("Coordinador.log", "Coordinador", 1, LOG_LEVEL_TRACE);
+
+	leer_config();
+
+	INSTANCIAS = list_create();
+}
+
 void leer_config(){
 	IP_COORD= "127.0.0.1";
 	PUERTO_COORD = 5051;
+}
+
+void bindear_socket_server(int listener) {
+	int yes = 1;
+
+	if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof (int)) == -1){
+		log_error(LOG_COORD, "Error en el setsockopt");
+		exit(EXIT_FAILURE);
+	}
+
+	bindear_socket(listener, IP_COORD, PUERTO_COORD, LOG_COORD);
 }
 
 void atender_handshake(int socket_cliente){
