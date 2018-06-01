@@ -21,7 +21,7 @@ void* crear_instancia(int id, int socket){
 	instancia->pedidos = queue_create();
 	sem_init(&instancia->sem, 0, 0);
 	instancia->socket = socket;
-	instancia->esta_conectado = true;
+	instancia->esta_activa = true;
 
 	return instancia;
 }

@@ -42,11 +42,11 @@ void setup_coord(){
 
 	leer_config();
 
-	INSTANCIAS = list_create();
+	INSTANCIAS = list_create();//t_instancia
 }
 
 void leer_config(){
-	IP_COORD= "127.0.0.1";
+	IP_COORD = "127.0.0.1";
 	PUERTO_COORD = 5051;
 }
 

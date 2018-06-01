@@ -25,8 +25,9 @@ typedef struct instancia {
 	int id;
 	int socket;
 	sem_t sem;
-	bool esta_conectado;
+	bool esta_activa;
 	t_queue* pedidos;
+	t_list* claves;//list<char*>
 } t_instancia;
 
 typedef struct { // esto es lo que nos tienen que mandar cuando reciben el protocolo STATUS :D (y en este orden)

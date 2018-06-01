@@ -54,10 +54,63 @@ int enviar_a_planif(int protocolo, void* payload, int tam_payload){
 	return resultado_envio;
 }
 
+t_list* instancias_con_clave(t_solicitud* solicitud){
+
+	bool instancia_contiene_clave(t_instancia* instancia){
+		bool contiene_clave(char* clave){
+			return string_equals_ignore_case(clave, solicitud->clave);
+		}
+
+		return list_any_satisfy(instancia->claves, contiene_clave);
+	}
+
+	return list_filter(INSTANCIAS, instancia_contiene_clave);
+}
+
+bool instancia_activa(t_instancia* instancia){
+	return instancia->esta_activa;
+}
+
+void crear_clave_con_instancia_caida(t_solicitud* solicitud, t_list* instancias){
+	/**
+	 * hay que usar el algoritmo de distribucion para elegir
+	 * en que instancia se va a crear la clave nueva, y setear
+	 * en todas las instancias un flag que indique que cuando
+	 * una de ellas vuelva a conectarse, tiene que borrar una
+	 * clave.
+	 *
+	 * Aca surge el problema de que hay que guardar en
+	 * algun lado cual es la clave que se debe borrar.
+	 *
+	 * Una solucion posible es usar una estructura t_clave, que
+	 * tenga un flag que indique si tiene que ser borrada o no.
+	 * Otra solucion es una lista de claves que deben ser borradas
+	 * en el t_instancia.
+	 *
+	 * Usar un t_clave puede ser mucho refactor, capaz rinde mas
+	 * la lista de claves. Lo malo de la lista de claves es que, para
+	 * borrar una clave, habria que tocar 2 listas al mismo tiempo
+	 */
+}
+
+void crear_clave(t_solicitud* solicitud){
+	distribuir(solicitud);//FIXME creo que es esto solo :O
+}
+
+void validar_existencia_clave(t_solicitud* solicitud){
+	t_list* instancias = instancias_con_clave(solicitud);
+
+	if(!list_is_empty(instancias))
+		if(!list_any_satisfy(instancias, instancia_activa))
+			crear_clave_con_instancia_caida(solicitud, instancias);
+	else
+		crear_clave(solicitud);
+}
+
 int realizar_get(t_solicitud* solicitud){
 	//[GET_CLAVE | id, tam_clave, clave]
 
-	//TODO ver que onda cuando la clave no existe
+	validar_existencia_clave(solicitud);
 
 	if(enviar_get_a_planif(solicitud) <= 0){
 		log_error(LOG_COORD, "no se pudo enviar el get del esi %d de la clave %s al planificador",

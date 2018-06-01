@@ -27,7 +27,7 @@ char* IP_COORD;
 int PUERTO_COORD;
 t_log* LOG_COORD;
 
-t_list* INSTANCIAS;
+t_list* INSTANCIAS;//t_instancia
 int SOCKET_PLANIF;
 pthread_mutex_t SEM_SOCKET_PLANIF;
 
