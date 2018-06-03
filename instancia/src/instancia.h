@@ -26,7 +26,7 @@ typedef struct {
 	char* clave;
 	int tamanio_bytes_clave;
 	int tamanio_entradas_clave;
-	void* valor;//se deberia levantar con mmap
+	//void* valor;//se deberia levantar con mmap
 }t_entrada; //TODO mejor nombre?
 
 char* PUNTO_MONTAGE;
@@ -36,8 +36,7 @@ int CANTIDAD_ENTRADAS_TOTALES;
 int TAMANIO_ENTRADA;
 int MI_ID;
 int socket_coordinador;
-//int nro_entrada;
-char* clave_a_encontrar;
+void* memoria;
 
 void (*algoritmo_reemplazo)(char*, char*);
 
@@ -57,14 +56,21 @@ void leer_protocolo(int protocolo);
 void configuracion_entradas();
 void crear_tabla_de_entradas();
 t_entrada* levantar_entrada(char* nombre);
+int tamanio_entrada(char* nombre);
+void levantar_entrada_a_memoria(t_entrada* entrada);
+void copiar_a_memoria(t_entrada* entrada, void* valor);
 int abrir_entrada(char* nombre);
 struct stat crear_stat(int fd);
 void* mi_mmap(int fd, struct stat stat);
 int entradas_ocupadas(int tamanio);
 int entrada_para(int cant_entradas);
+int entradas_libres_desde(int nro_entrada, int entradas_necesarias);
 void setear_bitarray(t_entrada* entrada);
-void recibir_set();
+void atender_set();
 int modificar_entrada(char* clave, char* valor);
+void aumentar_tamanio_entrada(t_entrada* entrada, char* valor);
+void actualizar_tamanio_entrada(t_entrada* entrada, char* valor);
+void liberar_entradas_desde(int desde_entrada, int cantidad);
 void reemplazo_circular(char* clave, char* valor);
 t_entrada* buscar_entrada(char* clave);
 

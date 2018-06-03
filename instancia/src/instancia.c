@@ -77,7 +77,11 @@ void leer_protocolo(int protocolo){
 		configuracion_entradas();
 		break;
 	case OPERACION_SET:
-		recibir_set();
+		atender_set();
+		break;
+	case OPERACION_STORE:
+		atender_store();
+		break;
 	}
 }
 
@@ -89,6 +93,8 @@ void configuracion_entradas(){
 }
 
 void crear_tabla_de_entradas(){
+	memoria = malloc(TAMANIO_ENTRADA * CANTIDAD_ENTRADAS_TOTALES);
+
 	tabla_de_entradas = list_create();
 	t_entrada* entrada;
 
@@ -108,25 +114,49 @@ void crear_tabla_de_entradas(){
 }
 
 t_entrada* levantar_entrada(char* nombre){
-	int file_desc = abrir_entrada(nombre);
-	struct stat stat_entrada = crear_stat(file_desc);
-
 	t_entrada* entrada_nueva = malloc(sizeof(t_entrada));
 	entrada_nueva->clave = string_new();
 	string_append(&entrada_nueva->clave, nombre);
 
-	entrada_nueva->tamanio_bytes_clave = stat_entrada.st_size;
-
-	entrada_nueva->valor = mi_mmap(file_desc, stat_entrada);
+	entrada_nueva->tamanio_bytes_clave = tamanio_entrada(nombre); //stat_entrada.st_size;
 
 	entrada_nueva->tamanio_entradas_clave = entradas_ocupadas(entrada_nueva->tamanio_bytes_clave);
 
 	//no lo chequeo por que se usa solo en la inicializacion (no va a pasar que tenga menos espacio que un estado anterior)
 	entrada_nueva->nro_entrada = entrada_para(entrada_nueva->tamanio_entradas_clave);
 
+	levantar_entrada_a_memoria(entrada_nueva);
+
 	setear_bitarray(entrada_nueva);
 
 	return entrada_nueva;
+}
+
+int tamanio_entrada(char* nombre){
+	int file_desc = abrir_entrada(nombre);
+	struct stat stat_entrada = crear_stat(file_desc);
+
+	int tamanio = stat_entrada.st_size;
+
+	close(file_desc);
+	return tamanio;
+}
+
+void levantar_entrada_a_memoria(t_entrada* entrada){
+	int file_desc = abrir_entrada(entrada->clave);
+	struct stat stat_entrada = crear_stat(file_desc);
+
+	void* valor = mi_mmap(file_desc, stat_entrada);
+
+	copiar_a_memoria(entrada, valor);
+
+	munmap(valor, entrada->tamanio_bytes_clave);
+	close(file_desc);
+}
+
+void copiar_a_memoria(t_entrada* entrada, void* valor){
+	int offset = TAMANIO_ENTRADA * entrada->nro_entrada;
+	memcpy(memoria + offset, valor, entrada->tamanio_bytes_clave);
 }
 
 int abrir_entrada(char* nombre){
@@ -210,7 +240,7 @@ void setear_bitarray(t_entrada* entrada){
 		bitarray_set_bit(bitarray_entradas, i);
 }
 
-void recibir_set(){
+void atender_set(){
 	char* clave = recibir_string(socket_coordinador);
 	char* valor = recibir_string(socket_coordinador);
 
@@ -225,19 +255,62 @@ int modificar_entrada(char* clave, char* valor){
 
 	if(entradas_nuevo_valor == entrada->tamanio_entradas_clave){
 		entrada->tamanio_bytes_clave = string_length(valor);
-		//todo primero habria que borrar el valor anterior
-		memcpy(entrada->valor, valor, string_length(valor));
-	} else {
-		if(entradas_nuevo_valor > entrada->tamanio_bytes_clave){
-			int entradas_libres = entradas_libres_desde(entrada->nro_entrada + entrada->tamanio_entradas_clave, entradas_faltantes);
-			if(entradas_libres != entradas_faltantes)
-				return -1;
-		}
-
+		copiar_a_memoria(entrada, valor);
+	} else if(entradas_nuevo_valor > entrada->tamanio_bytes_clave){
+		int entradas_libres = entradas_libres_desde(entrada->nro_entrada + entrada->tamanio_entradas_clave, entradas_faltantes);
+		if(entradas_libres != entradas_faltantes)
+			return -1;
+		aumentar_tamanio_entrada(entrada, valor);
+	} else
 		actualizar_tamanio_entrada(entrada, valor);
-	}
 
 	return SET_EXITOSO;
+}
+
+void aumentar_tamanio_entrada(t_entrada* entrada, char* valor){
+	int diferencia_entradas = entradas_ocupadas(string_length(valor)) - entrada->tamanio_entradas_clave;
+	int cant_libres = entradas_libres_desde(entrada->nro_entrada + entrada->tamanio_entradas_clave, diferencia_entradas);
+
+	if(cant_libres >= diferencia_entradas){
+		actualizar_tamanio_entrada(entrada, valor);
+	} else
+		;//todo habria que buscar otra posicion
+}
+
+void actualizar_tamanio_entrada(t_entrada* entrada, char* valor){
+	liberar_entradas_desde(entrada->nro_entrada, entrada->tamanio_entradas_clave);
+	entrada->tamanio_bytes_clave = string_length(valor);
+	entrada->tamanio_entradas_clave = entradas_ocupadas(string_length(valor));
+	copiar_a_memoria(entrada, valor);
+	setear_bitarray(entrada);
+}
+
+void liberar_entradas_desde(int desde_entrada, int cantidad){
+	int i;
+	for(i = 0; i < cantidad; i++)
+		bitarray_clean_bit(bitarray_entradas, desde_entrada + i);
+}
+
+void atender_store(){
+	char* clave = recibir_string(socket_coordinador);
+
+	t_entrada* entrada = buscar_entrada(clave);
+
+	persistir(entrada);
+}
+
+void persistir(void* entrada_void){
+	t_entrada* entrada = (t_entrada*)entrada_void;
+	int file_desc = abrir_entrada(entrada->clave);
+	ftruncate(file_desc, entrada->tamanio_bytes_clave);
+	struct stat stat_entrada = crear_stat(file_desc);
+	void* archivo_valor = mi_mmap(file_desc, stat_entrada);
+
+	int offset = TAMANIO_ENTRADA * entrada->nro_entrada;
+	memcpy(archivo_valor, memoria + offset, entrada->tamanio_bytes_clave);
+
+	munmap(archivo_valor, stat_entrada.st_size);
+	close(file_desc);
 }
 
 void reemplazo_circular(char* clave, char* valor){
@@ -266,11 +339,9 @@ void reemplazo_circular(char* clave, char* valor){
 }
 
 t_entrada* buscar_entrada(char* clave){
-	//clave_a_encontrar = clave;
-//TODO ver que esto funcione
+	//TODO ver que esto funcione
 	bool comparar_clave(void* void_clave){
 		t_entrada* entrada_aux = (t_entrada*)void_clave;
-		//char* clave_a_encontrar = clave;
 
 		return string_equals_ignore_case(entrada_aux->clave, clave);
 	}
