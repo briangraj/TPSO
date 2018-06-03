@@ -62,10 +62,16 @@ struct stat crear_stat(int fd);
 void* mi_mmap(int fd, struct stat stat);
 int entradas_ocupadas(int tamanio);
 int entrada_para(int cant_entradas);
+int entradas_libres_desde(int nro_entrada, int entradas_necesarias);
 void setear_bitarray(t_entrada* entrada);
 void recibir_set();
 int modificar_entrada(char* clave, char* valor);
-void reemplazo_circular(char* clave, char* valor);
+t_entrada* reemplazo_circular(char* clave, char* valor);
+t_entrada* reemplazo_bsu(char* clave, char* valor);
+bool es_entrada_atomica(void* entrada_void);
+bool bsu_entrada(void* entrada1, void* entrada2);
 t_entrada* buscar_entrada(char* clave);
+int entradas_disponibles();
+void actualizar_tamanio_entrada(t_entrada* entrada, char* valor);
 
 #endif /* SRC_INSTANCIA_H_ */
