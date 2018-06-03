@@ -28,6 +28,7 @@ typedef struct instancia {
 	bool esta_activa;
 	t_queue* pedidos;
 	t_list* claves;//list<char*>
+	t_list* claves_a_borrar;
 } t_instancia;
 
 typedef struct { // esto es lo que nos tienen que mandar cuando reciben el protocolo STATUS :D (y en este orden)

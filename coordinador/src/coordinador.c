@@ -89,8 +89,6 @@ void atender_handshake(int socket_cliente){
 		pthread_mutex_init(&SEM_SOCKET_PLANIF, NULL);
 
 		SOCKET_PLANIF = socket_cliente;
-
-		crear_hilo_planificador(); //TODO falta hacer
 	break;
 	case INSTANCIA: {
 		/**
