@@ -31,6 +31,7 @@ typedef struct {
 
 char* PUNTO_MONTAGE;
 char* IP_COORDINADOR;
+char* ALGORITMO_REEMPLAZO;
 int PUERTO_COORDINADOR;
 int CANTIDAD_ENTRADAS_TOTALES;
 int TAMANIO_ENTRADA;
@@ -41,7 +42,7 @@ void* memoria;
 t_entrada* (*algoritmo_reemplazo)(char*, char*);
 
 //para reemplazo circular
-t_entrada* entrada_a_reemplazar;
+int entrada_a_reemplazar;
 
 t_log* log_instancia;
 t_list* tabla_de_entradas;
@@ -49,7 +50,7 @@ t_bitarray* bitarray_entradas;
 
 void inicializar();
 void leer_config();
-void leer_algoritmo_reemplazo(t_config* config);
+void setup_algoritmo_reemplazo();
 void conectar_con_coordinador();
 void configuracion_entradas();
 void escuchar_coordinador();

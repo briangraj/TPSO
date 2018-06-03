@@ -36,20 +36,18 @@ void leer_config(){
 
 	PUNTO_MONTAGE = leer_string(archivo_config, "PUNTO_MONTAGE");
 
-	leer_algoritmo_reemplazo(archivo_config);
+	ALGORITMO_REEMPLAZO = leer_string(archivo_config, "ALGORITMO_REEMPLAZO");
 
 	config_destroy(archivo_config);
 }
 
-void leer_algoritmo_reemplazo(t_config* config){
-	char* algoritmo = leer_string(config, "ALGORITMO_REEMPLAZO");
-
-	if(string_equals_ignore_case(algoritmo, "CIRC")){
+void setup_algoritmo_reemplazo(){
+	if(string_equals_ignore_case(ALGORITMO_REEMPLAZO, "CIRC")){
 		algoritmo_reemplazo = &reemplazo_circular;
-		entrada_a_reemplazar = NULL;
-	} else if(string_equals_ignore_case(algoritmo, "LRU")){
+		entrada_a_reemplazar = 0;
+	} else if(string_equals_ignore_case(ALGORITMO_REEMPLAZO, "LRU")){
 
-	} else if(string_equals_ignore_case(algoritmo, "BSU")){
+	} else if(string_equals_ignore_case(ALGORITMO_REEMPLAZO, "BSU")){
 
 	}
 
@@ -102,6 +100,7 @@ void configuracion_entradas(){
 	recv(socket_coordinador, &TAMANIO_ENTRADA, sizeof(TAMANIO_ENTRADA), MSG_WAITALL);
 
 	crear_tabla_de_entradas();
+	setup_algoritmo_reemplazo();
 }
 
 void crear_tabla_de_entradas(){
@@ -342,12 +341,24 @@ t_entrada* reemplazo_circular(char* clave, char* valor){
 	//TODO faltan verificaciones: tamaño clave, espacio suficiente para almacenar valor
 
 	int tamanio_valor = string_length(valor);
-	entrada_a_reemplazar->tamanio_bytes_clave = tamanio_valor;
+	//entrada_a_reemplazar->tamanio_bytes_clave = tamanio_valor;
 	memcpy(entrada_a_reemplazar, valor, tamanio_valor);
 
-	entrada_a_reemplazar->tamanio_entradas_clave = entradas_ocupadas(tamanio_valor);
+	//entrada_a_reemplazar->tamanio_entradas_clave = entradas_ocupadas(tamanio_valor);
 
 	//entrada_a_reemplazar = list_get(tabla_de_entradas, (entrada_a_reemplazar->nro_entrada) + entradas_ocupadas);
+
+	int entrada_inicial = entrada_a_reemplazar;
+	do {
+		if(es_entrada_atomica(entrada_a_reemplazar))
+			break;
+
+		if(entrada_a_reemplazar == CANTIDAD_ENTRADAS_TOTALES - 1)
+			entrada_a_reemplazar = 0;
+		else
+			entrada_a_reemplazar++;
+	} while(entrada_a_reemplazar != );
+
 	return NULL;
 }
 
