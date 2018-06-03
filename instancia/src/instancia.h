@@ -38,7 +38,7 @@ int MI_ID;
 int socket_coordinador;
 void* memoria;
 
-void (*algoritmo_reemplazo)(char*, char*);
+t_entrada* (*algoritmo_reemplazo)(char*, char*);
 
 //para reemplazo circular
 t_entrada* entrada_a_reemplazar;
@@ -49,6 +49,7 @@ t_bitarray* bitarray_entradas;
 
 void inicializar();
 void leer_config();
+void leer_algoritmo_reemplazo(t_config* config);
 void conectar_con_coordinador();
 void configuracion_entradas();
 void escuchar_coordinador();
@@ -71,7 +72,13 @@ int modificar_entrada(char* clave, char* valor);
 void aumentar_tamanio_entrada(t_entrada* entrada, char* valor);
 void actualizar_tamanio_entrada(t_entrada* entrada, char* valor);
 void liberar_entradas_desde(int desde_entrada, int cantidad);
-void reemplazo_circular(char* clave, char* valor);
+void atender_store();
+void persistir(void* entrada_void);
+t_entrada* reemplazo_circular(char* clave, char* valor);
+t_entrada* reemplazo_bsu(char* clave, char* valor);
+bool es_entrada_atomica(void* entrada_void);
+bool bsu_entrada(void* entrada1, void* entrada2);
 t_entrada* buscar_entrada(char* clave);
+int entradas_disponibles();
 
 #endif /* SRC_INSTANCIA_H_ */

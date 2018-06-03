@@ -36,11 +36,23 @@ void leer_config(){
 
 	PUNTO_MONTAGE = leer_string(archivo_config, "PUNTO_MONTAGE");
 
-	//TODO esto hay que extraerlo
-	algoritmo_reemplazo = &reemplazo_circular;
-	entrada_a_reemplazar = list_get(tabla_de_entradas, 0);//TODO hay que ver donde va
+	leer_algoritmo_reemplazo(archivo_config);
 
 	config_destroy(archivo_config);
+}
+
+void leer_algoritmo_reemplazo(t_config* config){
+	char* algoritmo = leer_string(config, "ALGORITMO_REEMPLAZO");
+
+	if(string_equals_ignore_case(algoritmo, "CIRC")){
+		algoritmo_reemplazo = &reemplazo_circular;
+		entrada_a_reemplazar = NULL;
+	} else if(string_equals_ignore_case(algoritmo, "LRU")){
+
+	} else if(string_equals_ignore_case(algoritmo, "BSU")){
+
+	}
+
 }
 
 void conectar_con_coordinador(){
@@ -164,7 +176,7 @@ int abrir_entrada(char* nombre){
 
 	int fd = open(aux, O_RDWR);
 	if (fd == -1) {
-		log_error(log_instancia, "ERROR: no se puedo abrir la entrada: %s", nombre);
+		log_error(log_instancia, "no se puedo abrir la entrada: %s", nombre);
 		close(fd);
 		//rutina_final();
 		exit(1);
@@ -175,7 +187,7 @@ int abrir_entrada(char* nombre){
 struct stat crear_stat(int fd){
 	struct stat stat;
 	if(fstat(fd, &stat) < 0){
-		log_error(log_instancia, "ERROR: no se pudo cargar los atributos de una entrada");
+		log_error(log_instancia, "no se pudo cargar los atributos de una entrada");
 		close(fd);
 		//rutina_final();
 		exit(1);
@@ -187,7 +199,7 @@ void* mi_mmap(int fd, struct stat stat){
 	void* data = mmap(0, stat.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
 	if(data == MAP_FAILED){
-		log_error(log_instancia, "ERROR: no se pudo mapear uan entrada");
+		log_error(log_instancia, "no se pudo mapear uan entrada");
 		//perror("mmap");
 		close(fd);
 		//rutina_final();
@@ -259,7 +271,8 @@ int modificar_entrada(char* clave, char* valor){
 	} else if(entradas_nuevo_valor > entrada->tamanio_bytes_clave){
 		int entradas_libres = entradas_libres_desde(entrada->nro_entrada + entrada->tamanio_entradas_clave, entradas_faltantes);
 		if(entradas_libres != entradas_faltantes)
-			return -1;
+			return entradas_disponibles() > entradas_faltantes ? FS_NC : FS_EI;
+
 		aumentar_tamanio_entrada(entrada, valor);
 	} else
 		actualizar_tamanio_entrada(entrada, valor);
@@ -313,8 +326,7 @@ void persistir(void* entrada_void){
 	close(file_desc);
 }
 
-void reemplazo_circular(char* clave, char* valor){
-
+t_entrada* reemplazo_circular(char* clave, char* valor){
 	//esto era para agregarlo a la tabla
 //	if(!hay_espacio_para(entrada)){
 //		//TODO habria que compactar y/o reemplazar
@@ -336,6 +348,30 @@ void reemplazo_circular(char* clave, char* valor){
 	entrada_a_reemplazar->tamanio_entradas_clave = entradas_ocupadas(tamanio_valor);
 
 	//entrada_a_reemplazar = list_get(tabla_de_entradas, (entrada_a_reemplazar->nro_entrada) + entradas_ocupadas);
+	return NULL;
+}
+
+t_entrada* reemplazo_bsu(char* clave, char* valor){
+	t_list* entradas_atomicas = list_filter(tabla_de_entradas, es_entrada_atomica);
+
+	if(list_is_empty(entradas_atomicas))
+		return NULL;
+
+	list_sort(tabla_de_entradas, bsu_entrada);
+
+	t_entrada* entrada_a_reemplazar = list_get(entradas_atomicas, 0);
+	//ToDO habria que ver si mas de una cumple y desempatar
+	return entrada_a_reemplazar;
+}
+
+bool es_entrada_atomica(void* entrada_void){
+	t_entrada* entrada = (t_entrada*)entrada_void;
+
+	return entrada->tamanio_entradas_clave == 1;
+}
+
+bool bsu_entrada(void* entrada1, void* entrada2){
+	return ((t_entrada*)entrada1)->tamanio_bytes_clave > ((t_entrada*)entrada2)->tamanio_bytes_clave;
 }
 
 t_entrada* buscar_entrada(char* clave){
@@ -350,3 +386,15 @@ t_entrada* buscar_entrada(char* clave){
 	return entrada;
 
 }
+
+int entradas_disponibles(){
+	int i, contador = 0;
+	for(i = 0; i < CANTIDAD_ENTRADAS_TOTALES; i++)
+		if(!bitarray_test_bit(bitarray_entradas, i))
+			contador++;
+
+	return contador;
+}
+
+
+
