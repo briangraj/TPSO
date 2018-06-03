@@ -92,6 +92,9 @@ void leer_protocolo(int protocolo){
 	case OPERACION_STORE:
 		atender_store();
 		break;
+	case CREAR_CLAVE:
+		atender_crear_clave();
+		break;
 	}
 }
 
@@ -260,7 +263,7 @@ void atender_set(){
 }
 
 int modificar_entrada(char* clave, char* valor){
-	t_entrada* entrada = buscar_entrada(clave);
+	t_entrada* entrada = buscar_entrada(clave, buscar_entrada_clave);
 	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));
 	int entradas_faltantes = entradas_nuevo_valor - entrada->tamanio_entradas_clave;
 
@@ -306,7 +309,7 @@ void liberar_entradas_desde(int desde_entrada, int cantidad){
 void atender_store(){
 	char* clave = recibir_string(socket_coordinador);
 
-	t_entrada* entrada = buscar_entrada(clave);
+	t_entrada* entrada = buscar_entrada(clave, buscar_entrada_clave);
 
 	persistir(entrada);
 }
@@ -325,54 +328,88 @@ void persistir(void* entrada_void){
 	close(file_desc);
 }
 
-t_entrada* reemplazo_circular(char* clave, char* valor){
-	//esto era para agregarlo a la tabla
-//	if(!hay_espacio_para(entrada)){
-//		//TODO habria que compactar y/o reemplazar
-//		break;
-//	}
-//
-//	entrada->nro_entrada = nro_entrada;
-//	nro_entrada = entrada->tamanio_clave / TAMANIO_ENTRADA;
-//	if(entrada->tamanio_clave % TAMANIO_ENTRADA != 0)
-//		nro_entrada++;
-//	list_add(tabla_de_entradas, entrada);
+void atender_crear_clave(){
+	char* clave = recibir_string(socket_coordinador);
+	char* valor = recibir_string(socket_coordinador);
 
-	//TODO faltan verificaciones: tamaño clave, espacio suficiente para almacenar valor
+	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));
+	int nro_entrada = entrada_para(entradas_nuevo_valor);
 
-	int tamanio_valor = string_length(valor);
-	//entrada_a_reemplazar->tamanio_bytes_clave = tamanio_valor;
-	memcpy(entrada_a_reemplazar, valor, tamanio_valor);
-
-	//entrada_a_reemplazar->tamanio_entradas_clave = entradas_ocupadas(tamanio_valor);
-
-	//entrada_a_reemplazar = list_get(tabla_de_entradas, (entrada_a_reemplazar->nro_entrada) + entradas_ocupadas);
-
-	int entrada_inicial = entrada_a_reemplazar;
-	do {
-		if(es_entrada_atomica(entrada_a_reemplazar))
-			break;
-
-		if(entrada_a_reemplazar == CANTIDAD_ENTRADAS_TOTALES - 1)
-			entrada_a_reemplazar = 0;
-		else
-			entrada_a_reemplazar++;
-	} while(entrada_a_reemplazar != );
-
-	return NULL;
+	//todo deberia usar el algoritmo para nuevos valores que ocupen mas de una entrada?
+	if(nro_entrada == -1 && entradas_nuevo_valor == 1){
+		buscar_entrada_para_reemplazar(clave, valor);
+	}
 }
 
-t_entrada* reemplazo_bsu(char* clave, char* valor){
+void buscar_entrada_para_reemplazar(char* clave, char* valor){
+	int entrada_reemplazada = algoritmo_reemplazo(clave, valor);
+	reemplazar_entrada(entrada_reemplazada, clave, valor);
+}
+
+int reemplazo_circular(char* clave, char* valor){
+	int entrada_inicial = entrada_a_reemplazar;
+	bool hay_entrada = false;
+	do {
+		if(es_nro_entrada_atomica(entrada_a_reemplazar)){
+			hay_entrada = true;
+			break;
+		}
+
+		entrada_a_reemplazar = siguiente_entrada(entrada_a_reemplazar);
+	} while(entrada_a_reemplazar != entrada_inicial);
+
+	if(!hay_entrada)//todo si dio toda la vuelta, deberia avanzar la entrada_a_reemplazar?
+		return -1;
+
+	int entrada = entrada_a_reemplazar;
+	entrada_a_reemplazar = siguiente_entrada(entrada_a_reemplazar);
+	return entrada;
+}
+
+bool es_nro_entrada_atomica(int nro_entrada){
+	//todo ver si no es necesario pasar el nro_entrada a void*
+	t_entrada* entrada = buscar_entrada(&nro_entrada, buscar_entrada_nro);
+
+	return entrada == NULL ? false : entrada->tamanio_entradas_clave == 1;
+}
+
+t_entrada* buscar_entrada(void* buscado, bool (*comparador)(void*, void*)){
+	//TODO ver que esto funcione
+	bool comparar_clave(void* void_clave){
+		return comparador(void_clave, buscado);
+	}
+	t_entrada* entrada = (t_entrada*)list_find(tabla_de_entradas, comparar_clave);
+
+	return entrada;
+}
+
+bool buscar_entrada_clave(void* entrada_void, void* clave_void){
+	t_entrada* entrada_aux = (t_entrada*)entrada_void;
+
+	return string_equals_ignore_case(entrada_aux->clave, clave_void);
+}
+
+bool buscar_entrada_nro(void* entrada_void, void* nro_void){
+	t_entrada* entrada_aux = (t_entrada*)entrada_void;
+	int* nro_aux = (int*)nro_void;
+	return entrada_aux->nro_entrada == *nro_aux;
+}
+
+int siguiente_entrada(int nro_entrada){
+	return nro_entrada == CANTIDAD_ENTRADAS_TOTALES - 1 ? 0 : nro_entrada + 1;
+}
+
+int reemplazo_bsu(char* clave, char* valor){
 	t_list* entradas_atomicas = list_filter(tabla_de_entradas, es_entrada_atomica);
 
 	if(list_is_empty(entradas_atomicas))
-		return NULL;
+		return -1;
 
-	list_sort(tabla_de_entradas, bsu_entrada);
+	list_sort(tabla_de_entradas, mayor_entrada);
 
 	t_entrada* entrada_a_reemplazar = list_get(entradas_atomicas, 0);
 	//ToDO habria que ver si mas de una cumple y desempatar
-	return entrada_a_reemplazar;
+	return entrada_a_reemplazar->nro_entrada;
 }
 
 bool es_entrada_atomica(void* entrada_void){
@@ -381,21 +418,8 @@ bool es_entrada_atomica(void* entrada_void){
 	return entrada->tamanio_entradas_clave == 1;
 }
 
-bool bsu_entrada(void* entrada1, void* entrada2){
+bool mayor_entrada(void* entrada1, void* entrada2){
 	return ((t_entrada*)entrada1)->tamanio_bytes_clave > ((t_entrada*)entrada2)->tamanio_bytes_clave;
-}
-
-t_entrada* buscar_entrada(char* clave){
-	//TODO ver que esto funcione
-	bool comparar_clave(void* void_clave){
-		t_entrada* entrada_aux = (t_entrada*)void_clave;
-
-		return string_equals_ignore_case(entrada_aux->clave, clave);
-	}
-	t_entrada* entrada = (t_entrada*)list_find(tabla_de_entradas, comparar_clave);
-
-	return entrada;
-
 }
 
 int entradas_disponibles(){

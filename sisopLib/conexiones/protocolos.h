@@ -50,7 +50,8 @@ typedef enum {
 	//COORDINADOR - INSTANCIA
 	CONFIGURACION_ENTRADAS,
 	FS_EI,//fallo set: espacio insuficiente
-	FS_NC//fallo set: necesita compactar
+	FS_NC,//fallo set: necesita compactar
+	CREAR_CLAVE
 } t_protocolo;
 
 
