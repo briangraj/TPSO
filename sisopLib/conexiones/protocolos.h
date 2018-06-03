@@ -49,9 +49,12 @@ typedef enum {
 
 	//COORDINADOR - INSTANCIA
 	CONFIGURACION_ENTRADAS,
+	CREAR_CLAVE,
+	COMPACTACION,
+	OPERACION_EXITOSA,//se usaria para saber si salio bien el set, store o crear_clave en la instancia
 	FS_EI,//fallo set: espacio insuficiente
 	FS_NC,//fallo set: necesita compactar
-	CREAR_CLAVE
+	FALLO_REEMPLAZO
 } t_protocolo;
 
 

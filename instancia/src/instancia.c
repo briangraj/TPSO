@@ -46,9 +46,9 @@ void setup_algoritmo_reemplazo(){
 		algoritmo_reemplazo = &reemplazo_circular;
 		entrada_a_reemplazar = 0;
 	} else if(string_equals_ignore_case(ALGORITMO_REEMPLAZO, "LRU")){
-
+		algoritmo_reemplazo = reemplazo_lru;
 	} else if(string_equals_ignore_case(ALGORITMO_REEMPLAZO, "BSU")){
-
+		algoritmo_reemplazo = &reemplazo_bsu;
 	}
 
 }
@@ -82,20 +82,27 @@ void escuchar_coordinador(){
 }
 
 void leer_protocolo(int protocolo){
+	int resultado;
+
 	switch(protocolo){
 	case CONFIGURACION_ENTRADAS:
 		configuracion_entradas();
-		break;
+		return;
 	case OPERACION_SET:
-		atender_set();
+		resultado = atender_set();
 		break;
 	case OPERACION_STORE:
-		atender_store();
+		resultado = atender_store();
 		break;
 	case CREAR_CLAVE:
-		atender_crear_clave();
+		resultado = atender_crear_clave();
 		break;
+	case COMPACTACION:
+		atender_compactacion();//todo ver si deberia retornar algo
+		return;
 	}
+
+	enviar_paquete(resultado, socket_coordinador, 0, NULL);
 }
 
 void configuracion_entradas(){
@@ -128,11 +135,9 @@ void crear_tabla_de_entradas(){
 }
 
 t_entrada* levantar_entrada(char* nombre){
-	t_entrada* entrada_nueva = malloc(sizeof(t_entrada));
-	entrada_nueva->clave = string_new();
-	string_append(&entrada_nueva->clave, nombre);
+	t_entrada* entrada_nueva = crear_entrada(nombre);
 
-	entrada_nueva->tamanio_bytes_clave = tamanio_entrada(nombre); //stat_entrada.st_size;
+	entrada_nueva->tamanio_bytes_clave = tamanio_entrada_en_disco(nombre); //stat_entrada.st_size;
 
 	entrada_nueva->tamanio_entradas_clave = entradas_ocupadas(entrada_nueva->tamanio_bytes_clave);
 
@@ -146,7 +151,15 @@ t_entrada* levantar_entrada(char* nombre){
 	return entrada_nueva;
 }
 
-int tamanio_entrada(char* nombre){
+t_entrada* crear_entrada(char* clave){
+	t_entrada* entrada = malloc(sizeof(t_entrada));
+	entrada->clave = string_new();
+	string_append(&entrada->clave, clave);
+
+	return entrada;
+}
+
+int tamanio_entrada_en_disco(char* nombre){
 	int file_desc = abrir_entrada(nombre);
 	struct stat stat_entrada = crear_stat(file_desc);
 
@@ -174,16 +187,22 @@ void copiar_a_memoria(t_entrada* entrada, void* valor){
 }
 
 int abrir_entrada(char* nombre){
-	char* aux = string_from_format("%s/%s", PUNTO_MONTAGE, nombre);
+	char* aux = ruta_absoluta(nombre);
 
-	int fd = open(aux, O_RDWR);
+	int fd = open(aux, O_RDWR | O_CREAT, 0666);
 	if (fd == -1) {
 		log_error(log_instancia, "no se puedo abrir la entrada: %s", nombre);
 		close(fd);
 		//rutina_final();
 		exit(1);
 	}
+
+	free(aux);
 	return fd;
+}
+
+char* ruta_absoluta(char* nombre){
+	return string_from_format("%s/%s", PUNTO_MONTAGE, nombre);
 }
 
 struct stat crear_stat(int fd){
@@ -254,12 +273,12 @@ void setear_bitarray(t_entrada* entrada){
 		bitarray_set_bit(bitarray_entradas, i);
 }
 
-void atender_set(){
+int atender_set(){
 	char* clave = recibir_string(socket_coordinador);
 	char* valor = recibir_string(socket_coordinador);
 
-	int resultado = modificar_entrada(clave, valor);
-	enviar_paquete(resultado, socket_coordinador, 0, NULL);
+	//todo tendria que actualizar cosas de lsu
+	return modificar_entrada(clave, valor);
 }
 
 int modificar_entrada(char* clave, char* valor){
@@ -268,8 +287,7 @@ int modificar_entrada(char* clave, char* valor){
 	int entradas_faltantes = entradas_nuevo_valor - entrada->tamanio_entradas_clave;
 
 	if(entradas_nuevo_valor == entrada->tamanio_entradas_clave){
-		entrada->tamanio_bytes_clave = string_length(valor);
-		copiar_a_memoria(entrada, valor);
+		actualizar_valor_entrada(entrada, valor);
 	} else if(entradas_nuevo_valor > entrada->tamanio_bytes_clave){
 		int entradas_libres = entradas_libres_desde(entrada->nro_entrada + entrada->tamanio_entradas_clave, entradas_faltantes);
 		if(entradas_libres != entradas_faltantes)
@@ -279,7 +297,16 @@ int modificar_entrada(char* clave, char* valor){
 	} else
 		actualizar_tamanio_entrada(entrada, valor);
 
-	return SET_EXITOSO;
+	return OPERACION_EXITOSA;
+}
+
+int entradas_disponibles(){
+	int i, contador = 0;
+	for(i = 0; i < CANTIDAD_ENTRADAS_TOTALES; i++)
+		if(!bitarray_test_bit(bitarray_entradas, i))
+			contador++;
+
+	return contador;
 }
 
 void aumentar_tamanio_entrada(t_entrada* entrada, char* valor){
@@ -294,10 +321,14 @@ void aumentar_tamanio_entrada(t_entrada* entrada, char* valor){
 
 void actualizar_tamanio_entrada(t_entrada* entrada, char* valor){
 	liberar_entradas_desde(entrada->nro_entrada, entrada->tamanio_entradas_clave);
-	entrada->tamanio_bytes_clave = string_length(valor);
 	entrada->tamanio_entradas_clave = entradas_ocupadas(string_length(valor));
-	copiar_a_memoria(entrada, valor);
+	actualizar_valor_entrada(entrada, valor);
 	setear_bitarray(entrada);
+}
+
+void actualizar_valor_entrada(t_entrada* entrada, char* valor){
+	entrada->tamanio_bytes_clave = string_length(valor);
+	copiar_a_memoria(entrada, valor);
 }
 
 void liberar_entradas_desde(int desde_entrada, int cantidad){
@@ -306,12 +337,16 @@ void liberar_entradas_desde(int desde_entrada, int cantidad){
 		bitarray_clean_bit(bitarray_entradas, desde_entrada + i);
 }
 
-void atender_store(){
+int atender_store(){
 	char* clave = recibir_string(socket_coordinador);
 
 	t_entrada* entrada = buscar_entrada(clave, buscar_entrada_clave);
 
+	if(entrada == NULL)
+		return ERROR_CLAVE_INEXISTENTE;
+
 	persistir(entrada);
+	return OPERACION_EXITOSA;
 }
 
 void persistir(void* entrada_void){
@@ -328,7 +363,7 @@ void persistir(void* entrada_void){
 	close(file_desc);
 }
 
-void atender_crear_clave(){
+int atender_crear_clave(){
 	char* clave = recibir_string(socket_coordinador);
 	char* valor = recibir_string(socket_coordinador);
 
@@ -337,13 +372,41 @@ void atender_crear_clave(){
 
 	//todo deberia usar el algoritmo para nuevos valores que ocupen mas de una entrada?
 	if(nro_entrada == -1 && entradas_nuevo_valor == 1){
-		buscar_entrada_para_reemplazar(clave, valor);
+		return buscar_entrada_para_reemplazar(clave, valor);
 	}
+
+	t_entrada* entrada = crear_entrada(clave);
+	entrada->nro_entrada = nro_entrada;
+	entrada->tamanio_bytes_clave = string_length(valor);
+	entrada->tamanio_entradas_clave = entradas_nuevo_valor;
+	list_add(tabla_de_entradas, entrada);
+	return OPERACION_EXITOSA;
 }
 
-void buscar_entrada_para_reemplazar(char* clave, char* valor){
+int buscar_entrada_para_reemplazar(char* clave, char* valor){
 	int entrada_reemplazada = algoritmo_reemplazo(clave, valor);
+
+	//todo creo que solo seria si no hay entradas atomicas
+	if(entrada_reemplazada == -1)
+		return FALLO_REEMPLAZO;
+
 	reemplazar_entrada(entrada_reemplazada, clave, valor);
+	return OPERACION_EXITOSA;
+}
+
+void reemplazar_entrada(int nro_entrada, char* clave, char* valor){
+	t_entrada* entrada = buscar_entrada(&nro_entrada, buscar_entrada_nro);
+
+	eliminar_entrada(entrada->clave);
+	actualizar_valor_entrada(entrada, valor);
+	free(entrada->clave);
+	entrada->clave = clave;
+}
+
+void eliminar_entrada(char* nombre){
+	char* aux = ruta_absoluta(nombre);
+	remove(aux);
+	free(aux);
 }
 
 int reemplazo_circular(char* clave, char* valor){
@@ -422,14 +485,31 @@ bool mayor_entrada(void* entrada1, void* entrada2){
 	return ((t_entrada*)entrada1)->tamanio_bytes_clave > ((t_entrada*)entrada2)->tamanio_bytes_clave;
 }
 
-int entradas_disponibles(){
-	int i, contador = 0;
-	for(i = 0; i < CANTIDAD_ENTRADAS_TOTALES; i++)
-		if(!bitarray_test_bit(bitarray_entradas, i))
-			contador++;
-
-	return contador;
+int reemplazo_lru(char* clave, char* valor){
+	return -1;//buscador_generico()
 }
 
+void atender_compactacion(){
+	list_sort(tabla_de_entradas, menor_nro_entrada);
+	int primer_entrada_libre = entrada_para(1);
 
+	if(primer_entrada_libre == -1)
+		return;//quiere decir que no hay espacio libre
 
+	void compactar_entrada(void* void_entrada){
+		t_entrada* entrada = (t_entrada*)void_entrada;
+		if(entrada->nro_entrada < primer_entrada_libre)
+			return;
+
+		liberar_entradas_desde(entrada->nro_entrada, entrada->tamanio_entradas_clave);
+		entrada->nro_entrada = primer_entrada_libre;
+		setear_bitarray(entrada);
+		primer_entrada_libre = entrada_para(1);
+	}
+
+	list_iterate(tabla_de_entradas, compactar_entrada);
+}
+
+bool menor_nro_entrada(void* entrada1, void* entrada2){
+	return ((t_entrada*)entrada1)->nro_entrada < ((t_entrada*)entrada2)->nro_entrada;
+}

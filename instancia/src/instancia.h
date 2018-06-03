@@ -26,8 +26,7 @@ typedef struct {
 	char* clave;
 	int tamanio_bytes_clave;
 	int tamanio_entradas_clave;
-	//void* valor;//se deberia levantar con mmap
-}t_entrada; //TODO mejor nombre?
+}t_entrada;
 
 char* PUNTO_MONTAGE;
 char* IP_COORDINADOR;
@@ -58,23 +57,31 @@ void leer_protocolo(int protocolo);
 void configuracion_entradas();
 void crear_tabla_de_entradas();
 t_entrada* levantar_entrada(char* nombre);
-int tamanio_entrada(char* nombre);
+t_entrada* crear_entrada(char* clave);
+int tamanio_entrada_en_disco(char* nombre);
 void levantar_entrada_a_memoria(t_entrada* entrada);
 void copiar_a_memoria(t_entrada* entrada, void* valor);
 int abrir_entrada(char* nombre);
+char* ruta_absoluta(char* nombre);
 struct stat crear_stat(int fd);
 void* mi_mmap(int fd, struct stat stat);
 int entradas_ocupadas(int tamanio);
 int entrada_para(int cant_entradas);
 int entradas_libres_desde(int nro_entrada, int entradas_necesarias);
 void setear_bitarray(t_entrada* entrada);
-void atender_set();
+int atender_set();
 int modificar_entrada(char* clave, char* valor);
+int entradas_disponibles();
 void aumentar_tamanio_entrada(t_entrada* entrada, char* valor);
 void actualizar_tamanio_entrada(t_entrada* entrada, char* valor);
+void actualizar_valor_entrada(t_entrada* entrada, char* valor);
 void liberar_entradas_desde(int desde_entrada, int cantidad);
-void atender_store();
+int atender_store();
 void persistir(void* entrada_void);
+int atender_crear_clave();
+int buscar_entrada_para_reemplazar(char* clave, char* valor);
+void reemplazar_entrada(int nro_entrada, char* clave, char* valor);
+void eliminar_entrada(char* nombre);
 int reemplazo_circular(char* clave, char* valor);
 bool es_nro_entrada_atomica(int nro_entrada);
 t_entrada* buscar_entrada(void* buscado, bool (*comparador)(void*, void*));
@@ -84,6 +91,8 @@ int siguiente_entrada(int nro_entrada);
 int reemplazo_bsu(char* clave, char* valor);
 bool es_entrada_atomica(void* entrada_void);
 bool mayor_entrada(void* entrada1, void* entrada2);
-int entradas_disponibles();
+int reemplazo_lru(char* clave, char* valor);
+void atender_compactacion();
+bool menor_nro_entrada(void* entrada1, void* entrada2);
 
 #endif /* SRC_INSTANCIA_H_ */
