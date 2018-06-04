@@ -14,10 +14,11 @@
 #include <commons/config.h>
 #include <commons/collections/list.h>
 #include <commons/log.h>
-#include <conexiones/sockets.h>
-#include <conexiones/serializacion.h>
-#include <conexiones/strings.h>
 #include <conexiones/protocolos.h>
+#include <conexiones/serializacion.h>
+#include <conexiones/sockets.h>
+#include <conexiones/strings.h>
+#include <conexiones/threads.h>
 
 #define PATH_CONFIG "/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/configs/instancia.cfg"
 
@@ -35,6 +36,7 @@ int PUERTO_COORDINADOR;
 int CANTIDAD_ENTRADAS_TOTALES;
 int TAMANIO_ENTRADA;
 int MI_ID;
+int INTERVALO_DUMP;
 int socket_coordinador;
 void* memoria;
 
@@ -51,7 +53,8 @@ void inicializar();
 void leer_config();
 void setup_algoritmo_reemplazo();
 void conectar_con_coordinador();
-void configuracion_entradas();
+void enviar_entradas_al_coordinador();
+void* hilo_dump();
 void escuchar_coordinador();
 void leer_protocolo(int protocolo);
 void configuracion_entradas();

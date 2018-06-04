@@ -12,7 +12,9 @@ int main(int argc, char **argv){
 
 	conectar_con_coordinador();
 
-	//configuracion_entradas();
+	enviar_entradas_al_coordinador();
+
+	crear_hilo(hilo_dump, NULL);
 
 	escuchar_coordinador();
 
@@ -33,6 +35,8 @@ void leer_config(){
 	PUERTO_COORDINADOR = config_get_int_value(archivo_config, "PUERTO_COORDINADOR");
 
 	MI_ID = config_get_int_value(archivo_config, "ID");
+
+	INTERVALO_DUMP = config_get_int_value(archivo_config, "INTERVALO_DUMP");
 
 	PUNTO_MONTAGE = leer_string(archivo_config, "PUNTO_MONTAGE");
 
@@ -60,7 +64,36 @@ void conectar_con_coordinador(){
 		exit(1);
 	}
 
-	enviar_paquete(MI_ID, socket_coordinador, 0, NULL);
+	enviar_paquete(ENVIO_ID, socket_coordinador, sizeof(MI_ID), &MI_ID);
+}
+
+//todo probablemente haya que ponerlo despues de recibir la config de la tabla de entredas
+void enviar_entradas_al_coordinador(){
+	int cant_claves = tabla_de_entradas->elements_count;
+	int tamanio_paquete = 0;
+	void* paquete = NULL;
+
+	void empaquetar_clave(void* void_entrada){
+		t_entrada* entrada = (t_entrada*)void_entrada;
+		int offset = tamanio_paquete;
+		tamanio_paquete += sizeof(int) + string_length(entrada->clave) + 1;
+		paquete = realloc(paquete, tamanio_paquete);
+		serializar_string(paquete + offset, entrada->clave);
+	}
+
+	list_iterate(tabla_de_entradas, empaquetar_clave);
+	enviar_paquete(cant_claves, socket_coordinador, tamanio_paquete, paquete);
+	free(paquete);
+}
+
+void* hilo_dump(){
+	while(true){
+		sleep(INTERVALO_DUMP);
+		//wait() seria para que la instancia no atienda pedidos
+		list_iterate(tabla_de_entradas, persistir);
+		//signal()
+	}
+	return NULL;
 }
 
 void escuchar_coordinador(){
@@ -137,7 +170,7 @@ void crear_tabla_de_entradas(){
 t_entrada* levantar_entrada(char* nombre){
 	t_entrada* entrada_nueva = crear_entrada(nombre);
 
-	entrada_nueva->tamanio_bytes_clave = tamanio_entrada_en_disco(nombre); //stat_entrada.st_size;
+	entrada_nueva->tamanio_bytes_clave = tamanio_entrada_en_disco(nombre);
 
 	entrada_nueva->tamanio_entradas_clave = entradas_ocupadas(entrada_nueva->tamanio_bytes_clave);
 
