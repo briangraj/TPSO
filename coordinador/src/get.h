@@ -20,5 +20,6 @@ void 		 crear_clave					(t_solicitud* solicitud);
 void 		 validar_existencia_clave		(t_solicitud* solicitud);
 t_list* 	 instancias_con_clave			(t_solicitud* solicitud);
 bool 		 instancia_activa				(t_instancia* instancia);
+t_mensaje 	 serializar_get					(char* clave);
 
 #endif /* GET_H_ */

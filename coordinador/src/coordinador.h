@@ -16,10 +16,10 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/select.h>
-#include "hilo_planificador.h"
 #include "hilo_esi.h"
 #include <conexiones/estructuras_coord.h>
 #include "hilo_instancia.h"
+#include "t_mensaje.h"
 
 int CANTIDAD_ENTRADAS_TOTALES;
 int TAMANIO_ENTRADA;

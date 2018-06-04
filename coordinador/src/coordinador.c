@@ -45,9 +45,11 @@ void setup_coord(){
 	INSTANCIAS = list_create();//t_instancia
 }
 
-void leer_config(){
+void leer_config(){//FIXME hardcodeado
 	IP_COORD = "127.0.0.1";
 	PUERTO_COORD = 5051;
+	CANTIDAD_ENTRADAS_TOTALES = 20;
+	TAMANIO_ENTRADA = 100;
 }
 
 void bindear_socket_server(int listener) {
@@ -81,6 +83,7 @@ void atender_handshake(int socket_cliente){
 		/**
 		 * TODO ¿El planificador puede conectarse al coordinador si no hay instancias conectadas?
 		 * ¿Cuantas instancias?
+		 * Deberia haber 1 solo planificador
 		 */
 		informar_conexion_exitosa_a(socket_cliente);
 

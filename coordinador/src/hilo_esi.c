@@ -94,15 +94,15 @@ t_solicitud* recibir_solicitud_esi(int socket, int id){
 
 }
 
-int recibir_id(int socket_esi){
-	int protocolo = recibir_protocolo(socket_esi);
+int recibir_id(int socket){
+	int protocolo = recibir_protocolo(socket);
 
 	if(protocolo != ENVIO_ID)
 		return -1;
 
 	int id;
 
-	int bytes_recibidos = recv(socket_esi, &id, sizeof(int), MSG_WAITALL);
+	int bytes_recibidos = recv(socket, &id, sizeof(int), MSG_WAITALL);
 
 	if(bytes_recibidos <= 0)
 		return -1;

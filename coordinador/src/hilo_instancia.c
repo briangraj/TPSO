@@ -8,9 +8,6 @@
 #include "hilo_instancia.h"
 
 void crear_hilo_instancia(t_instancia* instancia){
-	CANTIDAD_ENTRADAS_TOTALES = 20;
-	TAMANIO_ENTRADA = 100;
-
 	crear_hilo(atender_instancia, (void*) instancia);
 }
 
@@ -26,87 +23,88 @@ void* crear_instancia(int id, int socket){
 	return instancia;
 }
 
-int recibir_id(int socket){
-	int id;
+int recibir_claves(t_instancia* instancia){
+	int cant_claves;
 
-	if(recv(socket, &id, sizeof(int), MSG_WAITALL) <= 0)
+	if(recv(instancia->socket, &cant_claves, sizeof(int), MSG_WAITALL) <= 0){
+		log_error(LOG_COORD, "no se pudo recibir la cantidad de claves de la instancia %d", instancia->id);
 		return -1;
+	}
 
-	return id;
+	int i;
+	for(i = 0; i < cant_claves; i++){
+		char* clave = recibir_string(instancia->socket);
+		agregar_clave(instancia, clave);
+	}
+
+	return 0;
 }
 
 void* atender_instancia(void* instancia_void){
 	t_instancia* instancia = (t_instancia*)instancia_void;
 	t_solicitud* pedido;
-	enviar_configuracion_instancia(instancia->socket);
+
+	if(recibir_claves(instancia) == -1){
+		log_error(LOG_COORD, "no se pudieron recibir las claves de la instancia %d", instancia->id);
+		return -1;
+	}
+
+	if(enviar_config_instancia(instancia->socket) == -1){
+		log_error(LOG_COORD, "no se pudo enviar la config a la instancia %d", instancia->id);
+		return -1;
+	}
 
 	while(true) {
 		sem_wait(&instancia->sem);
 		pedido = (t_solicitud*)queue_pop(instancia->pedidos);
 
-		enviar_pedido(pedido, instancia->socket);
+		if(enviar_pedido(pedido, instancia->socket) == -1){
+			log_error(
+					LOG_COORD,
+					"no se pudo enviar el pedido de la instruccion %d a la instancia %d",
+					pedido->instruccion,
+					instancia->id
+			);
+
+			return -1;
+		}
+
+		//recv(resultado_pedido)
 	}
 
-	return NULL;
+	return 0;
 }
 
-void enviar_configuracion_instancia(int socket_instancia){
+int enviar_config_instancia(int socket_instancia){
 	int tamanio_payload = sizeof(CANTIDAD_ENTRADAS_TOTALES) + sizeof(TAMANIO_ENTRADA);
 	void* payload = malloc(tamanio_payload);
 
 	memcpy(payload, &CANTIDAD_ENTRADAS_TOTALES, sizeof(CANTIDAD_ENTRADAS_TOTALES));
 	memcpy(payload + sizeof(CANTIDAD_ENTRADAS_TOTALES), &TAMANIO_ENTRADA, sizeof(TAMANIO_ENTRADA));
 
-	enviar_paquete(CONFIGURACION_ENTRADAS, socket_instancia, tamanio_payload, payload);
+	return enviar_paquete(CONFIGURACION_ENTRADAS, socket_instancia, tamanio_payload, payload);
 }
 
 int enviar_pedido(t_solicitud* solicitud, int socket){
-	int tam_mensaje, tam_header = sizeof(int);
-	void* mensaje;
-	int protocolo;
+	t_mensaje mensaje;
 
-	//TODO arreglar repeticion de logica
 	switch(solicitud->instruccion){
+	case OPERACION_GET:{
+		mensaje = serializar_get(solicitud->clave);
+		break;
+	}
 	case OPERACION_SET:{
-		protocolo = OPERACION_SET;
-		int tam_clave = strlen(solicitud->clave) + 1;
-		int tam_valor = strlen(solicitud->valor) + 1;
-
-		tam_mensaje = tam_header + sizeof(int) + tam_clave + sizeof(int) + tam_valor;
-
-		void* mensaje = malloc(tam_mensaje);
-		void* aux = mensaje;
-
-		memcpy(aux, &solicitud->instruccion, tam_header);
-		aux += tam_header;
-
-		serializar_string(aux, solicitud->clave);
-		aux += sizeof(int) + tam_clave;
-
-		serializar_string(aux, solicitud->valor);
-
+		mensaje = serializar_set(solicitud->clave, solicitud->valor);
 		break;
 	}
 	case OPERACION_STORE:{
-		protocolo = OPERACION_SET;
-		int tam_clave = strlen(solicitud->clave) + 1;
-
-		tam_mensaje = tam_header + sizeof(int) + tam_clave;
-
-		void* mensaje = malloc(tam_mensaje);
-		void* aux = mensaje;
-
-		memcpy(aux, &solicitud->instruccion, tam_header);
-		aux += tam_header;
-
-		serializar_string(aux, solicitud->valor);
-
+		mensaje = serializar_store(solicitud->clave);
 		break;
 	}
 	default:
 		return -1;
 	}
 
-	return enviar_paquete(protocolo, socket, tam_mensaje, mensaje);
+	return enviar_mensaje(mensaje, socket);
 }
 

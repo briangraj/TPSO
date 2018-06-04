@@ -13,5 +13,6 @@
 
 t_solicitud* crear_set			   (int socket);
 int 		 realizar_set		   (t_solicitud* solicitud);
+t_mensaje    serializar_set        (char* clave, char* valor);
 
 #endif /* SET_H_ */

@@ -12,5 +12,6 @@
 #include "conexiones/estructuras_coord.h"
 
 t_solicitud* crear_store		   (int socket);
+t_mensaje 	 serializar_store	   (char* clave);
 
 #endif /* STORE_H_ */

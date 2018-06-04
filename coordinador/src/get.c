@@ -16,6 +16,14 @@ t_solicitud* crear_get(int socket){
 	return solicitud;
 }
 
+t_mensaje serializar_get(char* clave){
+	/**
+	 * TODO mock
+	 * acordarse que aca el protocolo tiene que ser CREAR_CLAVE
+	 */
+	return NULL;
+}
+
 int realizar_get(t_solicitud* solicitud){
 	//[GET_CLAVE | id, tam_clave, clave]
 
