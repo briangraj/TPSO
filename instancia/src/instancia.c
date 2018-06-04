@@ -243,8 +243,8 @@ int entrada_para(int cant_entradas){
 
 	while(i < CANTIDAD_ENTRADAS_TOTALES){
 		if(!bitarray_test_bit(bitarray_entradas, i)){
-			entradas_libres = entradas_libres_desde(i, cant_entradas);
-			if(entradas_libres == cant_entradas)
+			entradas_libres = entradas_libres_desde(i);
+			if(entradas_libres >= cant_entradas)
 				return i;
 
 			i += entradas_libres;
@@ -256,9 +256,10 @@ int entrada_para(int cant_entradas){
 	return -1;
 }
 
-int entradas_libres_desde(int nro_entrada, int entradas_necesarias){
+int entradas_libres_desde(int nro_entrada){
 	int i;
-	for(i = 0; i < entradas_necesarias; i++){
+	int entradas_restantes = CANTIDAD_ENTRADAS_TOTALES - nro_entrada;
+	for(i = 0; i < entradas_restantes; i++){
 		if(bitarray_test_bit(bitarray_entradas, nro_entrada + i)){
 			break;
 		}
@@ -285,19 +286,21 @@ int modificar_entrada(char* clave, char* valor){
 	t_entrada* entrada = buscar_entrada(clave, buscar_entrada_clave);
 	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));
 	int entradas_faltantes = entradas_nuevo_valor - entrada->tamanio_entradas_clave;
+	int resultado = OPERACION_EXITOSA;
 
 	if(entradas_nuevo_valor == entrada->tamanio_entradas_clave){
 		actualizar_valor_entrada(entrada, valor);
-	} else if(entradas_nuevo_valor > entrada->tamanio_bytes_clave){
-		int entradas_libres = entradas_libres_desde(entrada->nro_entrada + entrada->tamanio_entradas_clave, entradas_faltantes);
-		if(entradas_libres != entradas_faltantes)
-			return entradas_disponibles() > entradas_faltantes ? FS_NC : FS_EI;
+	} else {
+		int entradas_libres = entradas_libres_desde(entrada->nro_entrada + entrada->tamanio_entradas_clave);
+		if(entradas_nuevo_valor > entrada->tamanio_bytes_clave && entradas_libres < entradas_faltantes)
+			resultado = entradas_disponibles() > entradas_faltantes ? FS_NC : FS_EI;//todo es necesario el FS_NC? o deberia ver si entra en otra parte?
+		else
+			actualizar_tamanio_entrada(entrada, valor);
+	}
 
-		aumentar_tamanio_entrada(entrada, valor);
-	} else
-		actualizar_tamanio_entrada(entrada, valor);
-
-	return OPERACION_EXITOSA;
+	free(valor);
+	free(clave);
+	return resultado;
 }
 
 int entradas_disponibles(){
@@ -309,25 +312,15 @@ int entradas_disponibles(){
 	return contador;
 }
 
-void aumentar_tamanio_entrada(t_entrada* entrada, char* valor){
-	int diferencia_entradas = entradas_ocupadas(string_length(valor)) - entrada->tamanio_entradas_clave;
-	int cant_libres = entradas_libres_desde(entrada->nro_entrada + entrada->tamanio_entradas_clave, diferencia_entradas);
-
-	if(cant_libres >= diferencia_entradas){
-		actualizar_tamanio_entrada(entrada, valor);
-	} else
-		;//todo habria que buscar otra posicion
-}
-
 void actualizar_tamanio_entrada(t_entrada* entrada, char* valor){
 	liberar_entradas_desde(entrada->nro_entrada, entrada->tamanio_entradas_clave);
-	entrada->tamanio_entradas_clave = entradas_ocupadas(string_length(valor));
 	actualizar_valor_entrada(entrada, valor);
 	setear_bitarray(entrada);
 }
 
 void actualizar_valor_entrada(t_entrada* entrada, char* valor){
 	entrada->tamanio_bytes_clave = string_length(valor);
+	entrada->tamanio_entradas_clave = entradas_ocupadas(string_length(valor));
 	copiar_a_memoria(entrada, valor);
 }
 
@@ -339,14 +332,17 @@ void liberar_entradas_desde(int desde_entrada, int cantidad){
 
 int atender_store(){
 	char* clave = recibir_string(socket_coordinador);
+	int resultado = OPERACION_EXITOSA;
 
 	t_entrada* entrada = buscar_entrada(clave, buscar_entrada_clave);
 
 	if(entrada == NULL)
-		return ERROR_CLAVE_INEXISTENTE;
+		resultado = ERROR_CLAVE_INEXISTENTE;
+	else
+		persistir(entrada);
 
-	persistir(entrada);
-	return OPERACION_EXITOSA;
+	free(clave);
+	return resultado;
 }
 
 void persistir(void* entrada_void){
@@ -369,18 +365,21 @@ int atender_crear_clave(){
 
 	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));
 	int nro_entrada = entrada_para(entradas_nuevo_valor);
+	int resultado = OPERACION_EXITOSA;
 
 	//todo deberia usar el algoritmo para nuevos valores que ocupen mas de una entrada?
 	if(nro_entrada == -1 && entradas_nuevo_valor == 1){
-		return buscar_entrada_para_reemplazar(clave, valor);
+		resultado = buscar_entrada_para_reemplazar(clave, valor);
+	} else {
+		t_entrada* entrada = crear_entrada(clave);
+		entrada->nro_entrada = nro_entrada;
+		actualizar_valor_entrada(entrada, valor);
+		list_add(tabla_de_entradas, entrada);
 	}
 
-	t_entrada* entrada = crear_entrada(clave);
-	entrada->nro_entrada = nro_entrada;
-	entrada->tamanio_bytes_clave = string_length(valor);
-	entrada->tamanio_entradas_clave = entradas_nuevo_valor;
-	list_add(tabla_de_entradas, entrada);
-	return OPERACION_EXITOSA;
+	free(clave);
+	free(valor);
+	return resultado;
 }
 
 int buscar_entrada_para_reemplazar(char* clave, char* valor){
@@ -400,7 +399,8 @@ void reemplazar_entrada(int nro_entrada, char* clave, char* valor){
 	eliminar_entrada(entrada->clave);
 	actualizar_valor_entrada(entrada, valor);
 	free(entrada->clave);
-	entrada->clave = clave;
+	entrada->clave = string_new();
+	string_append(&entrada->clave, clave);
 }
 
 void eliminar_entrada(char* nombre){
@@ -501,9 +501,11 @@ void atender_compactacion(){
 		if(entrada->nro_entrada < primer_entrada_libre)
 			return;
 
-		liberar_entradas_desde(entrada->nro_entrada, entrada->tamanio_entradas_clave);
+		char* valor = obtener_valor_de(entrada);
 		entrada->nro_entrada = primer_entrada_libre;
-		setear_bitarray(entrada);
+		copiar_a_memoria(entrada, valor);
+		free(valor);
+
 		primer_entrada_libre = entrada_para(1);
 	}
 
@@ -513,3 +515,16 @@ void atender_compactacion(){
 bool menor_nro_entrada(void* entrada1, void* entrada2){
 	return ((t_entrada*)entrada1)->nro_entrada < ((t_entrada*)entrada2)->nro_entrada;
 }
+
+char* obtener_valor_de(t_entrada* entrada){
+	int offset = TAMANIO_ENTRADA * entrada->nro_entrada;
+	int tamanio_valor = entrada->tamanio_bytes_clave + 1;
+	char* valor = malloc(tamanio_valor);
+
+	memcpy(valor, memoria + offset, entrada->tamanio_bytes_clave);
+	valor[tamanio_valor] = '\0';
+	return valor;
+}
+
+
+
