@@ -27,12 +27,7 @@ t_mensaje serializar_get(char* clave){
 
 	mensaje.payload = malloc(mensaje.tam_payload);
 
-	void* aux = mensaje.payload;
-
-	memcpy(aux, &tam_clave, sizeof(int));
-	aux += sizeof(int);
-
-	serializar_string(aux, clave);
+	serializar_string(mensaje.payload, clave);
 
 	return mensaje;
 }

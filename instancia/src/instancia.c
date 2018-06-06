@@ -152,6 +152,7 @@ void crear_tabla_de_entradas(){
 	memoria = malloc(TAMANIO_ENTRADA * CANTIDAD_ENTRADAS_TOTALES);
 
 	tabla_de_entradas = list_create();
+	crear_bitarray();
 	t_entrada* entrada;
 
 	DIR* d = opendir(PUNTO_MONTAJE);
@@ -167,6 +168,17 @@ void crear_tabla_de_entradas(){
 	closedir(d);
 
 	log_trace(log_instancia, "cree tabla de entradas");
+}
+
+void crear_bitarray(){
+
+	int tamanio_en_bytes = CANTIDAD_ENTRADAS_TOTALES/8;
+	if(CANTIDAD_ENTRADAS_TOTALES%8 != 0)
+		tamanio_en_bytes += 1;
+
+	char* bitarray = malloc(tamanio_en_bytes);
+
+	bitarray_entradas = bitarray_create_with_mode(bitarray, tamanio_en_bytes, LSB_FIRST);
 }
 
 t_entrada* levantar_entrada(char* nombre){
