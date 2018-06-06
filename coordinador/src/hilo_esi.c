@@ -8,65 +8,61 @@
 #include "hilo_esi.h"
 
 void crear_hilo_esi(int socket_cliente){
-
 	crear_hilo(atender_esi, (void*) socket_cliente);
-
 }
 
 void* atender_esi(void* socket_esi){
-	int id_esi = recibir_id(socket_esi);
+	int id_esi = recibir_id((int) socket_esi);
 
 	if(id_esi == -1){
-		log_error(LOG_COORD, "ERROR: no se pudo recibir el id del esi en el socket %d", socket_esi);
-		return -1;
+		log_error(LOG_COORD, "no se pudo recibir el id del esi en el socket %d", socket_esi);
+		return NULL;
 	}
 
 	while(true){
 		t_solicitud* solicitud = recibir_solicitud_esi((int) socket_esi, id_esi);
 
-		realizar_solicitud(solicitud); //TODO chequear si necesita error
+		if(atender_solicitud(solicitud) == -1){
+			log_error(LOG_COORD, "no se pudo atender la solicitud del esi %d", solicitud->id_esi);
+			return NULL;
+		}
 
-		if(enviar_paquete(solicitud->respuesta_a_esi, socket_esi, 0, NULL) <= 0){
-			log_error(LOG_COORD, "no se pudo enviar el resultado del get de la clave %s al esi %d",
-					solicitud->clave,
+		if(enviar_paquete(solicitud->respuesta_a_esi, (int) socket_esi, 0, NULL) <= 0){
+			log_error(
+					LOG_COORD,
+					"no se pudo enviar el resultado de la instruccion %d al esi %d",
+					solicitud->instruccion,
 					solicitud->id_esi
 			);
-			return 1 * -1;
+
+			return NULL;
 		}
 	}
 
 	return 0;
 }
 
-void realizar_solicitud(t_solicitud* solicitud){
+int atender_solicitud(t_solicitud* solicitud){
 	switch(solicitud->instruccion){
 	case OPERACION_GET:
-		realizar_get(solicitud);
-		break;
+		return realizar_get(solicitud);
 	case OPERACION_SET:
-		realizar_set(solicitud);
-		break;
+		return realizar_set(solicitud);
 	case OPERACION_STORE:
-		realizar_store(solicitud);
-		break;
+		return realizar_store(solicitud);
+	default:
+		return -1;
 	}
 }
 
-
-int enviar_a_planif(int protocolo, void* payload, int tam_payload){
+int enviar_a_planif(t_mensaje mensaje){
 	pthread_mutex_lock(&SEM_SOCKET_PLANIF);
 
-	int resultado_envio = enviar_paquete(protocolo, SOCKET_PLANIF, tam_payload, payload);
+	int resultado_envio = enviar_mensaje(mensaje, SOCKET_PLANIF);
 
 	pthread_mutex_unlock(&SEM_SOCKET_PLANIF);
 
 	return resultado_envio;
-}
-
-void agregar_pedido(t_instancia* instancia, t_solicitud* solicitud){
-	//faltarian semaforos
-	queue_push(instancia->pedidos, solicitud);
-	sem_post(&instancia->sem);
 }
 
 t_solicitud* recibir_solicitud_esi(int socket, int id){
@@ -76,11 +72,11 @@ t_solicitud* recibir_solicitud_esi(int socket, int id){
 	t_solicitud* solicitud;
 
 	if(protocolo == -1){
-		log_error(LOG_COORD, "El esi %d envio una solicitud invalida", socket);
+		log_error(LOG_COORD, "el esi %d envio una solicitud invalida", socket);
 		pthread_exit(NULL);
 	}
 
-	sem_init(&solicitud->solicitud_finalizada, 0, 0);
+	sem_init(&solicitud->solicitud_finalizada, 0, 0);//TODO podria ser una abstraccion parte del t_solicitud
 
 	switch(protocolo){
 

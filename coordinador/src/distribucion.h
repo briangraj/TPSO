@@ -11,6 +11,7 @@
 #include "coordinador.h"
 #include "conexiones/estructuras_coord.h"
 
-void 		 distribuir			   (t_solicitud* solicitud);
+void			distribuir			(t_solicitud* solicitud);
+t_instancia*	elegir_instancia	(t_solicitud* solicitud);
 
 #endif /* DISTRIBUCION_H_ */

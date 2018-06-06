@@ -16,6 +16,7 @@ typedef struct mensaje {
 	void* payload;
 } t_mensaje;
 
-int  enviar_mensaje(t_mensaje mensaje, int socket);
+t_mensaje	crear_mensaje	(int header, int tam_payload);
+int			enviar_mensaje	(t_mensaje mensaje, int socket);
 
 #endif /* T_MENSAJE_H_ */

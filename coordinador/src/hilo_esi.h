@@ -9,15 +9,13 @@
 #define HILO_ESI_H_
 
 #include "coordinador.h"
-#include "conexiones/estructuras_coord.h"
+#include "t_mensaje.h"
 
 void 		 crear_hilo_esi		   (int socket_cliente);
 void* 		 atender_esi		   (void* socket_esi);
 t_solicitud* recibir_solicitud_esi (int socket, int id);
-t_instancia* elegir_instancia	   (t_solicitud* solicitud);
-void		 agregar_pedido		   (t_instancia* instancia, t_solicitud* solicitud);
-void 		 realizar_solicitud	   (t_solicitud* solicitud);
-int 		 enviar_a_planif	   (int protocolo, void* stream, int tam_stream);
+int 		 atender_solicitud	   (t_solicitud* solicitud);
+int 		 enviar_a_planif	   (t_mensaje mensaje);
 int 		 recibir_id		   	   (int socket);
 
 #endif /* HILO_ESI_H_ */

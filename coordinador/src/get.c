@@ -8,7 +8,7 @@
 #include "get.h"
 
 t_solicitud* crear_get(int socket){
-	t_solicitud* solicitud = malloc(sizeof(t_solicitud));
+	t_solicitud* solicitud = crear_solicitud();
 
 	solicitud->instruccion = OPERACION_GET;
 	solicitud->clave = recibir_string(socket);
@@ -16,16 +16,23 @@ t_solicitud* crear_get(int socket){
 	return solicitud;
 }
 
-t_mensaje serializar_get(char* clave){
-	t_mensaje mensaje;
-
-	mensaje.header = CREAR_CLAVE;
-
+t_mensaje serializar_get_a_instancia(char* clave){//TODO testear
+//	t_mensaje mensaje;
+//
+//	mensaje.header = CREAR_CLAVE;
+//
+//	int tam_clave = strlen(clave) + 1;
+//
+//	mensaje.tam_payload = sizeof(int) + tam_clave;
+//
+//	mensaje.payload = malloc(mensaje.tam_payload);
+//
+//	serializar_string(mensaje.payload, clave);
+//
+//	return mensaje;
 	int tam_clave = strlen(clave) + 1;
 
-	mensaje.tam_payload = sizeof(int) + tam_clave;
-
-	mensaje.payload = malloc(mensaje.tam_payload);
+	t_mensaje mensaje = crear_mensaje(CREAR_CLAVE, sizeof(int) + tam_clave);
 
 	serializar_string(mensaje.payload, clave);
 
@@ -37,16 +44,24 @@ int evaluar_resultados(int resultado_instancia, int resultado_planif){
 }
 
 int realizar_get(t_solicitud* solicitud){
-	//[GET_CLAVE | id, tam_clave, clave]
-
 	validar_existencia_clave(solicitud);
 
-	if(enviar_get_a_planif(solicitud) < 0){
+	/**
+	 * FIXME aca el problema es que, si la clave no existia, entonces
+	 * en la funcion validar_existencia_clave() se crea la clave.
+	 * Pero al ser una funcion que habla con la instancia, esta podria
+	 * tener algun error, entonces aca no tendria que enviarle el get
+	 * al planif sino manejar este error
+	 */
+
+	t_mensaje get = serializar_get_a_planif(solicitud);
+
+	if(enviar_a_planif(get) < 0){
 		log_error(LOG_COORD, "no se pudo enviar el get del esi %d de la clave %s al planificador",
 				solicitud->id_esi,
 				solicitud->clave
 		);
-		return 1 * -1;
+		return -1;
 	}
 
 	int resultado_planif = recibir_protocolo(SOCKET_PLANIF);
@@ -56,7 +71,7 @@ int realizar_get(t_solicitud* solicitud){
 				solicitud->id_esi,
 				solicitud->clave
 		);
-		return 1 * -1;
+		return -1;
 	}
 
 	sem_wait(&solicitud->solicitud_finalizada);
@@ -65,13 +80,22 @@ int realizar_get(t_solicitud* solicitud){
 	return 0;
 }
 
-int enviar_get_a_planif(t_solicitud* solicitud){
+//t_mensaje serializar_get(char* clave){
+//	int tam_clave = strlen(clave) + 1;
+//
+//	t_mensaje mensaje = crear_mensaje(CREAR_CLAVE, sizeof(int) + tam_clave);
+//
+//	serializar_string(mensaje.payload, clave);
+//
+//	return mensaje;
+//}
+
+t_mensaje serializar_get_a_planif(t_solicitud* solicitud){
 	int tam_clave = strlen(solicitud->clave) + 1;
-	int tam_payload = sizeof(int) * 2 + tam_clave;
 
-	void* payload = malloc(tam_payload);
+	t_mensaje mensaje = crear_mensaje(GET_CLAVE, sizeof(int) * 2 + tam_clave);
 
-	char* aux = payload;
+	char* aux = mensaje.payload;
 
 	memcpy(aux, &solicitud->id_esi, sizeof(int));
 	aux += sizeof(int);
@@ -81,12 +105,7 @@ int enviar_get_a_planif(t_solicitud* solicitud){
 
 	memcpy(aux, solicitud->clave, tam_clave);
 
-	int resultado_envio = enviar_a_planif(GET_CLAVE, payload, tam_payload);
-
-	if(resultado_envio <= 0)
-		return -1;
-
-	return 0;
+	return mensaje;
 }
 
 void agregar_clave_a_borrar(t_solicitud* solicitud, t_list* instancias){
@@ -115,7 +134,7 @@ void validar_existencia_clave(t_solicitud* solicitud){
 	t_list* instancias = instancias_con_clave(solicitud);
 
 	if(!list_is_empty(instancias)){
-		if(!list_any_satisfy(instancias, instancia_activa))
+		if(!list_any_satisfy(instancias, es_instancia_activa))
 			crear_clave_con_instancia_caida(solicitud, instancias);
 	}
 	else
@@ -126,15 +145,11 @@ t_list* instancias_con_clave(t_solicitud* solicitud){
 
 	bool instancia_contiene_clave(t_instancia* instancia){
 		bool contiene_clave(char* clave){
-			return !strcmp(clave, solicitud->clave);
+			return !strcmp(clave, (t_instancia*) solicitud->clave);
 		}
 
 		return list_any_satisfy(instancia->claves, contiene_clave);
 	}
 
 	return list_filter(INSTANCIAS, instancia_contiene_clave);
-}
-
-bool instancia_activa(t_instancia* instancia){
-	return instancia->esta_activa;
 }

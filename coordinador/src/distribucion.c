@@ -11,7 +11,6 @@ void distribuir(t_solicitud* solicitud){
 	t_instancia* instancia = elegir_instancia(solicitud);//TODO mock
 
 	agregar_pedido(instancia, solicitud);
-	//sem_post(&instancia->sem);
 }
 
 t_instancia* elegir_instancia(t_solicitud* solicitud){//TODO mock

@@ -11,4 +11,8 @@
 #include "coordinador.h"
 #include "conexiones/estructuras_coord.h"
 
+void	agregar_clave		(t_instancia* instancia, char* clave);
+bool	es_instancia_activa	(t_instancia* instancia);
+void	agregar_pedido		(t_instancia* instancia, t_solicitud* solicitud);
+
 #endif /* T_INSTANCIA_H_ */

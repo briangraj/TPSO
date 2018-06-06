@@ -8,7 +8,7 @@
 #include "set.h"
 
 t_solicitud* crear_set(int socket){
-	t_solicitud* solicitud = malloc(sizeof(t_solicitud));
+	t_solicitud* solicitud = crear_solicitud();
 
 	solicitud->instruccion = OPERACION_SET;
 	solicitud->clave = recibir_string(socket);
@@ -17,7 +17,7 @@ t_solicitud* crear_set(int socket){
 	return solicitud;
 }
 
-t_mensaje serializar_set(char* clave, char* valor){
+t_mensaje serializar_set_a_instancia(char* clave, char* valor){
 	t_mensaje mensaje;
 
 	mensaje.header = OPERACION_SET;
@@ -40,6 +40,5 @@ t_mensaje serializar_set(char* clave, char* valor){
 }
 
 int realizar_set(t_solicitud* solicitud){
-
-	return 0;
+	return 0;//TODO mock
 }

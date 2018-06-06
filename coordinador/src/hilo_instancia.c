@@ -101,27 +101,21 @@ int enviar_pedido(t_solicitud* solicitud, int socket){
 
 	switch(solicitud->instruccion){
 	case OPERACION_GET:{
-		t_mensaje mensaje;
-
-		mensaje = serializar_get(solicitud->clave);
+		t_mensaje mensaje = serializar_get_a_instancia(solicitud->clave);
 
 		return enviar_mensaje(mensaje, socket);
 
 		break;
 	}
 	case OPERACION_SET:{
-		t_mensaje mensaje;
-
-		mensaje = serializar_set(solicitud->clave, solicitud->valor);
+		t_mensaje mensaje = serializar_set_a_instancia(solicitud->clave, solicitud->valor);
 
 		return enviar_mensaje(mensaje, socket);
 
 		break;
 	}
 	case OPERACION_STORE:{
-		t_mensaje mensaje;
-
-		mensaje = serializar_store(solicitud->clave);
+		t_mensaje mensaje = serializar_store_a_instancia(solicitud->clave);
 
 		return enviar_mensaje(mensaje, socket);
 
