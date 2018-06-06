@@ -32,6 +32,10 @@ t_mensaje serializar_get(char* clave){
 	return mensaje;
 }
 
+int evaluar_resultados(int resultado_instancia, int resultado_planif){
+	return 0;//TODO mock
+}
+
 int realizar_get(t_solicitud* solicitud){
 	//[GET_CLAVE | id, tam_clave, clave]
 
@@ -45,24 +49,20 @@ int realizar_get(t_solicitud* solicitud){
 		return 1 * -1;
 	}
 
-	int resultado_get = recibir_protocolo(SOCKET_PLANIF);
+	int resultado_planif = recibir_protocolo(SOCKET_PLANIF);
 
-	if(resultado_get <= 0){
-		log_error(LOG_COORD, "no se pudo recibir el resultado del get del esi %d de la clave %s",
+	if(resultado_planif <= 0){
+		log_error(LOG_COORD, "no se pudo recibir el resultado del get del esi %d de la clave %s desde el planificador",
 				solicitud->id_esi,
 				solicitud->clave
 		);
 		return 1 * -1;
 	}
 
-	if(enviar_paquete(resultado_get, solicitud->socket_esi, 0, NULL) <= 0){
-		log_error(LOG_COORD, "no se pudo enviar el resultado del get de la clave %s al esi %d",
-				solicitud->clave,
-				solicitud->id_esi
-		);
-		return 1 * -1;
-	}
+	sem_wait(&solicitud->solicitud_finalizada);
+	solicitud->respuesta_a_esi = evaluar_resultados(solicitud->resultado_instancia, resultado_planif);
 
+	return 0;
 }
 
 int enviar_get_a_planif(t_solicitud* solicitud){

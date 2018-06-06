@@ -17,7 +17,9 @@ typedef struct solicitud {
 	int instruccion;
 	char* clave;
 	char* valor;
-	int socket_esi;
+	sem_t solicitud_finalizada;
+	int resultado_instancia;
+	int respuesta_a_esi;
 	int id_esi;
 } t_solicitud;
 

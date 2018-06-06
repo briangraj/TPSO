@@ -44,7 +44,7 @@ int recibir_claves(t_instancia* instancia){
 
 void* atender_instancia(void* instancia_void){
 	t_instancia* instancia = (t_instancia*)instancia_void;
-	t_solicitud* pedido;
+	t_solicitud* solicitud;
 
 	if(enviar_config_instancia(instancia->socket) == -1){
 		log_error(LOG_COORD, "no se pudo enviar la config a la instancia %d", instancia->id);
@@ -58,23 +58,33 @@ void* atender_instancia(void* instancia_void){
 
 	while(true) {
 		sem_wait(&instancia->sem);
-		pedido = (t_solicitud*)queue_pop(instancia->pedidos);
+		solicitud = (t_solicitud*)queue_pop(instancia->pedidos);
 
-		if(enviar_pedido(pedido, instancia->socket) == -1){
+		if(enviar_pedido(solicitud, instancia->socket) == -1){
 			log_error(
 					LOG_COORD,
 					"no se pudo enviar el pedido de la instruccion %d a la instancia %d",
-					pedido->instruccion,
+					solicitud->instruccion,
 					instancia->id
 			);
 
 			return -1;
 		}
 
-		//recv(resultado_pedido)
+		evaluar_resultado_instr(solicitud, instancia->socket);//TODO checkear error
 	}
 
 	return 0;
+}
+
+void evaluar_resultado_instr(t_solicitud* solicitud, int socket_instancia){
+	switch(recibir_protocolo(socket_instancia)){
+	case OPERACION_EXITOSA:
+		solicitud->resultado_instancia = OPERACION_EXITOSA;
+		sem_post(&solicitud->solicitud_finalizada);
+	break;
+	default:;
+	}
 }
 
 int enviar_config_instancia(int socket_instancia){

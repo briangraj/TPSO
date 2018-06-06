@@ -25,6 +25,14 @@ void* atender_esi(void* socket_esi){
 		t_solicitud* solicitud = recibir_solicitud_esi((int) socket_esi, id_esi);
 
 		realizar_solicitud(solicitud); //TODO chequear si necesita error
+
+		if(enviar_paquete(solicitud->respuesta_a_esi, socket_esi, 0, NULL) <= 0){
+			log_error(LOG_COORD, "no se pudo enviar el resultado del get de la clave %s al esi %d",
+					solicitud->clave,
+					solicitud->id_esi
+			);
+			return 1 * -1;
+		}
 	}
 
 	return 0;
@@ -72,6 +80,8 @@ t_solicitud* recibir_solicitud_esi(int socket, int id){
 		pthread_exit(NULL);
 	}
 
+	sem_init(&solicitud->solicitud_finalizada, 0, 0);
+
 	switch(protocolo){
 
 	case OPERACION_GET:
@@ -90,7 +100,6 @@ t_solicitud* recibir_solicitud_esi(int socket, int id){
 	}
 
 	solicitud->id_esi = id;
-	solicitud->socket_esi = socket;
 
 	return solicitud;
 
