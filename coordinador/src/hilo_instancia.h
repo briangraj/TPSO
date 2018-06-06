@@ -10,6 +10,9 @@
 
 #include "coordinador.h"
 #include "t_instancia.h"
+#include "get.h"
+#include "set.h"
+#include "store.h"
 
 void  crear_hilo_instancia			 (t_instancia* instancia);
 void* crear_instancia				 (int id, int socket);

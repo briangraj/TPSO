@@ -10,6 +10,7 @@
 
 #include "coordinador.h"
 #include "conexiones/estructuras_coord.h"
+#include "t_mensaje.h"
 
 t_solicitud* crear_set			   (int socket);
 int 		 realizar_set		   (t_solicitud* solicitud);

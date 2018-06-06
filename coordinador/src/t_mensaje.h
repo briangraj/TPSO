@@ -8,9 +8,9 @@
 #ifndef T_MENSAJE_H_
 #define T_MENSAJE_H_
 
-#include "coordinador.h"
+#include "conexiones/serializacion.h"
 
-typedef struct {
+typedef struct mensaje {
 	int header;
 	int tam_payload;
 	void* payload;

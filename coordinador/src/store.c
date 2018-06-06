@@ -36,3 +36,7 @@ t_mensaje serializar_store(char* clave){
 
 	return mensaje;
 }
+
+int realizar_store(t_solicitud* solicitud){
+	return 1;//TODO mock
+}

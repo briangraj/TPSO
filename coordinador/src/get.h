@@ -10,9 +10,10 @@
 
 #include "coordinador.h"
 #include "conexiones/estructuras_coord.h"
+#include "t_mensaje.h"
 
 t_solicitud* crear_get			   			(int socket);
-void 		 realizar_get		   			(t_solicitud* solicitud);
+int 		 realizar_get		   			(t_solicitud* solicitud);
 int 		 enviar_get_a_planif   			(t_solicitud* solicitud);
 void 		 agregar_clave_a_borrar			(t_solicitud* solicitud, t_list* instancias);
 void 		 crear_clave_con_instancia_caida(t_solicitud* solicitud, t_list* instancias);

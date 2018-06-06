@@ -17,11 +17,24 @@ t_solicitud* crear_get(int socket){
 }
 
 t_mensaje serializar_get(char* clave){
-	/**
-	 * TODO mock
-	 * acordarse que aca el protocolo tiene que ser CREAR_CLAVE
-	 */
-	return NULL;
+	t_mensaje mensaje;
+
+	mensaje.header = CREAR_CLAVE;
+
+	int tam_clave = strlen(clave) + 1;
+
+	mensaje.tam_payload = sizeof(int) + tam_clave;
+
+	mensaje.payload = malloc(mensaje.tam_payload);
+
+	void* aux = mensaje.payload;
+
+	memcpy(aux, &tam_clave, sizeof(int));
+	aux += sizeof(int);
+
+	serializar_string(aux, clave);
+
+	return mensaje;
 }
 
 int realizar_get(t_solicitud* solicitud){
@@ -29,7 +42,7 @@ int realizar_get(t_solicitud* solicitud){
 
 	validar_existencia_clave(solicitud);
 
-	if(enviar_get_a_planif(solicitud) <= 0){
+	if(enviar_get_a_planif(solicitud) < 0){
 		log_error(LOG_COORD, "no se pudo enviar el get del esi %d de la clave %s al planificador",
 				solicitud->id_esi,
 				solicitud->clave
@@ -47,7 +60,7 @@ int realizar_get(t_solicitud* solicitud){
 		return 1 * -1;
 	}
 
-	if(enviar_resultado_get_esi(solicitud->socket_esi, resultado_get) <= 0){
+	if(enviar_paquete(resultado_get, solicitud->socket_esi, 0, NULL) <= 0){
 		log_error(LOG_COORD, "no se pudo enviar el resultado del get de la clave %s al esi %d",
 				solicitud->clave,
 				solicitud->id_esi
@@ -59,7 +72,7 @@ int realizar_get(t_solicitud* solicitud){
 
 int enviar_get_a_planif(t_solicitud* solicitud){
 	int tam_clave = strlen(solicitud->clave) + 1;
-	int tam_payload = sizeof(int) * 3 + tam_clave;
+	int tam_payload = sizeof(int) * 2 + tam_clave;
 
 	void* payload = malloc(tam_payload);
 
@@ -83,7 +96,7 @@ int enviar_get_a_planif(t_solicitud* solicitud){
 
 void agregar_clave_a_borrar(t_solicitud* solicitud, t_list* instancias){
 	bool no_contiene_clave_a_borrar(char* clave){
-		return !strcmp(clave, solicitud->clave);
+		return strcmp(clave, solicitud->clave);
 	}
 
 	bool no_contiene_clave_en_claves_a_borrar(t_instancia* instancia){
@@ -106,9 +119,10 @@ void crear_clave(t_solicitud* solicitud){
 void validar_existencia_clave(t_solicitud* solicitud){
 	t_list* instancias = instancias_con_clave(solicitud);
 
-	if(!list_is_empty(instancias))
+	if(!list_is_empty(instancias)){
 		if(!list_any_satisfy(instancias, instancia_activa))
 			crear_clave_con_instancia_caida(solicitud, instancias);
+	}
 	else
 		crear_clave(solicitud);
 }
@@ -117,7 +131,7 @@ t_list* instancias_con_clave(t_solicitud* solicitud){
 
 	bool instancia_contiene_clave(t_instancia* instancia){
 		bool contiene_clave(char* clave){
-			return strcmp(clave, solicitud->clave);
+			return !strcmp(clave, solicitud->clave);
 		}
 
 		return list_any_satisfy(instancia->claves, contiene_clave);

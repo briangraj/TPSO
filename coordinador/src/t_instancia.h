@@ -9,6 +9,6 @@
 #define T_INSTANCIA_H_
 
 #include "coordinador.h"
-#include "estructuras_coord.h"
+#include "conexiones/estructuras_coord.h"
 
 #endif /* T_INSTANCIA_H_ */

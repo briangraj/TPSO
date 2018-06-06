@@ -44,6 +44,7 @@ void realizar_solicitud(t_solicitud* solicitud){
 	}
 }
 
+
 int enviar_a_planif(int protocolo, void* payload, int tam_payload){
 	pthread_mutex_lock(&SEM_SOCKET_PLANIF);
 
@@ -56,7 +57,8 @@ int enviar_a_planif(int protocolo, void* payload, int tam_payload){
 
 void agregar_pedido(t_instancia* instancia, t_solicitud* solicitud){
 	//faltarian semaforos
-	list_add(instancia->pedidos, solicitud);
+	queue_push(instancia->pedidos, solicitud);
+	sem_post(&instancia->sem);
 }
 
 t_solicitud* recibir_solicitud_esi(int socket, int id){

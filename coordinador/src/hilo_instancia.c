@@ -19,6 +19,8 @@ void* crear_instancia(int id, int socket){
 	sem_init(&instancia->sem, 0, 0);
 	instancia->socket = socket;
 	instancia->esta_activa = true;
+	instancia->claves = list_create();
+	instancia->claves_a_borrar = list_create();
 
 	return instancia;
 }
@@ -44,13 +46,13 @@ void* atender_instancia(void* instancia_void){
 	t_instancia* instancia = (t_instancia*)instancia_void;
 	t_solicitud* pedido;
 
-	if(recibir_claves(instancia) == -1){
-		log_error(LOG_COORD, "no se pudieron recibir las claves de la instancia %d", instancia->id);
+	if(enviar_config_instancia(instancia->socket) == -1){
+		log_error(LOG_COORD, "no se pudo enviar la config a la instancia %d", instancia->id);
 		return -1;
 	}
 
-	if(enviar_config_instancia(instancia->socket) == -1){
-		log_error(LOG_COORD, "no se pudo enviar la config a la instancia %d", instancia->id);
+	if(recibir_claves(instancia) == -1){
+		log_error(LOG_COORD, "no se pudieron recibir las claves de la instancia %d", instancia->id);
 		return -1;
 	}
 
@@ -86,25 +88,38 @@ int enviar_config_instancia(int socket_instancia){
 }
 
 int enviar_pedido(t_solicitud* solicitud, int socket){
-	t_mensaje mensaje;
 
 	switch(solicitud->instruccion){
 	case OPERACION_GET:{
+		t_mensaje mensaje;
+
 		mensaje = serializar_get(solicitud->clave);
+
+		return enviar_mensaje(mensaje, socket);
+
 		break;
 	}
 	case OPERACION_SET:{
+		t_mensaje mensaje;
+
 		mensaje = serializar_set(solicitud->clave, solicitud->valor);
+
+		return enviar_mensaje(mensaje, socket);
+
 		break;
 	}
 	case OPERACION_STORE:{
+		t_mensaje mensaje;
+
 		mensaje = serializar_store(solicitud->clave);
+
+		return enviar_mensaje(mensaje, socket);
+
 		break;
 	}
 	default:
 		return -1;
 	}
 
-	return enviar_mensaje(mensaje, socket);
 }
 

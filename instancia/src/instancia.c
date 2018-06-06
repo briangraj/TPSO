@@ -12,7 +12,7 @@ int main(int argc, char **argv){
 
 	conectar_con_coordinador();
 
-	enviar_entradas_al_coordinador();
+	//enviar_entradas_al_coordinador();
 
 	crear_hilo(hilo_dump, NULL);
 
@@ -22,7 +22,7 @@ int main(int argc, char **argv){
 }
 
 void inicializar(){
-	log_instancia = log_create("DataNode.log", "DataNode", 1, LOG_LEVEL_TRACE);
+	log_instancia = log_create("Instancia.log", "Instancia", 1, LOG_LEVEL_TRACE);
 
 	leer_config();
 }
@@ -38,7 +38,7 @@ void leer_config(){
 
 	INTERVALO_DUMP = config_get_int_value(archivo_config, "INTERVALO_DUMP");
 
-	PUNTO_MONTAGE = leer_string(archivo_config, "PUNTO_MONTAGE");
+	PUNTO_MONTAJE = leer_string(archivo_config, "PUNTO_MONTAJE");
 
 	ALGORITMO_REEMPLAZO = leer_string(archivo_config, "ALGORITMO_REEMPLAZO");
 
@@ -86,7 +86,7 @@ void enviar_entradas_al_coordinador(){
 	free(paquete);
 }
 
-void* hilo_dump(){
+void* hilo_dump(void* _){
 	while(true){
 		sleep(INTERVALO_DUMP);
 		//wait() seria para que la instancia no atienda pedidos
@@ -144,6 +144,8 @@ void configuracion_entradas(){
 
 	crear_tabla_de_entradas();
 	setup_algoritmo_reemplazo();
+	//todo acomodar
+	enviar_entradas_al_coordinador();
 }
 
 void crear_tabla_de_entradas(){
@@ -152,7 +154,7 @@ void crear_tabla_de_entradas(){
 	tabla_de_entradas = list_create();
 	t_entrada* entrada;
 
-	DIR* d = opendir(PUNTO_MONTAGE);
+	DIR* d = opendir(PUNTO_MONTAJE);
 	struct dirent* dir;
 
 	while((dir = readdir(d)) != NULL){
@@ -235,7 +237,7 @@ int abrir_entrada(char* nombre){
 }
 
 char* ruta_absoluta(char* nombre){
-	return string_from_format("%s/%s", PUNTO_MONTAGE, nombre);
+	return string_from_format("%s/%s", PUNTO_MONTAJE, nombre);
 }
 
 struct stat crear_stat(int fd){
@@ -380,6 +382,7 @@ int atender_store(){
 
 void persistir(void* entrada_void){
 	t_entrada* entrada = (t_entrada*)entrada_void;
+	puts(entrada->clave);
 	int file_desc = abrir_entrada(entrada->clave);
 	ftruncate(file_desc, entrada->tamanio_bytes_clave);
 	struct stat stat_entrada = crear_stat(file_desc);
@@ -394,8 +397,9 @@ void persistir(void* entrada_void){
 
 int atender_crear_clave(){
 	char* clave = recibir_string(socket_coordinador);
-	char* valor = recibir_string(socket_coordinador);
+	char* valor = "hola";//TODO recibir_string(socket_coordinador);
 
+	puts(clave);
 	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));
 	int nro_entrada = entrada_para(entradas_nuevo_valor);
 	int resultado = OPERACION_EXITOSA;
@@ -411,7 +415,7 @@ int atender_crear_clave(){
 	}
 
 	free(clave);
-	free(valor);
+	//free(valor);
 	return resultado;
 }
 

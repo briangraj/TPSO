@@ -29,7 +29,7 @@ typedef struct {
 	int tamanio_entradas_clave;
 }t_entrada;
 
-char* PUNTO_MONTAGE;
+char* PUNTO_MONTAJE;
 char* IP_COORDINADOR;
 char* ALGORITMO_REEMPLAZO;
 int PUERTO_COORDINADOR;
@@ -54,7 +54,7 @@ void leer_config();
 void setup_algoritmo_reemplazo();
 void conectar_con_coordinador();
 void enviar_entradas_al_coordinador();
-void* hilo_dump();
+void* hilo_dump(void* _);
 void escuchar_coordinador();
 void leer_protocolo(int protocolo);
 void configuracion_entradas();

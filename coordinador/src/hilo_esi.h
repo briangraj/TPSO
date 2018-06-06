@@ -17,7 +17,7 @@ t_solicitud* recibir_solicitud_esi (int socket, int id);
 t_instancia* elegir_instancia	   (t_solicitud* solicitud);
 void		 agregar_pedido		   (t_instancia* instancia, t_solicitud* solicitud);
 void 		 realizar_solicitud	   (t_solicitud* solicitud);
-int 		 enviar_a_planif	   (void* stream, int tam_stream);
+int 		 enviar_a_planif	   (int protocolo, void* stream, int tam_stream);
 int 		 recibir_id		   	   (int socket);
 
 #endif /* HILO_ESI_H_ */
