@@ -8,14 +8,13 @@
 #include "get.h"
 
 t_solicitud* crear_get(int socket, int id){
-	t_solicitud* solicitud = crear_solicitud(id);
-	solicitud->instruccion = OPERACION_GET;
+	t_solicitud* solicitud = crear_solicitud(OPERACION_GET, id);
+
 	solicitud->clave = recibir_string(socket);
 
 	return solicitud;
 }
 t_mensaje serializar_get_a_instancia(char* clave){
-
 	int tam_clave = strlen(clave) + 1;
 
 	t_mensaje mensaje = crear_mensaje(CREAR_CLAVE, sizeof(int) + tam_clave);
@@ -46,7 +45,7 @@ int realizar_get(t_solicitud* solicitud){
 	t_mensaje get = serializar_get_a_planif(solicitud);
 
 	if(enviar_a_planif(get) < 0){
-		log_error(LOG_COORD, "no se pudo enviar el get del esi %d de la clave %s al planificador",
+		log_error(LOG_COORD, "No se pudo enviar el get del esi %d de la clave %s al planificador",
 				solicitud->id_esi,
 				solicitud->clave
 		);
@@ -58,7 +57,7 @@ int realizar_get(t_solicitud* solicitud){
 	int resultado_planif = recibir_protocolo(SOCKET_PLANIF);
 
 	if(resultado_planif <= 0){
-		log_error(LOG_COORD, "no se pudo recibir el resultado del get del esi %d de la clave %s desde el planificador",
+		log_error(LOG_COORD, "No se pudo recibir el resultado del get del esi %d de la clave %s desde el planificador",
 				solicitud->id_esi,
 				solicitud->clave
 		);
@@ -68,7 +67,9 @@ int realizar_get(t_solicitud* solicitud){
 	sem_wait(&solicitud->solicitud_finalizada);
 	solicitud->respuesta_a_esi = evaluar_resultados(solicitud->resultado_instancia, resultado_planif);
 
-	log_info(LOG_COORD, "El resultado fue %d", solicitud->respuesta_a_esi);
+	log_info(LOG_COORD, "El resultado de ejecutar la instruccion %d fue %d",
+			solicitud->instruccion,
+			solicitud->respuesta_a_esi);
 
 	return 0;
 }
@@ -125,7 +126,7 @@ void validar_existencia_clave(t_solicitud* solicitud){
 	}
 	else {
 		crear_clave(solicitud);
-		log_info(LOG_COORD,"La clave %s no existia y se creo en una instancia", solicitud->clave);
+		log_info(LOG_COORD, "La clave %s no existia y se creo en una instancia", solicitud->clave);
 	}
 
 }

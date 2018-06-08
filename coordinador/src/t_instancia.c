@@ -22,9 +22,6 @@ void* crear_instancia(int id, int socket){
 }
 
 void agregar_clave(t_instancia* instancia, char* clave){
-	/**
-	 * FIXME la coleccion de claves conviene mas que sea un t_list* o un diccionario?
-	 */
 	list_add(instancia->claves, clave);
 }
 
@@ -42,11 +39,11 @@ int recibir_claves(t_instancia* instancia){
 	int cant_claves;
 
 	if(recv(instancia->socket, &cant_claves, sizeof(int), MSG_WAITALL) <= 0){
-		log_error(LOG_COORD, "no se pudo recibir la cantidad de claves de la instancia %d", instancia->id);
+		log_error(LOG_COORD, "No se pudo recibir la cantidad de claves de la instancia %d", instancia->id);
 		return -1;
 	}
 
-	log_info(LOG_COORD, "Se recibio las claves de la instancia");
+	log_info(LOG_COORD, "Se recibieron las claves de la instancia");
 
 	int i;
 	for(i = 0; i < cant_claves; i++){

@@ -10,6 +10,6 @@
 
 #include "coordinador.h"
 
-t_solicitud* crear_solicitud(int id);
+t_solicitud* crear_solicitud(int instruccion, int id);
 
 #endif /* T_SOLICITUD_H_ */

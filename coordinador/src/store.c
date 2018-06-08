@@ -8,31 +8,21 @@
 #include "store.h"
 
 t_solicitud* crear_store(int socket, int id){
-	t_solicitud* solicitud = crear_solicitud(id);
+	t_solicitud* solicitud = crear_solicitud(OPERACION_STORE, id);
 
-	solicitud->instruccion = OPERACION_GET;
 	solicitud->clave = recibir_string(socket);
 
 	return solicitud;
 }
 
 t_mensaje serializar_store_a_instancia(char* clave){
-	t_mensaje mensaje;
-
-	mensaje.header = OPERACION_STORE;
-
 	int tam_clave = strlen(clave) + 1;
 
-	mensaje.tam_payload = sizeof(int) + tam_clave;
+	t_mensaje mensaje = crear_mensaje(OPERACION_STORE, sizeof(int) + tam_clave);
 
-	mensaje.payload = malloc(mensaje.tam_payload);
+	memcpy(mensaje.payload, &tam_clave, sizeof(int));
 
-	void* aux = mensaje.payload;
-
-	memcpy(aux, &tam_clave, sizeof(int));
-	aux += sizeof(int);
-
-	serializar_string(aux, clave);
+	serializar_string(mensaje.payload + sizeof(int), clave);
 
 	return mensaje;
 }

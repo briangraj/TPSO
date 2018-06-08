@@ -15,7 +15,7 @@ void* atender_esi(void* socket_esi){
 	int id_esi = recibir_id((int) socket_esi);
 
 	if(id_esi == -1){
-		log_error(LOG_COORD, "no se pudo recibir el id del esi en el socket %d", socket_esi);
+		log_error(LOG_COORD, "No se pudo recibir el id del esi en el socket %d", socket_esi);
 		pthread_exit(NULL);
 	}
 
@@ -30,7 +30,7 @@ void* atender_esi(void* socket_esi){
 		}
 
 		if(atender_solicitud(solicitud) == -1){
-			log_error(LOG_COORD, "no se pudo atender la solicitud del esi %d", solicitud->id_esi);
+			log_error(LOG_COORD, "No se pudo atender la solicitud del esi %d", solicitud->id_esi);
 			pthread_exit(NULL);
 		}
 
@@ -39,7 +39,7 @@ void* atender_esi(void* socket_esi){
 		if(enviar_paquete(solicitud->respuesta_a_esi, (int) socket_esi, 0, NULL) <= 0){
 			log_error(
 					LOG_COORD,
-					"no se pudo enviar el resultado de la instruccion %d al esi %d",
+					"No se pudo enviar el resultado de la instruccion %d al esi %d",
 					solicitud->instruccion,
 					solicitud->id_esi
 			);
@@ -83,7 +83,7 @@ t_solicitud* recibir_solicitud_esi(int socket, int id){
 	t_solicitud* solicitud;
 
 	if(protocolo == -1){
-		log_error(LOG_COORD, "el esi %d envio una solicitud invalida", socket);
+		log_error(LOG_COORD, "El esi %d envio una solicitud invalida", socket);
 		return NULL;
 	}
 
