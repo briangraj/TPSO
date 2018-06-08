@@ -7,8 +7,8 @@
 
 #include "set.h"
 
-t_solicitud* crear_set(int socket){
-	t_solicitud* solicitud = crear_solicitud();
+t_solicitud* crear_set(int socket, int id){
+	t_solicitud* solicitud = crear_solicitud(id);
 
 	solicitud->instruccion = OPERACION_SET;
 	solicitud->clave = recibir_string(socket);

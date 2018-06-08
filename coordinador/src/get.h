@@ -14,7 +14,7 @@
 #include "t_instancia.h"
 #include "t_solicitud.h"
 
-t_solicitud* crear_get			   			(int socket);
+t_solicitud* crear_get			   			(int socket, int id);
 int 		 realizar_get		   			(t_solicitud* solicitud);
 void 		 agregar_clave_a_borrar			(t_solicitud* solicitud, t_list* instancias);
 void 		 crear_clave_con_instancia_caida(t_solicitud* solicitud, t_list* instancias);

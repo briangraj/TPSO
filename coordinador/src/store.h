@@ -13,8 +13,8 @@
 #include "conexiones/estructuras_coord.h"
 #include "t_solicitud.h"
 
-t_solicitud* crear_store		(int socket);
-t_mensaje 	 serializar_store_a_instancia	(char* clave);
-int 		 realizar_store		(t_solicitud* solicitud);
+t_solicitud*	crear_store						(int socket, int id);
+t_mensaje		serializar_store_a_instancia	(char* clave);
+int				realizar_store					(t_solicitud* solicitud);
 
 #endif /* STORE_H_ */

@@ -11,49 +11,18 @@ void crear_hilo_instancia(t_instancia* instancia){
 	crear_hilo(atender_instancia, (void*) instancia);
 }
 
-void* crear_instancia(int id, int socket){
-	t_instancia* instancia = malloc(sizeof(t_instancia));
-
-	instancia->id = id;
-	instancia->pedidos = queue_create();
-	sem_init(&instancia->sem, 0, 0);
-	instancia->socket = socket;
-	instancia->esta_activa = true;
-	instancia->claves = list_create();
-	instancia->claves_a_borrar = list_create();
-
-	return instancia;
-}
-
-int recibir_claves(t_instancia* instancia){
-	int cant_claves;
-
-	if(recv(instancia->socket, &cant_claves, sizeof(int), MSG_WAITALL) <= 0){
-		log_error(LOG_COORD, "no se pudo recibir la cantidad de claves de la instancia %d", instancia->id);
-		return -1;
-	}
-
-	int i;
-	for(i = 0; i < cant_claves; i++){
-		char* clave = recibir_string(instancia->socket);
-		agregar_clave(instancia, clave);
-	}
-
-	return 0;
-}
-
 void* atender_instancia(void* instancia_void){
 	t_instancia* instancia = (t_instancia*)instancia_void;
 	t_solicitud* solicitud;
 
 	if(enviar_config_instancia(instancia->socket) == -1){
 		log_error(LOG_COORD, "no se pudo enviar la config a la instancia %d", instancia->id);
-		return -1;
+		pthread_exit(NULL);
 	}
 
 	if(recibir_claves(instancia) == -1){
 		log_error(LOG_COORD, "no se pudieron recibir las claves de la instancia %d", instancia->id);
-		return -1;
+		pthread_exit(NULL);
 	}
 
 	while(true) {
@@ -68,13 +37,14 @@ void* atender_instancia(void* instancia_void){
 					instancia->id
 			);
 
-			return -1;
+			pthread_exit(NULL);
 		}
 
 		evaluar_resultado_instr(solicitud, instancia->socket);//TODO checkear error
+		log_trace(LOG_COORD, "Se evaluo el resultado de la instruccion %s", solicitud->instruccion);
 	}
 
-	return 0;
+	pthread_exit(NULL);
 }
 
 void evaluar_resultado_instr(t_solicitud* solicitud, int socket_instancia){
