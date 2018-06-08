@@ -21,12 +21,39 @@ void* crear_instancia(int id, int socket){
 	return instancia;
 }
 
+t_instancia* instancia_con_clave(t_solicitud* solicitud){
+
+	bool instancia_contiene_clave(t_instancia* instancia){
+		bool contiene_clave(char* clave){
+			return !strcmp(clave, solicitud->clave);
+		}
+
+		return list_any_satisfy(instancia->claves, contiene_clave);
+	}
+
+	return (t_instancia*) list_find(INSTANCIAS, instancia_contiene_clave);
+}
+
+void borrar_clave(t_solicitud* solicitud, t_instancia* instancia){
+	bool contiene_clave(char* clave){
+		return !strcmp(clave, solicitud->clave);
+	}
+
+	char* clave = (char*) list_remove_by_condition(instancia->claves, contiene_clave);
+
+	list_add(instancia->claves_a_borrar, (void*) clave);
+}
+
 void agregar_clave(t_instancia* instancia, char* clave){
 	list_add(instancia->claves, clave);
 }
 
-bool es_instancia_activa(t_instancia* instancia){
+bool esta_activa(t_instancia* instancia){
 	return instancia->esta_activa;
+}
+
+t_solicitud* sacar_pedido(t_instancia* instancia) {
+	return (t_solicitud*) queue_pop(instancia->pedidos);
 }
 
 void agregar_pedido(t_instancia* instancia, t_solicitud* solicitud){

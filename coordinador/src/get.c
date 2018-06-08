@@ -29,7 +29,13 @@ int evaluar_resultados(int resultado_instancia, int resultado_planif){
 }
 
 int realizar_get(t_solicitud* solicitud){
-	validar_existencia_clave(solicitud);
+	if(validar_existencia_clave(solicitud) == -1) {
+//		abortar_esi([]); TODO
+
+		log_error(LOG_COORD, "No se pudo ejecutar el get del esi %d", solicitud->id_esi);
+		return -1;
+	}
+
 	log_trace(LOG_COORD, "Se valido la existencia de la clave %s", solicitud->clave);
 
 	/**
@@ -49,6 +55,7 @@ int realizar_get(t_solicitud* solicitud){
 				solicitud->id_esi,
 				solicitud->clave
 		);
+
 		return -1;
 	}
 
@@ -92,54 +99,34 @@ t_mensaje serializar_get_a_planif(t_solicitud* solicitud){
 	return mensaje;
 }
 
-void agregar_clave_a_borrar(t_solicitud* solicitud, t_list* instancias){
-	bool no_contiene_clave_a_borrar(char* clave){
-		return strcmp(clave, solicitud->clave);
-	}
-
-	bool no_contiene_clave_en_claves_a_borrar(t_instancia* instancia){
-		return list_any_satisfy(instancia->claves_a_borrar, no_contiene_clave_a_borrar);
-	}
-
-	t_instancia* instancia = list_find(instancias, no_contiene_clave_en_claves_a_borrar);
-}
-
-void crear_clave_con_instancia_caida(t_solicitud* solicitud, t_list* instancias){
-	distribuir(solicitud);
-
-	agregar_clave_a_borrar(solicitud, instancias);
-}
-
 void crear_clave(t_solicitud* solicitud){
 	distribuir(solicitud);
 }
 
-void validar_existencia_clave(t_solicitud* solicitud){
-	t_list* instancias = instancias_con_clave(solicitud);
+int validar_existencia_clave(t_solicitud* solicitud){
+	t_instancia* instancia = instancia_con_clave(solicitud);
 
-	if(!list_is_empty(instancias)){
-		if(!list_any_satisfy(instancias, es_instancia_activa)){
-			crear_clave_con_instancia_caida(solicitud, instancias);
-			log_info(LOG_COORD,"Se creo la clave con instancia caida");
+	if(instancia != NULL){
+		if(!esta_activa(instancia)){
+			borrar_clave(solicitud, instancia);
+
+			log_info(LOG_COORD,"Se borro la clave de la instancia %d");
+
+			return -1;
+
 		} else
 			log_info(LOG_COORD, "La clave %s se encuentra en una instancia activa", solicitud->clave);
 	}
 	else {
-		crear_clave(solicitud);
+		if(crear_clave(solicitud) == -1){
+			log_error(LOG_COORD, "No se pudo crear la clave %s", solicitud->clave);
+
+			return -1;
+		}
+
 		log_info(LOG_COORD, "La clave %s no existia y se creo en una instancia", solicitud->clave);
 	}
 
+	return 0;
 }
 
-t_list* instancias_con_clave(t_solicitud* solicitud){
-
-	bool instancia_contiene_clave(t_instancia* instancia){
-		bool contiene_clave(char* clave){
-			return !strcmp(clave, (t_instancia*) solicitud->clave);
-		}
-
-		return list_any_satisfy(instancia->claves, contiene_clave);
-	}
-
-	return list_filter(INSTANCIAS, instancia_contiene_clave);
-}

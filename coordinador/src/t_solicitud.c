@@ -17,3 +17,4 @@ t_solicitud* crear_solicitud(int instruccion, int id){
 
 	return solicitud;
 }
+

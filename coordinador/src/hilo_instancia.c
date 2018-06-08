@@ -17,7 +17,8 @@ void* atender_instancia(void* instancia_void){
 
 	while(true) {
 		sem_wait(&instancia->sem);
-		solicitud = (t_solicitud*)queue_pop(instancia->pedidos);
+
+		solicitud = sacar_pedido(instancia);
 
 		if(enviar_pedido(solicitud, instancia->socket) == -1){
 			log_error(
