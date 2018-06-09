@@ -21,14 +21,15 @@ typedef struct solicitud {
 	int resultado_instancia;
 	int respuesta_a_esi;
 	int id_esi;
+	int socket_esi;
 } t_solicitud;
 
 typedef struct instancia {
 	int id;
 	int socket;
-	sem_t sem;
+	sem_t solicitud_lista;
 	bool esta_activa;
-	t_queue* pedidos;
+	t_queue* solicitudes;
 	t_list* claves;//list<char*>
 	t_list* claves_a_borrar;
 } t_instancia;

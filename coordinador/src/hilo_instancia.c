@@ -16,11 +16,11 @@ void* atender_instancia(void* instancia_void){
 	t_solicitud* solicitud;
 
 	while(true) {
-		sem_wait(&instancia->sem);
+		sem_wait(&instancia->solicitud_lista);
 
-		solicitud = sacar_pedido(instancia);
+		solicitud = sacar_solicitud(instancia);
 
-		if(enviar_pedido(solicitud, instancia->socket) == -1){
+		if(enviar_solicitud(solicitud, instancia->socket) == -1){
 			log_error(
 					LOG_COORD,
 					"No se pudo enviar la solicitud de la instruccion %d a la instancia %d",
@@ -28,14 +28,18 @@ void* atender_instancia(void* instancia_void){
 					instancia->id
 			);
 
+			setear_error_comunicacion_instancia(solicitud);
+
 			pthread_exit(NULL);
 		}
 
 		log_info(LOG_COORD, "Se envio la solicitud de la instruccion %d a la instancia %d",
-				solicitud->instruccion,
-				instancia->id);
+			solicitud->instruccion,
+			instancia->id);
 
-		evaluar_resultado_instr(solicitud, instancia->socket);//TODO checkear error
+		evaluar_resultado_instr(solicitud, instancia->socket);
+
+		sem_post(&solicitud->solicitud_finalizada);
 
 		log_trace(LOG_COORD, "El resultado de la instruccion %s fue $d", solicitud->instruccion, solicitud->respuesta_a_esi);
 	}
@@ -47,13 +51,11 @@ void evaluar_resultado_instr(t_solicitud* solicitud, int socket_instancia){
 
 	switch(recibir_protocolo(socket_instancia)){
 	case OPERACION_EXITOSA:
-
-		solicitud->resultado_instancia = OPERACION_EXITOSA;
-
-		sem_post(&solicitud->solicitud_finalizada);
-
+		setear_operacion_exitosa_instancia(solicitud);
 	break;
-	default:;
+	default:
+		setear_error_comunicacion_instancia(solicitud);//TODO ver que errores puede tirar la instancia
+	;
 	}
 
 }
@@ -73,12 +75,12 @@ int enviar_config_instancia(int socket_instancia){
 	return enviar_mensaje(config, socket_instancia);
 }
 
-int enviar_pedido(t_solicitud* solicitud, int socket){
+int enviar_solicitud(t_solicitud* solicitud, int socket){
 	t_mensaje mensaje;
 
 	switch(solicitud->instruccion){
 	case OPERACION_GET:{
-		serializar_get_a_instancia(solicitud->clave);
+		mensaje = serializar_get_a_instancia(solicitud->clave);
 
 		break;
 	}
@@ -98,4 +100,7 @@ int enviar_pedido(t_solicitud* solicitud, int socket){
 
 	return enviar_mensaje(mensaje, socket);
 }
+
+
+
 
