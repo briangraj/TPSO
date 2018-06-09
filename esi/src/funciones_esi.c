@@ -125,13 +125,13 @@ int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion, FILE*
 
 	switch (informe_ejecucion.informe_coordinador){
 
-		case EJECUCION_EXITOSA:
-			 log_trace(log_esi, "Se ejecuto correctamente la sentencia");
-			 free(informe_ejecucion.sentencia_ejecutada);
-			 return EJECUCION_EXITOSA;
+//		case EJECUCION_EXITOSA:
+//			 log_trace(log_esi, "Se ejecuto correctamente la sentencia");
+//			 free(informe_ejecucion.sentencia_ejecutada);
+//			 return EJECUCION_EXITOSA;
 
 		case GET_EXITOSO:
-			 log_trace(log_esi, "Se ejecuto correctamente la sentencia");
+			 log_trace(log_esi, "Se ejecuto correctamente la sentencia GET");
 			 free(informe_ejecucion.sentencia_ejecutada);
 			 return EJECUCION_EXITOSA;
 
@@ -142,22 +142,22 @@ int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion, FILE*
 			 return EJECUCION_EXITOSA;
 
 		case STORE_INVALIDO:
-			log_error(log_esi, "Se intento hacer store sobre una clave que no posee el ESI");
+			log_error(log_esi, "Se intento hacer STORE sobre una clave que no pertenece a este ESI");
 			free(informe_ejecucion.sentencia_ejecutada);
 			return FALLO_EN_EJECUCION;
 
 		case STORE_EXITOSO:
-			 log_trace(log_esi, "Se ejecuto correctamente la sentencia");
+			 log_trace(log_esi, "Se ejecuto correctamente la sentencia STORE");
 			 free(informe_ejecucion.sentencia_ejecutada);
 			 return EJECUCION_EXITOSA;
 
 		case SET_INVALIDO:
-			log_error(log_esi, "Se intento hacer set sobre una clave que no posee el ESI");
+			log_error(log_esi, "Se intento hacer SET sobre una clave que no pertenece a este ESI");
 			free(informe_ejecucion.sentencia_ejecutada);
 			return FALLO_EN_EJECUCION;
 
 		case SET_EXITOSO:
-			 log_trace(log_esi, "Se ejecuto correctamente la sentencia");
+			 log_trace(log_esi, "Se ejecuto correctamente la sentencia SET");
 			 free(informe_ejecucion.sentencia_ejecutada);
 			 return EJECUCION_EXITOSA;
 
@@ -176,8 +176,8 @@ int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion, FILE*
 			 free(informe_ejecucion.sentencia_ejecutada);
 			 return FALLO_EN_EJECUCION;
 
-		case ERROR_CLAVE_INEXISTENTE:
-			 log_error(log_esi, "Se intento acceder a una clave inexistente en el sistema");//FIXME: ver diferencia con CLAVE_NO_IDENTIFICADA
+		case ERROR_CLAVE_INACCESIBLE:
+			 log_error(log_esi, "Se intento acceder a una clave que estaba en una instancia que ahora se encuentra desconectada");//FIXME: ver diferencia con CLAVE_NO_IDENTIFICADA
 			 free(informe_ejecucion.sentencia_ejecutada);
 			 return FALLO_EN_EJECUCION;
 

@@ -440,10 +440,10 @@ int elegir_opcion(){
 
 			return ERROR_DE_COMUNICACION;
 
-		case 5: // ERROR_CLAVE_INEXISTENTE
-			log_trace(log, "Se va a enviar ERROR_CLAVE_INEXISTENTE");
+		case 5: // ERROR_CLAVE_INACCESIBLE
+			log_trace(log, "Se va a enviar ERROR_CLAVE_INACCESIBLE");
 
-			return ERROR_CLAVE_INEXISTENTE;
+			return ERROR_CLAVE_INACCESIBLE;
 
 		default: return -1;
 	}
