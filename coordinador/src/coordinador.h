@@ -13,6 +13,7 @@
 #include <conexiones/estructuras_coord.h>
 #include <commons/log.h>
 #include <commons/collections/list.h>
+#include <commons/config.h>
 #include <netdb.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -24,6 +25,7 @@
 
 #define PATH_CONFIG "/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/configs/coordinador.cfg"
 
+char* IP_COORD;
 int PUERTO_COORD;
 char* ALGORITMO_DISTRIBUCION;
 int CANTIDAD_ENTRADAS_TOTALES;

@@ -9,7 +9,7 @@ lib: so-commons-library readline parsi
 so-commons-library:
 	$(call mostrarTitulo,$@)
 	git clone https://github.com/sisoputnfrba/so-commons-library ../so-commons-library
-	cd ./so-commons-library; sudo make install
+	cd ../so-commons-library; sudo make install
 	
 readline:
 	$(call mostrarTitulo,$@)
@@ -17,8 +17,8 @@ readline:
 
 parsi:
 	$(call mostrarTitulo,$@)
-	git clone https://github.com/sisoputnfrba/parsi.git
-	cd ./parsi; sudo make install
+	git clone https://github.com/sisoputnfrba/parsi.git ../parsi
+	cd ../parsi; sudo make install
 
 clean: clean-sisopLib clean-esi clean-instancia clean-planificador clean-coordinador
 

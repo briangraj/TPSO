@@ -70,6 +70,7 @@ void setup_coord(){
 void leer_config(){//FIXME hardcodeado
 	t_config* config = config_create(PATH_CONFIG);
 
+	IP_COORD = config_get_string_value(config, "MI_IP");
 	PUERTO_COORD = config_get_int_value(config, "MI_PUERTO");
 	ALGORITMO_DISTRIBUCION = config_get_string_value(config, "ALGORITMO_DISTRIBUCION");
 	CANTIDAD_ENTRADAS_TOTALES = config_get_int_value(config, "CANTIDAD_ENTRADAS");
