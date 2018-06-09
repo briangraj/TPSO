@@ -11,8 +11,8 @@ void* crear_instancia(int id, int socket){
 	t_instancia* instancia = malloc(sizeof(t_instancia));
 
 	instancia->id = id;
-	instancia->pedidos = queue_create();
-	sem_init(&instancia->sem, 0, 0);
+	instancia->solicitudes = queue_create();
+	sem_init(&instancia->solicitud_lista, 0, 0);
 	instancia->socket = socket;
 	instancia->esta_activa = true;
 	instancia->claves = list_create();
@@ -52,14 +52,14 @@ bool esta_activa(t_instancia* instancia){
 	return instancia->esta_activa;
 }
 
-t_solicitud* sacar_pedido(t_instancia* instancia) {
-	return (t_solicitud*) queue_pop(instancia->pedidos);
+t_solicitud* sacar_solicitud(t_instancia* instancia) {
+	return (t_solicitud*) queue_pop(instancia->solicitudes);
 }
 
-void agregar_pedido(t_instancia* instancia, t_solicitud* solicitud){
-	queue_push(instancia->pedidos, solicitud);
+void agregar_solicitud(t_instancia* instancia, t_solicitud* solicitud){
+	queue_push(instancia->solicitudes, solicitud);
 
-	sem_post(&instancia->sem);
+	sem_post(&instancia->solicitud_lista);
 }
 
 int recibir_claves(t_instancia* instancia){

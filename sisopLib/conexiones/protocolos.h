@@ -54,9 +54,9 @@ typedef enum {
 	OPERACION_EXITOSA,//se usaria para saber si salio bien el set, store o crear_clave en la instancia
 	FS_EI,//fallo set: espacio insuficiente
 	FS_NC,//fallo set: necesita compactar
+	//TODO FG_EI, FG_NC
 	FALLO_REEMPLAZO
 } t_protocolo;
-
 
 typedef enum {
 	ESI,

@@ -19,3 +19,14 @@ t_solicitud* crear_solicitud(int instruccion, int id, int socket){
 	return solicitud;
 }
 
+void setear_error_comunicacion_instancia(t_solicitud* solicitud){
+	solicitud->resultado_instancia = ERROR_DE_COMUNICACION;
+}
+
+void setear_error_clave_inaccesible(t_solicitud* solicitud){
+	solicitud->respuesta_a_esi = ERROR_CLAVE_INACCESIBLE;
+}
+
+void setear_operacion_exitosa_instancia(t_solicitud* solicitud){
+	solicitud->resultado_instancia = OPERACION_EXITOSA;
+}

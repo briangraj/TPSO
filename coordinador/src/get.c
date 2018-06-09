@@ -14,6 +14,7 @@ t_solicitud* crear_get(int socket, int id){
 
 	return solicitud;
 }
+
 t_mensaje serializar_get_a_instancia(char* clave){
 	int tam_clave = strlen(clave) + 1;
 
@@ -23,7 +24,6 @@ t_mensaje serializar_get_a_instancia(char* clave){
 
 	return mensaje;
 }
-
 
 int realizar_get(t_solicitud* solicitud){
 	bool existe_clave = existe_clave_en_instancia_activa(solicitud);
@@ -72,7 +72,7 @@ int realizar_get(t_solicitud* solicitud){
 	if(!existe_clave){
 		sem_wait(&solicitud->solicitud_finalizada);
 
-		solicitud->respuesta_a_esi = evaluar_resultados(solicitud->resultado_instancia, resultado_planif);
+		setear_respuesta_a_esi(solicitud, resultado_planif);
 	} else {
 		solicitud->respuesta_a_esi = resultado_planif;
 	}
@@ -115,6 +115,8 @@ int validar_existencia_clave(t_solicitud* solicitud){
 
 			log_info(LOG_COORD,"Se borro la clave de la instancia %d");
 
+			setear_error_clave_inaccesible(solicitud);
+
 			return -1;
 
 		} else
@@ -151,13 +153,29 @@ void abortar_esi(t_solicitud* solicitud){
 }
 
 
-int evaluar_resultados(int resultado_instancia, int resultado_planif){
+void setear_respuesta_a_esi(t_solicitud* solicitud, int resultado_planif){
+//	coord-instanc
+//	ERROR_DE_COMUNICACION
+//	ERROR_CLAVE_INACCESIBLE
+//	FG_EI
+//	FG_NC
+//	OPERACION_EXITOSA
+//	coord-planf
+//	GET_EXITOSO
+//	GET_BLOQUEANTE
 
-	switch (resultado_instancia){
-
+	switch (solicitud->resultado_instancia){
+	case ERROR_CLAVE_INACCESIBLE:
+		solicitud->respuesta_a_esi = ERROR_CLAVE_INACCESIBLE;
+		break;
+	case ERROR_DE_COMUNICACION:
+		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
+		break;
+//	case FG_EI:
+//	case FG_NC:
+	default:
+		solicitud->respuesta_a_esi = resultado_planif;
 	}
-
-	return 0;
 }
 
 
