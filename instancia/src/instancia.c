@@ -27,6 +27,8 @@ void inicializar(){
 	pthread_mutex_init(&mutex_dump, NULL);
 
 	leer_config();
+
+	crear_si_no_existe(PUNTO_MONTAJE, log_instancia);
 }
 
 void leer_config(){
@@ -104,8 +106,8 @@ void escuchar_coordinador(){
 	int protocolo;
 
 	while(1) {
-		pthread_mutex_lock(&mutex_dump);
 		protocolo = recibir_protocolo(socket_coordinador);
+		pthread_mutex_lock(&mutex_dump);
 		//printf("leer_protocolo %d\n", protocolo);
 		if (protocolo <= 0) {
 			log_error(log_instancia, "se desconecto el coordinador");
@@ -400,7 +402,7 @@ int atender_store(){
 
 void persistir(void* entrada_void){
 	t_entrada* entrada = (t_entrada*)entrada_void;
-	puts(entrada->clave);
+	//puts(entrada->clave);
 	int file_desc = abrir_entrada(entrada->clave);
 	ftruncate(file_desc, entrada->tamanio_bytes_clave);
 	struct stat stat_entrada = crear_stat(file_desc);
@@ -417,7 +419,7 @@ int atender_crear_clave(){
 	char* clave = recibir_string(socket_coordinador);
 	char* valor = "hola";//TODO recibir_string(socket_coordinador);
 
-	puts(clave);
+	//puts(clave);
 	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));
 	int nro_entrada = entrada_para(entradas_nuevo_valor);
 	int resultado = OPERACION_EXITOSA;

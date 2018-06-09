@@ -147,11 +147,7 @@ int validar_existencia_clave(t_solicitud* solicitud){
 			log_info(LOG_COORD, "La clave %s se encuentra en una instancia activa", solicitud->clave);
 	}
 	else {
-		if(crear_clave(solicitud) == -1){
-			log_error(LOG_COORD, "No se pudo crear la clave %s", solicitud->clave);
-
-			return -1;
-		}
+		crear_clave(solicitud);
 
 		log_info(LOG_COORD, "La clave %s no existia y se creo en una instancia", solicitud->clave);
 	}

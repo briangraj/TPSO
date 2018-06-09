@@ -31,6 +31,24 @@ t_mensaje serializar_set_a_instancia(char* clave, char* valor){
 	return mensaje;
 }
 
+t_mensaje serializar_set_a_planif(t_solicitud* solicitud){
+	int tam_payload = sizeof(int) * 3 + strlen(solicitud->clave) + strlen(solicitud->valor) + 2;
+
+	t_mensaje mensaje = crear_mensaje(GET_CLAVE, tam_payload);
+
+	char* aux = mensaje.payload;
+
+	memcpy(aux, &solicitud->id_esi, sizeof(int));
+	aux += sizeof(int);
+
+	serializar_string(aux, solicitud->clave);
+	aux += strlen(solicitud->clave) + 1;
+
+	serializar_string(aux, solicitud->valor);
+
+	return mensaje;
+}
+
 int realizar_set(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
@@ -39,7 +57,7 @@ int realizar_set(t_solicitud* solicitud){
 
 		abortar_esi(solicitud);
 
-		log_error(LOG_COORD, "no se encontro la clave %s, se abortara al esi %d", solicitud)
+		log_error(LOG_COORD, "No se encontro la clave %s, se abortara al esi %d", solicitud->clave, solicitud->id_esi);
 
 		return -1;
 	} else if(!esta_activa(instancia)){
@@ -47,7 +65,9 @@ int realizar_set(t_solicitud* solicitud){
 
 		abortar_esi(solicitud);
 
-		log_error(LOG_COORD, "la clave %s se encuentra en una instancia desconectada, se abortara al esi %d", solicitud)
+		log_error(LOG_COORD, "La clave %s se encuentra en una instancia desconectada, se abortara al esi %d",
+				solicitud->clave,
+				solicitud->id_esi);
 
 		return -1;
 	}
@@ -56,7 +76,7 @@ int realizar_set(t_solicitud* solicitud){
 
 	sem_wait(&solicitud->solicitud_finalizada);
 
-	if(solicitud->resultado_instancia == ERROR_DE_COMUNICACION){TODO falta checkear FS_EI, FS_NC
+	if(solicitud->resultado_instancia == ERROR_DE_COMUNICACION){
 		/**
 		 * TODO falta checkear FS_EI, FS_NC, y ver que evento
 		 * desencadena la compactacion

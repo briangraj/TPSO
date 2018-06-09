@@ -17,5 +17,6 @@
 t_solicitud*	crear_set			   		(int socket, int id);
 int				realizar_set		   		(t_solicitud* solicitud);
 t_mensaje		serializar_set_a_instancia	(char* clave, char* valor);
+t_mensaje		serializar_get_a_planif		(t_solicitud* solicitud);
 
 #endif /* SET_H_ */

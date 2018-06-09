@@ -14,6 +14,7 @@
 #include <commons/config.h>
 #include <commons/collections/list.h>
 #include <commons/log.h>
+#include <conexiones/archivos.h>
 #include <conexiones/protocolos.h>
 #include <conexiones/serializacion.h>
 #include <conexiones/sockets.h>

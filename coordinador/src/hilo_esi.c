@@ -83,7 +83,7 @@ t_solicitud* recibir_solicitud_esi(int socket, int id){
 	t_solicitud* solicitud;
 
 	if(protocolo == -1){
-		log_error(LOG_COORD, "El esi %d envio una solicitud invalida", socket);
+		log_error(LOG_COORD, "El esi %d envio una solicitud invalida", id);
 		return NULL;
 	}
 
