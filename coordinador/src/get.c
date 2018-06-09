@@ -154,15 +154,6 @@ void abortar_esi(t_solicitud* solicitud){
 
 
 void setear_respuesta_a_esi(t_solicitud* solicitud, int resultado_planif){
-//	coord-instanc
-//	ERROR_DE_COMUNICACION
-//	ERROR_CLAVE_INACCESIBLE
-//	FG_EI
-//	FG_NC
-//	OPERACION_EXITOSA
-//	coord-planf
-//	GET_EXITOSO
-//	GET_BLOQUEANTE
 
 	switch (solicitud->resultado_instancia){
 	case ERROR_CLAVE_INACCESIBLE:
