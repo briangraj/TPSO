@@ -13,6 +13,7 @@
 #include "t_mensaje.h"
 #include "t_solicitud.h"
 #include "t_instancia.h"
+#include "get.h"
 
 t_solicitud*	crear_set			   		(int socket, int id);
 int				realizar_set		   		(t_solicitud* solicitud);

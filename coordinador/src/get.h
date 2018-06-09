@@ -17,7 +17,7 @@
 
 t_solicitud* crear_get			   		      (int socket, int id);
 int 		 realizar_get		   			  (t_solicitud* solicitud);
-void 		 crear_clave					  (t_solicitud* solicitud);
+void 		 crear_clave					  (t_solicitud* solicitud, t_instancia* instancia);
 int 		 validar_existencia_clave		  (t_solicitud* solicitud);
 t_mensaje 	 serializar_get_a_instancia		  (char* clave);
 t_mensaje 	 serializar_get_a_planif		  (t_solicitud* solicitud);

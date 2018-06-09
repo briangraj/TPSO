@@ -68,10 +68,15 @@ void setup_coord(){
 }
 
 void leer_config(){//FIXME hardcodeado
-	IP_COORD = "127.0.0.1";
-	PUERTO_COORD = 5051;
-	CANTIDAD_ENTRADAS_TOTALES = 20;
-	TAMANIO_ENTRADA = 100;
+	t_config* config = config_create(PATH_CONFIG);
+
+	PUERTO_COORD = config_get_int_value(config, "MI_PUERTO");
+	ALGORITMO_DISTRIBUCION = config_get_string_value(config, "ALGORITMO_DISTRIBUCION");
+	CANTIDAD_ENTRADAS_TOTALES = config_get_int_value(config, "CANTIDAD_ENTRADAS");
+	TAMANIO_ENTRADA = config_get_int_value(config, "TAMANIO_ENTRADA");
+	RETARDO = config_get_int_value(config, "RETARDO");
+
+	config_destroy(config);
 }
 
 void bindear_socket_server(int listener){

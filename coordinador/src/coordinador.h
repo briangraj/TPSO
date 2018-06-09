@@ -22,10 +22,13 @@
 #include "t_mensaje.h"
 #include "t_instancia.h"
 
+#define PATH_CONFIG "/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/configs/coordinador.cfg"
+
+int PUERTO_COORD;
+char* ALGORITMO_DISTRIBUCION;
 int CANTIDAD_ENTRADAS_TOTALES;
 int TAMANIO_ENTRADA;
-char* IP_COORD;
-int PUERTO_COORD;
+int RETARDO;
 t_log* LOG_COORD;
 
 t_list* INSTANCIAS;//t_instancia

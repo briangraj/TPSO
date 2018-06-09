@@ -325,8 +325,8 @@ int entradas_libres_desde(int nro_entrada){
 
 void setear_bitarray(t_entrada* entrada){
 	int i;
-	for(i = entrada->nro_entrada; i < entrada->tamanio_entradas_clave; i++)
-		bitarray_set_bit(bitarray_entradas, i);
+	for(i = 0; i < entrada->tamanio_entradas_clave; i++)
+		bitarray_set_bit(bitarray_entradas, entrada->nro_entrada + i);
 }
 
 int atender_set(){

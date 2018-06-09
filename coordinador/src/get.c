@@ -127,8 +127,10 @@ t_mensaje serializar_get_a_planif(t_solicitud* solicitud){
 	return mensaje;
 }
 
-void crear_clave(t_solicitud* solicitud){
+void crear_clave(t_solicitud* solicitud, t_instancia* instancia){
 	distribuir(solicitud);
+
+	agregar_clave(instancia, solicitud->clave);
 }
 
 int validar_existencia_clave(t_solicitud* solicitud){
@@ -147,7 +149,7 @@ int validar_existencia_clave(t_solicitud* solicitud){
 			log_info(LOG_COORD, "La clave %s se encuentra en una instancia activa", solicitud->clave);
 	}
 	else {
-		crear_clave(solicitud);
+		crear_clave(solicitud, instancia);
 
 		log_info(LOG_COORD, "La clave %s no existia y se creo en una instancia", solicitud->clave);
 	}
