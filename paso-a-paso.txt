@@ -1,0 +1,33 @@
+# Levantar ubuntu server
+
+# Tirar ifconfig para sacar la ip de tu instancia
+	- Si no te muestra la ip de la forma 192.168.bla y te muestra 10.0.bla tira sudo ifdown eth0 
+  ... te pide contraseña, y despues de eso tira sudo ifup eth0 
+  ... volve a tirar ifconfig y ahi deberia estar la ip normal
+
+# Levanta 4 Putty con la ip que sacaste, el puerto es el 22, no hay que tocarlo
+
+# Desde una de las consolas hace mkdir workspace, metete ahi y ahi clonas el repo pegando la ruta: 
+    https://github.com/sisoputnfrba/tp-2018-1c-A-la-grande-le-puse-Jacketing.git 
+ ... (para pegar en putty es con click derecho solamente, lo hace automagico) y despues metete en la carpeta del tp
+
+# Copiate esta linea en cada una de las 4 consolas (no hace falta que te muevas hasta /home ni nada): 
+  export LD_LIBRARY_PATH=/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/sisopLib/Debug/ && export LC_ALL=C && echo LIBRARY PATH TIENE : $LD_LIBRARY_PATH && echo LC_ALL TIENE : $LC_ALL ... lo que hace es setear las variables y mostrarte como quedaron para que te quedes pillo... 
+
+# Ahora si, parado en la carpeta del tp haces make lib para instalar las commons, readline y el parsi
+	- ¿Fallo porque las commons ya existen? 
+  Podes instalar solo readline y/o el parsi haciendo make readline y make parsi... y si ya existe no falla, dice que esta al dia. (Puede o no fallar porque ya existe el parsi, no lo probamos)
+
+# Parado en la carpeta del tp copiate esta linea y dale enter para hacer la compilacion de todos los procesos: chmod +x deploy.sh && ./deploy.sh
+	- ¿Te salto algun problema bizarro en la compilacion que muestra que no se compilo por culpa de una funcion de las commons? 
+  parate en el directorio que contiene a las commons, 
+  que supongo que es /home/utnso/workspace o /home/utnso/ y hace sudo rm -r -f so-commons-library
+  ... despues volvelas a instalar parandote en la carpeta del tp y haciendo make lib o make so-commons-library
+
+# Si por alguna razon mistica queres borrar todo lo que se compilo (procesos + sisopLib pero no readline, parsi y commons) tira make clean
+
+# Ahora para modificar un archivo de configuracion es :
+	-> vim archivo.cfg
+	-> apreta i para que te deje modificarlo
+	-> apreta ESC cuando termines
+	-> apreta : y escribi wq , despues mandale enter...
