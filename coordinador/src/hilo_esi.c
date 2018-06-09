@@ -15,31 +15,42 @@ void* atender_esi(void* socket_esi){
 	int id_esi = recibir_id((int) socket_esi);
 
 	if(id_esi == -1){
-		log_error(LOG_COORD, "no se pudo recibir el id del esi en el socket %d", socket_esi);
-		return NULL;
+		log_error(LOG_COORD, "No se pudo recibir el id del esi en el socket %d", socket_esi);
+		pthread_exit(NULL);
 	}
+
+	log_info(LOG_COORD, "Se recibio al esi de id %d", id_esi);
 
 	while(true){
 		t_solicitud* solicitud = recibir_solicitud_esi((int) socket_esi, id_esi);
 
-		if(atender_solicitud(solicitud) == -1){
-			log_error(LOG_COORD, "no se pudo atender la solicitud del esi %d", solicitud->id_esi);
-			return NULL;
+		if(solicitud == NULL){
+			log_error(LOG_COORD, "No se pudo crear la solicitud del esi %d", id_esi);
+			pthread_exit(NULL);
 		}
+
+		if(atender_solicitud(solicitud) == -1){
+			log_error(LOG_COORD, "No se pudo atender la solicitud del esi %d", solicitud->id_esi);
+			pthread_exit(NULL);
+		}
+
+		log_trace(LOG_COORD, "Se recibio la solicitud %d del esi %d", solicitud->instruccion, solicitud->id_esi);
 
 		if(enviar_paquete(solicitud->respuesta_a_esi, (int) socket_esi, 0, NULL) <= 0){
 			log_error(
 					LOG_COORD,
-					"no se pudo enviar el resultado de la instruccion %d al esi %d",
+					"No se pudo enviar el resultado de la instruccion %d al esi %d",
 					solicitud->instruccion,
 					solicitud->id_esi
 			);
 
-			return NULL;
+			pthread_exit(NULL);
 		}
+
+		log_info(LOG_COORD, "Se envio la respuesta %d al esi %d", solicitud->respuesta_a_esi, solicitud->id_esi);
 	}
 
-	return 0;
+	pthread_exit(NULL);
 }
 
 int atender_solicitud(t_solicitud* solicitud){
@@ -72,30 +83,25 @@ t_solicitud* recibir_solicitud_esi(int socket, int id){
 	t_solicitud* solicitud;
 
 	if(protocolo == -1){
-		log_error(LOG_COORD, "el esi %d envio una solicitud invalida", socket);
-		pthread_exit(NULL);
+		log_error(LOG_COORD, "El esi %d envio una solicitud invalida", socket);
+		return NULL;
 	}
-
-	sem_init(&solicitud->solicitud_finalizada, 0, 0);//TODO podria ser una abstraccion parte del t_solicitud
 
 	switch(protocolo){
 
 	case OPERACION_GET:
-		solicitud = crear_get(socket);
+		solicitud = crear_get(socket, id);
 		break;
 	case OPERACION_SET:
-		solicitud = crear_set(socket);
+		solicitud = crear_set(socket, id);
 		break;
 	case OPERACION_STORE:
-		solicitud = crear_store(socket);
+		solicitud = crear_store(socket, id);
 		break;
 	default:
 		log_error(LOG_COORD, "El protocolo %d no existe", protocolo);
-		pthread_exit(NULL);
 		return NULL;
 	}
-
-	solicitud->id_esi = id;
 
 	return solicitud;
 

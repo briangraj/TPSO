@@ -7,10 +7,9 @@
 
 #include "set.h"
 
-t_solicitud* crear_set(int socket){
-	t_solicitud* solicitud = crear_solicitud();
+t_solicitud* crear_set(int socket, int id){
+	t_solicitud* solicitud = crear_solicitud(OPERACION_SET, id);
 
-	solicitud->instruccion = OPERACION_SET;
 	solicitud->clave = recibir_string(socket);
 	solicitud->valor = recibir_string(socket);
 
@@ -18,23 +17,16 @@ t_solicitud* crear_set(int socket){
 }
 
 t_mensaje serializar_set_a_instancia(char* clave, char* valor){
-	t_mensaje mensaje;
-
-	mensaje.header = OPERACION_SET;
-
 	int tam_clave = strlen(clave) + 1;
 	int tam_valor = strlen(valor) + 1;
 
-	mensaje.tam_payload = sizeof(int) + tam_clave + sizeof(int) + tam_valor;
+	int tam_payload = sizeof(int) + tam_clave + sizeof(int) + tam_valor;
 
-	mensaje.payload = malloc(mensaje.tam_payload);
+	t_mensaje mensaje = crear_mensaje(OPERACION_SET, tam_payload);
 
-	void* aux = mensaje.payload;
+	serializar_string(mensaje.payload, clave);
 
-	serializar_string(aux, clave);
-	aux += sizeof(int) + tam_clave;
-
-	serializar_string(aux, valor);
+	serializar_string(mensaje.payload + sizeof(int) + tam_clave, valor);
 
 	return mensaje;
 }

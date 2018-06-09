@@ -9,6 +9,7 @@
 
 void distribuir(t_solicitud* solicitud){
 	t_instancia* instancia = elegir_instancia(solicitud);//TODO mock
+	log_trace(LOG_COORD, "Se eligio la instancia de id %d", instancia->id);
 
 	agregar_pedido(instancia, solicitud);
 }

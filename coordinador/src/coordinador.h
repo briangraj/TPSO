@@ -20,6 +20,7 @@
 #include "hilo_esi.h"
 #include "hilo_instancia.h"
 #include "t_mensaje.h"
+#include "t_instancia.h"
 
 int CANTIDAD_ENTRADAS_TOTALES;
 int TAMANIO_ENTRADA;
