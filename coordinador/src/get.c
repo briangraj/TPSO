@@ -32,6 +32,7 @@ int realizar_get(t_solicitud* solicitud){
 		abortar_esi(solicitud);
 
 		log_error(LOG_COORD, "No se pudo ejecutar el get del esi %d", solicitud->id_esi);
+
 		return -1;
 	}
 
@@ -46,6 +47,23 @@ int realizar_get(t_solicitud* solicitud){
 	 * Una solucion podria ser primero checkear la respuesta de la instance,
 	 * y despues mandarle el get al planificador	 */
 
+	if(!existe_clave){//TODO ver que onda con la falta de espacio
+		sem_wait(&solicitud->solicitud_finalizada);
+
+		if(solicitud->resultado_instancia == ERROR_DE_COMUNICACION){
+			solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
+
+			abortar_esi(solicitud);
+
+			log_error(LOG_COORD,
+				"ocurrio un error de comunicacion con la instancia al hacer un get de la clave %s del esi %d",
+				solicitud->clave,
+				solicitud->id_esi);
+
+			return -1;
+		}
+	}
+
 	t_mensaje get = serializar_get_a_planif(solicitud);
 
 	if(enviar_a_planif(get) < 0){
@@ -53,6 +71,12 @@ int realizar_get(t_solicitud* solicitud){
 				solicitud->id_esi,
 				solicitud->clave
 		);
+
+		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
+
+		abortar_esi(solicitud);
+
+		log_error(LOG_COORD, "error de comunicacion con el planif");
 
 		return -1;
 	}
@@ -66,16 +90,17 @@ int realizar_get(t_solicitud* solicitud){
 				solicitud->id_esi,
 				solicitud->clave
 		);
+
+		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
+
+		abortar_esi(solicitud);
+
+		log_error(LOG_COORD, "error de comunicacion con el planif");
+
 		return -1;
 	}
 
-	if(!existe_clave){
-		sem_wait(&solicitud->solicitud_finalizada);
-
-		setear_respuesta_a_esi(solicitud, resultado_planif);
-	} else {
-		solicitud->respuesta_a_esi = resultado_planif;
-	}
+	solicitud->respuesta_a_esi = resultado_planif;
 
 	log_info(LOG_COORD, "El resultado de ejecutar la instruccion %d fue %d",
 			solicitud->instruccion,
@@ -118,7 +143,6 @@ int validar_existencia_clave(t_solicitud* solicitud){
 			setear_error_clave_inaccesible(solicitud);
 
 			return -1;
-
 		} else
 			log_info(LOG_COORD, "La clave %s se encuentra en una instancia activa", solicitud->clave);
 	}
@@ -152,7 +176,6 @@ void abortar_esi(t_solicitud* solicitud){
 	}
 }
 
-
 void setear_respuesta_a_esi(t_solicitud* solicitud, int resultado_planif){
 
 	switch (solicitud->resultado_instancia){
@@ -162,6 +185,7 @@ void setear_respuesta_a_esi(t_solicitud* solicitud, int resultado_planif){
 	case ERROR_DE_COMUNICACION:
 		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
 		break;
+	case ERROR_CLAVE_NO_IDENTIFICADA:
 //	case FG_EI:
 //	case FG_NC:
 	default:

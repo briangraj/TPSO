@@ -32,5 +32,87 @@ t_mensaje serializar_set_a_instancia(char* clave, char* valor){
 }
 
 int realizar_set(t_solicitud* solicitud){
-	return 0;//TODO mock
+	t_instancia* instancia = instancia_con_clave(solicitud);
+
+	if(instancia == NULL){
+		solicitud->respuesta_a_esi = ERROR_CLAVE_NO_IDENTIFICADA;
+
+		abortar_esi(solicitud);
+
+		log_error(LOG_COORD, "no se encontro la clave %s, se abortara al esi %d", solicitud)
+
+		return -1;
+	} else if(!esta_activa(instancia)){
+		solicitud->respuesta_a_esi = ERROR_CLAVE_INACCESIBLE;
+
+		abortar_esi(solicitud);
+
+		log_error(LOG_COORD, "la clave %s se encuentra en una instancia desconectada, se abortara al esi %d", solicitud)
+
+		return -1;
+	}
+
+	agregar_solicitud(instancia, solicitud);
+
+	sem_wait(&solicitud->solicitud_finalizada);
+
+	if(solicitud->resultado_instancia == ERROR_DE_COMUNICACION){TODO falta checkear FS_EI, FS_NC
+		/**
+		 * TODO falta checkear FS_EI, FS_NC, y ver que evento
+		 * desencadena la compactacion
+		 */
+		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
+
+		abortar_esi(solicitud);
+
+		log_error(LOG_COORD,
+			"ocurrio un error de comunicacion con la instancia al hacer un set %s %s del esi %d",
+			solicitud->clave,
+			solicitud->valor,
+			solicitud->id_esi);
+
+		return -1;
+	}
+
+	t_mensaje set = serializar_set_a_planif(solicitud);
+
+	if(enviar_a_planif(set) < 0){
+		log_error(LOG_COORD, "No se pudo enviar el set %s %s del esi %d al planificador",
+				solicitud->clave,
+				solicitud->valor,
+				solicitud->id_esi
+		);
+
+		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
+
+		abortar_esi(solicitud);
+
+		return -1;
+	}
+
+	log_trace(LOG_COORD, "Se envio el set %s %s al planificador", solicitud->clave, solicitud->valor);
+
+	int resultado_planif = recibir_protocolo(SOCKET_PLANIF);
+
+	if(resultado_planif <= 0){
+		log_error(LOG_COORD, "No se pudo recibir el resultado del set %s %s del esi %d desde el planificador",
+				solicitud->clave,
+				solicitud->valor,
+				solicitud->id_esi
+		);
+
+		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
+
+		abortar_esi(solicitud);
+
+		return -1;
+	}
+
+	solicitud->respuesta_a_esi = resultado_planif;
+
+	log_info(LOG_COORD, "El resultado de ejecutar la instruccion %d fue %d",
+			solicitud->instruccion,
+			solicitud->respuesta_a_esi);
+
+	return 0;
 }

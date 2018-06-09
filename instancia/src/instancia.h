@@ -39,6 +39,7 @@ int MI_ID;
 int INTERVALO_DUMP;
 int socket_coordinador;
 void* memoria;
+pthread_mutex_t mutex_dump;
 
 int (*algoritmo_reemplazo)(char*, char*);
 
@@ -59,6 +60,7 @@ void escuchar_coordinador();
 void leer_protocolo(int protocolo);
 void configuracion_entradas();
 void crear_tabla_de_entradas();
+void crear_bitarray();
 t_entrada* levantar_entrada(char* nombre);
 t_entrada* crear_entrada(char* clave);
 int tamanio_entrada_en_disco(char* nombre);

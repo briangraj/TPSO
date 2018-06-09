@@ -24,6 +24,8 @@ int main(int argc, char **argv){
 void inicializar(){
 	log_instancia = log_create("Instancia.log", "Instancia", 1, LOG_LEVEL_TRACE);
 
+	pthread_mutex_init(&mutex_dump, NULL);
+
 	leer_config();
 }
 
@@ -89,9 +91,11 @@ void enviar_entradas_al_coordinador(){
 void* hilo_dump(void* _){
 	while(true){
 		sleep(INTERVALO_DUMP);
+		pthread_mutex_lock(&mutex_dump);
 		//wait() seria para que la instancia no atienda pedidos
 		list_iterate(tabla_de_entradas, persistir);
 		//signal()
+		pthread_mutex_unlock(&mutex_dump);
 	}
 	return NULL;
 }
@@ -100,14 +104,16 @@ void escuchar_coordinador(){
 	int protocolo;
 
 	while(1) {
+		pthread_mutex_lock(&mutex_dump);
 		protocolo = recibir_protocolo(socket_coordinador);
-		printf("leer_protocolo %d\n", protocolo);
+		//printf("leer_protocolo %d\n", protocolo);
 		if (protocolo <= 0) {
 			log_error(log_instancia, "se desconecto el coordinador");
 			//rutina_final();
 			break;//exit(1);
 		}
 		leer_protocolo(protocolo);
+		pthread_mutex_unlock(&mutex_dump);
 	}
 
 	close(socket_coordinador);
@@ -384,7 +390,7 @@ int atender_store(){
 	t_entrada* entrada = buscar_entrada(clave, buscar_entrada_clave);
 
 	if(entrada == NULL)
-		resultado = ERROR_CLAVE_INEXISTENTE;
+		resultado = ERROR_CLAVE_NO_IDENTIFICADA;
 	else
 		persistir(entrada);
 
