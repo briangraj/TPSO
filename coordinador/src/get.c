@@ -8,7 +8,7 @@
 #include "get.h"
 
 t_solicitud* crear_get(int socket, int id){
-	t_solicitud* solicitud = crear_solicitud(OPERACION_GET, id);
+	t_solicitud* solicitud = crear_solicitud(OPERACION_GET, id, socket);
 
 	solicitud->clave = recibir_string(socket);
 
@@ -24,13 +24,12 @@ t_mensaje serializar_get_a_instancia(char* clave){
 	return mensaje;
 }
 
-int evaluar_resultados(int resultado_instancia, int resultado_planif){
-	return 0;//TODO mock
-}
 
 int realizar_get(t_solicitud* solicitud){
+	bool existe_clave = existe_clave_en_instancia_activa(solicitud);
+
 	if(validar_existencia_clave(solicitud) == -1) {
-//		abortar_esi([]); TODO
+		abortar_esi(solicitud);
 
 		log_error(LOG_COORD, "No se pudo ejecutar el get del esi %d", solicitud->id_esi);
 		return -1;
@@ -44,9 +43,8 @@ int realizar_get(t_solicitud* solicitud){
 	 * Pero al ser una funcion que habla con la instancia, esta podria
 	 * tener algun error, entonces aca no tendria que enviarle el get
 	 * al planif sino manejar este error.
-	 * Una solucion podria ser primero checkear la respuesta de la instancia,
-	 * y despues mandarle el get al planificador
-	 */
+	 * Una solucion podria ser primero checkear la respuesta de la instance,
+	 * y despues mandarle el get al planificador	 */
 
 	t_mensaje get = serializar_get_a_planif(solicitud);
 
@@ -71,8 +69,13 @@ int realizar_get(t_solicitud* solicitud){
 		return -1;
 	}
 
-	sem_wait(&solicitud->solicitud_finalizada);
-	solicitud->respuesta_a_esi = evaluar_resultados(solicitud->resultado_instancia, resultado_planif);
+	if(!existe_clave){
+		sem_wait(&solicitud->solicitud_finalizada);
+
+		solicitud->respuesta_a_esi = evaluar_resultados(solicitud->resultado_instancia, resultado_planif);
+	} else {
+		solicitud->respuesta_a_esi = resultado_planif;
+	}
 
 	log_info(LOG_COORD, "El resultado de ejecutar la instruccion %d fue %d",
 			solicitud->instruccion,
@@ -129,4 +132,35 @@ int validar_existencia_clave(t_solicitud* solicitud){
 
 	return 0;
 }
+
+bool existe_clave_en_instancia_activa(t_solicitud* solicitud){
+	t_instancia* instancia = instancia_con_clave(solicitud);
+
+	return instancia != NULL && esta_activa(instancia);
+}
+
+void abortar_esi(t_solicitud* solicitud){
+	if(enviar_paquete(solicitud->respuesta_a_esi, (int) solicitud->socket_esi, 0, NULL) <= 0){ // FIXME ENORME
+		log_error(
+			LOG_COORD,
+			"No se pudo enviar el resultado de la instruccion %d al esi %d",
+			solicitud->instruccion,
+			solicitud->id_esi
+		);
+	}
+}
+
+
+int evaluar_resultados(int resultado_instancia, int resultado_planif){
+
+	switch (resultado_instancia){
+
+	}
+
+	return 0;
+}
+
+
+
+
 

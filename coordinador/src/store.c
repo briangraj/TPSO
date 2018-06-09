@@ -8,7 +8,7 @@
 #include "store.h"
 
 t_solicitud* crear_store(int socket, int id){
-	t_solicitud* solicitud = crear_solicitud(OPERACION_STORE, id);
+	t_solicitud* solicitud = crear_solicitud(OPERACION_STORE, id, socket);
 
 	solicitud->clave = recibir_string(socket);
 

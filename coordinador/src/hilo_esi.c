@@ -88,7 +88,6 @@ t_solicitud* recibir_solicitud_esi(int socket, int id){
 	}
 
 	switch(protocolo){
-
 	case OPERACION_GET:
 		solicitud = crear_get(socket, id);
 		break;

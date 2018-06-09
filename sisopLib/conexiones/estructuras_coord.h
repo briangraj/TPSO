@@ -21,6 +21,7 @@ typedef struct solicitud {
 	int resultado_instancia;
 	int respuesta_a_esi;
 	int id_esi;
+	int socket_esi;
 } t_solicitud;
 
 typedef struct instancia {
