@@ -11,6 +11,7 @@
 #include <conexiones/sockets.h>
 #include <conexiones/threads.h>
 #include <conexiones/estructuras_coord.h>
+#include <conexiones/strings.h>
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include <commons/config.h>
