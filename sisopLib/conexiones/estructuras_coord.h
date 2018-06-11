@@ -27,11 +27,12 @@ typedef struct solicitud {
 typedef struct instancia {
 	int id;
 	int socket;
+	pthread_t id_hilo;
 	sem_t solicitud_lista;
 	bool esta_activa;
 	t_queue* solicitudes;
 	t_list* claves;//list<char*>
-	t_list* claves_a_borrar;
+	t_list* claves_a_crear;
 } t_instancia;
 
 typedef struct { // esto es lo que nos tienen que mandar cuando reciben el protocolo STATUS :D (y en este orden)
