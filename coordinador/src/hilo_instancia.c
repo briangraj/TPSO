@@ -12,8 +12,10 @@ void crear_hilo_instancia(t_instancia* instancia){
 }
 
 void* atender_instancia(void* instancia_void){
-	t_instancia* instancia = (t_instancia*)instancia_void;
+	t_instancia* instancia = (t_instancia*) instancia_void;
 	t_solicitud* solicitud;
+
+	instancia->id_hilo = pthread_self();
 
 	while(true) {
 		sem_wait(&instancia->solicitud_lista);

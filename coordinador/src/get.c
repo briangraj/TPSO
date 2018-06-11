@@ -26,43 +26,16 @@ t_mensaje serializar_get_a_instancia(char* clave){
 }
 
 int realizar_get(t_solicitud* solicitud){
-	bool existe_clave = existe_clave_en_instancia_activa(solicitud);
 
-	if(validar_existencia_clave(solicitud) == -1) {
-		abortar_esi(solicitud);
+	if(validar_existencia_clave(solicitud) == -1) { //TODO capaz no hace falta chequear
+		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
 
 		log_error(LOG_COORD, "No se pudo ejecutar el get del esi %d", solicitud->id_esi);
 
-		return -1;
+		return -10;
 	}
 
 	log_trace(LOG_COORD, "Se valido la existencia de la clave %s", solicitud->clave);
-
-	/**
-	 * FIXME aca el problema es que, si la clave no existia, entonces
-	 * en la funcion validar_existencia_clave() se crea la clave.
-	 * Pero al ser una funcion que habla con la instancia, esta podria
-	 * tener algun error, entonces aca no tendria que enviarle el get
-	 * al planif sino manejar este error.
-	 * Una solucion podria ser primero checkear la respuesta de la instance,
-	 * y despues mandarle el get al planificador	 */
-
-	if(!existe_clave){//TODO ver que onda con la falta de espacio
-		sem_wait(&solicitud->solicitud_finalizada);
-
-		if(solicitud->resultado_instancia == ERROR_DE_COMUNICACION){
-			solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
-
-			abortar_esi(solicitud);
-
-			log_error(LOG_COORD,
-				"ocurrio un error de comunicacion con la instancia al hacer un get de la clave %s del esi %d",
-				solicitud->clave,
-				solicitud->id_esi);
-
-			return -1;
-		}
-	}
 
 	t_mensaje get = serializar_get_a_planif(solicitud);
 
@@ -74,9 +47,8 @@ int realizar_get(t_solicitud* solicitud){
 
 		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
 
-		abortar_esi(solicitud);
 
-		log_error(LOG_COORD, "error de comunicacion con el planif");
+		log_error(LOG_COORD, "Error de comunicacion con el planif");
 
 		return -1;
 	}
@@ -93,9 +65,7 @@ int realizar_get(t_solicitud* solicitud){
 
 		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
 
-		abortar_esi(solicitud);
-
-		log_error(LOG_COORD, "error de comunicacion con el planif");
+		log_error(LOG_COORD, "Error de comunicacion con el planif");
 
 		return -1;
 	}
@@ -127,32 +97,15 @@ t_mensaje serializar_get_a_planif(t_solicitud* solicitud){
 	return mensaje;
 }
 
-void crear_clave(t_solicitud* solicitud, t_instancia* instancia){
-	distribuir(solicitud);
-
-	agregar_clave(instancia, solicitud->clave);
-}
-
 int validar_existencia_clave(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
-	if(instancia != NULL){
-		if(!esta_activa(instancia)){
-			borrar_clave(solicitud, instancia);
-
-			log_info(LOG_COORD,"Se borro la clave de la instancia %d");
-
-			setear_error_clave_inaccesible(solicitud);
-
-			return -1;
-		} else
-			log_info(LOG_COORD, "La clave %s se encuentra en una instancia activa", solicitud->clave);
-	}
-	else {
-		crear_clave(solicitud, instancia);
+	if(instancia == NULL){
+		agregar_clave_a_crear( distribuir(solicitud), solicitud->clave); //TODO checkear errores
 
 		log_info(LOG_COORD, "La clave %s no existia y se creo en una instancia", solicitud->clave);
-	}
+	} else
+		log_info(LOG_COORD, "La clave %s se encuentra en la instancia %d", solicitud->clave, instancia->id);
 
 	return 0;
 }

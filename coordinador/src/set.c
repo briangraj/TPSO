@@ -62,7 +62,7 @@ int realizar_set(t_solicitud* solicitud){
 		return -1;
 	} else if(!esta_activa(instancia)){
 		solicitud->respuesta_a_esi = ERROR_CLAVE_INACCESIBLE;
-
+		//TODO hay que borrar la clave
 		abortar_esi(solicitud);
 
 		log_error(LOG_COORD, "La clave %s se encuentra en una instancia desconectada, se abortara al esi %d",

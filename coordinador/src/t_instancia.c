@@ -16,7 +16,7 @@ void* crear_instancia(int id, int socket){
 	instancia->socket = socket;
 	instancia->esta_activa = true;
 	instancia->claves = list_create();
-	instancia->claves_a_borrar = list_create();
+	instancia->claves_a_crear = list_create();
 
 	return instancia;
 }
@@ -41,11 +41,15 @@ void borrar_clave(t_solicitud* solicitud, t_instancia* instancia){
 
 	char* clave = (char*) list_remove_by_condition(instancia->claves, contiene_clave);
 
-	list_add(instancia->claves_a_borrar, (void*) clave);
+//	list_add(instancia->claves_a_borrar, (void*) clave);
 }
 
 void agregar_clave(t_instancia* instancia, char* clave){
 	list_add(instancia->claves, clave);
+}
+
+void agregar_clave_a_crear(t_instancia* instancia, char* clave){
+	list_add(instancia->claves_a_crear, clave);
 }
 
 bool esta_activa(t_instancia* instancia){
@@ -80,4 +84,22 @@ int recibir_claves(t_instancia* instancia){
 
 	log_info(LOG_COORD, "Se agregaron las claves a la instancia %d", instancia->id);
 	return 0;
+}
+
+void destruir_instancias(){
+	list_iterate(INSTANCIAS, (void (*)(void*)) destruir_instancia);
+}
+
+void destruir_instancia(t_instancia* instancia){
+	sem_close(&instancia->solicitud_lista);
+	sem_destroy(&instancia->solicitud_lista);
+
+	list_destroy_and_destroy_elements(instancia->claves, free);
+	list_destroy_and_destroy_elements(instancia->claves_a_crear, free);
+
+	queue_destroy_and_destroy_elements(instancia->solicitudes, destruir_solicitud);
+
+	pthread_cancel(instancia->id_hilo);
+
+	close(instancia->socket);
 }

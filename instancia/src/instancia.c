@@ -288,7 +288,7 @@ void* mi_mmap(int fd, struct stat stat){
 int entradas_ocupadas(int tamanio){
 	int entradas_ocupadas = tamanio / TAMANIO_ENTRADA;
 	if(tamanio % TAMANIO_ENTRADA != 0)
-		tamanio++;
+		entradas_ocupadas++;
 
 	return entradas_ocupadas;
 }

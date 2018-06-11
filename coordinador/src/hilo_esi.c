@@ -26,11 +26,15 @@ void* atender_esi(void* socket_esi){
 
 		if(solicitud == NULL){
 			log_error(LOG_COORD, "No se pudo crear la solicitud del esi %d", id_esi);
+			close((int) socket_esi);
 			pthread_exit(NULL);
 		}
 
 		if(atender_solicitud(solicitud) == -1){
 			log_error(LOG_COORD, "No se pudo atender la solicitud del esi %d", solicitud->id_esi);
+			close((int) socket_esi);
+			destruir_solicitud(solicitud);
+			destruir_instancias();
 			pthread_exit(NULL);
 		}
 
@@ -44,12 +48,17 @@ void* atender_esi(void* socket_esi){
 					solicitud->id_esi
 			);
 
+			close((int) socket_esi);
+			destruir_solicitud(solicitud);
 			pthread_exit(NULL);
 		}
+
+		destruir_solicitud(solicitud);
 
 		log_info(LOG_COORD, "Se envio la respuesta %d al esi %d", solicitud->respuesta_a_esi, solicitud->id_esi);
 	}
 
+	close((int) socket_esi);
 	pthread_exit(NULL);
 }
 

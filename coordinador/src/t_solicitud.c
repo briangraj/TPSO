@@ -30,3 +30,11 @@ void setear_error_clave_inaccesible(t_solicitud* solicitud){
 void setear_operacion_exitosa_instancia(t_solicitud* solicitud){
 	solicitud->resultado_instancia = OPERACION_EXITOSA;
 }
+
+void destruir_solicitud(t_solicitud* solicitud){
+	free(solicitud->clave);
+	free(solicitud->valor);
+	sem_close(&solicitud->solicitud_finalizada);
+	sem_destroy(&solicitud->solicitud_finalizada);
+	free(solicitud);
+}
