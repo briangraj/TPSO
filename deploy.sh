@@ -3,7 +3,8 @@
 DIR=/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing
 WORKSPACE=/home/utnso/workspace
 NOSOTROS=A-la-grande-le-puse-Jacketing
-CLONAR=0 #false
+CLONAR = 0 #false
+MANDO_FRUTA = 0 #false
 
 SEP='----------------------'
 
@@ -19,25 +20,31 @@ mostrar (){
   echo ''
 }
 
+opciones_repo(){
+ read -p "El repo ya existe, queres borrarlo y empezar de cero (b), dejarlo asi como esta y compilar (c), hacer pull y compilar los combios (p) o salir del script (s) ? : " resp
+ case $resp in
+	[Bb]* ) MANDO_FRUTA = 0 && CLONAR = 1 && sudo rm -rf $DIR && (mostrar "El repo fue borrado" $LOG_INFO) ;;
+	[Cc]* ) MANDO_FRUTA = 0;;
+	[Pp]* ) MANDO_FRUTA = 0 && cd $DIR && git pull;;
+	[Ss]* ) return;;
+	* ) MANDO_FRUTA = 1 && mostrar "Dale, no mandes fruta." $LOG_ERROR;;
+}
+
 mostrar "$NOSOTROS - EMPEZANDO DEPLOY" $LOG_TITLE
 
 mostrar "Preparando el repo" $LOG_INFO
 if [ ! -d $WORKSPACE ]
-  then (cd /home/utnso && mkdir workspace) && mostrar "Workspace creado" LOG_INFO
+  then (cd /home/utnso && mkdir workspace) && mostrar "Workspace creado" LOG_INFO && CLONAR = 1
 
 elif [ -d "$DIR" ]
   then 
-    read -p "El repo ya existe, queres borrarlo y empezar de cero (b), dejarlo asi como esta y compilar (c), hacer pull y compilar los combios (p) o salir del script (s) ? : " resp
-    case $resp in
-      [Bb]* ) CLONAR = 1 && sudo rm -rf $DIR && (mostrar "El repo fue borrado" $LOG_INFO) ;;
-      [Cc]* ) ;;
-      [Pp]* ) cd $DIR && git pull;;
-      [Ss]* ) return;;
-      * ) mostrar "Dale, no mandes fruta." $LOG_ERROR;;
+    opciones_repo
+    while [ MANDO_FRUTA ]; do
+	   opciones_repo
     esac
 fi
 
-if [ $CLONAR 1]
+if [ $CLONAR ]
   then (cd $WORKSPACE && git clone https://github.com/sisoputnfrba/tp-2018-1c-A-la-grande-le-puse-Jacketing.git)
 fi
 
@@ -45,7 +52,7 @@ if [ -d $DIR ];
   then
     if [ ! $CLONAR ]
       then
-	      mostrar "Repo clonado con exito" $LOG_OK
+	 mostrar "Repo clonado con exito" $LOG_OK
     fi  
   else
     mostrar "Error clonando el repo" $LOG_ERROR
