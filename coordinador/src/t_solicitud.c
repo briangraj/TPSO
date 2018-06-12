@@ -13,8 +13,8 @@ t_solicitud* crear_solicitud(int instruccion, int id, int socket){
 	solicitud->id_esi = id;
 	solicitud->socket_esi = socket;
 	sem_init(&solicitud->solicitud_finalizada, 0, 0);
-	solicitud->respuesta_a_esi = NULL;
-	solicitud->resultado_instancia = NULL;
+	solicitud->respuesta_a_esi = 0;
+	solicitud->resultado_instancia = 0;
 
 	return solicitud;
 }
