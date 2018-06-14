@@ -53,10 +53,15 @@ dkms.conf
 
 # Archivos compilados
 /esi/Debug/*.o
+/esi/Debug/esi
 /planificador/Debug/*.o
-/coodinador/Debug/*.o
+/planificador/Debug/planificador
+/coordinador/Debug/*.o
+/coordinador/Debug/coordinador
 /instancia/Debug/*.o
-/coodinador-mock/Debug/*.o
+/instancia/Debug/instancia
+/coordinador-mock/Debug/*.o
+/coordinador-mock/Debug/coordinador-mock
 
 #logs
 *.log

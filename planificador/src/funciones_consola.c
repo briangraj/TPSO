@@ -821,7 +821,7 @@ void imprimir_cola_bloqueados(char* clave){
 
 int com_check(char* parametro){
 
-	char* mensaje = string_from_format("El estado de la cola de listos es: [");
+	char* mensaje = string_from_format("El estado de la cola de listos es: [ ");
 
 	void imprimir_listo(void* elem){
 		t_ready* esi = (t_ready*) elem;
@@ -837,7 +837,7 @@ int com_check(char* parametro){
 
 	free(mensaje);
 
-	string_append(&mensaje_final, "]");
+	string_append(&mensaje_final, " ]");
 
 	imprimir(mensaje_final);
 

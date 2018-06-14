@@ -20,7 +20,7 @@ restart: clean clean-dependencies
 commons:
 	$(call print,$(SEP) $@ $(SEP), $(LOG_TRACE))
 	git clone https://github.com/sisoputnfrba/so-commons-library ../so-commons-library
-	cd ../so-commons-library; sudo make install
+	cd ../so-commons-library; make; sudo make install
 	$(call print,$(SEP) $@ - LISTO! $(SEP), $(LOG_OK))	
 
 readline:

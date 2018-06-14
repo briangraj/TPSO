@@ -150,7 +150,62 @@ void atender_protocolo(int protocolo, int socket_cliente){
 		case SET_CLAVE:
 			atender_set();
 			break;
+		default:
+			log_info(log_planif, "Se desconecto un proceso...");
+
+			if(socket_cliente == SOCKET_COORDINADOR){
+				log_error(log_planif, "Se perdio la conexion con el coordinador, wtf");
+				finalizar();
+			}
+
+			t_ready* esi_desconectado = encontrar_esi_de_socket(socket_cliente);
+
+			if(esi_desconectado->ID == ((t_ready*)esi_activo())->ID){
+				mover_a_finalizados(esi_desconectado, "Se perdio la conexion con el esi.");
+				mandar_a_ejecutar();
+			}else{
+				mover_a_finalizados(esi_desconectado, "Se perdio la conexion con el esi.");
+			}
 	}
+}
+
+t_ready* encontrar_esi_de_socket(int socket){
+	t_ready* esi = NULL;
+
+	bool encontrar_en_ready(void* elem){
+		t_ready* esi = (t_ready*) elem;
+
+		return esi->socket == socket;
+	}
+
+	void encontrar_en_bloqueados(void* elem){
+		if(esi) return;
+
+		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
+
+		bool es_de_socket(void* elem2){
+			t_blocked* un_esi = (t_blocked*) elem2;
+
+			return un_esi->info_ejecucion->socket == socket;
+		}
+
+		t_blocked* esi_bloq = list_find(bloqueados_por_clave->bloqueados, es_de_socket);
+
+		if(esi_bloq)
+			esi = esi_bloq->info_ejecucion;
+	}
+
+	pthread_mutex_lock(&semaforo_cola_listos);
+	esi = list_find(cola_de_listos, encontrar_en_ready);
+	pthread_mutex_unlock(&semaforo_cola_listos);
+
+	if(!esi){
+		pthread_mutex_lock(&semaforo_cola_bloqueados);
+		list_iterate(colas_de_bloqueados, encontrar_en_bloqueados);
+		pthread_mutex_unlock(&semaforo_cola_bloqueados);
+	}
+
+	return esi;
 }
 
 void aniadir_a_colas_de_asignaciones(t_ready nuevo_esi){
@@ -213,6 +268,19 @@ void atender_get_clave(){
 }
 
 int intentar_asignar(int id_esi, char* recurso){
+
+	bool es_del_esi(void* elem){
+		t_recursos_por_esi* rec = (t_recursos_por_esi*) elem;
+
+		return rec->id_esi == id_esi;
+	}
+
+	t_recursos_por_esi* recursos_por_esi = list_find(colas_de_asignaciones, es_del_esi);
+
+	if(recursos_por_esi == NULL){
+		log_error(log_planif, "El esi %d que intento hacer un GET de la clave %s no forma parte del sistema", id_esi, recurso);
+		return GET_FALLIDO;
+	}
 
 	t_bloqueados_por_clave* bloqueados_por_clave = encontrar_bloqueados_para_la_clave(recurso);
 
@@ -297,24 +365,19 @@ void crear_entrada_bloqueados_del_recurso(int id_esi, char* recurso){
 }
 
 void asignar_recurso_al_esi(int id_esi, char* recurso){
-	bool es_del_esi(void* elem){
-		t_recursos_por_esi* rec = (t_recursos_por_esi*) elem;
-
-		return rec->id_esi == id_esi;
-	}
-
 	bool es_la_clave(void* elem){
 		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
 
 		return string_equals_ignore_case(bloqueados_por_clave->clave, recurso);
 	}
 
-	t_recursos_por_esi* recursos_por_esi = list_find(colas_de_asignaciones, es_del_esi);
+	bool es_del_esi(void* elem){
+		t_recursos_por_esi* rec = (t_recursos_por_esi*) elem;
 
-	if(recursos_por_esi == NULL){
-		log_error(log_planif, "La lista de asignaciones del esi %d no esta, wtf", id_esi);
-		finalizar();
+		return rec->id_esi == id_esi;
 	}
+
+	t_recursos_por_esi* recursos_por_esi = list_find(colas_de_asignaciones, es_del_esi);
 
 	char* clave = strdup(recurso);
 
@@ -568,6 +631,8 @@ void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){
 	list_remove_and_destroy_by_condition(colas_de_asignaciones, coincide_el_id, asignacion_destroyer);
 	pthread_mutex_unlock(&semaforo_asignaciones);
 
+	log_info(log_planif, "Acabo de sacar al esi %d de las listas", esi_finalizado->ID);
+
 }
 
 void eliminar_de_bloqueados(t_ready* esi){
@@ -713,6 +778,8 @@ bool verificar_tenencia_de_la_clave(int id_esi, char* clave){
 	}
 
 	t_recursos_por_esi* recursos_del_esi = list_find(colas_de_asignaciones, es_el_esi);
+
+	if(!recursos_del_esi) return false; // Cubre el caso en donde el esi no esta en el sistema
 
 	bool resultado = list_any_satisfy(recursos_del_esi->recursos_asignados, es_el_recurso_buscado);
 
@@ -910,10 +977,10 @@ void finalizar(){
 	config_destroy(archivo_config);
 
 	pthread_mutex_lock(&semaforo_cola_listos);
-	list_destroy(cola_de_listos);
+	list_destroy_and_destroy_elements(cola_de_listos, funcion_al_pedo);
 	pthread_mutex_unlock(&semaforo_cola_listos);
 
-	list_destroy(cola_finalizados);
+	list_destroy_and_destroy_elements(cola_finalizados, finalizado_destroyer);
 
 	pthread_mutex_lock(&semaforo_cola_bloqueados);
 	list_destroy_and_destroy_elements(colas_de_bloqueados, clave_destroyer);
@@ -947,6 +1014,11 @@ void clave_destroyer(void* elemento){
 	list_destroy(bloqueados_por_clave->bloqueados);
 }
 
+void finalizado_destroyer(void* elem){
+	t_ended* finalizado = (t_ended*) elem;
+
+	free(finalizado->exit_text);
+}
 
 void funcion_al_pedo(void* esi){}
 

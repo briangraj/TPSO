@@ -150,6 +150,8 @@ t_ready* 					buscar_en_ready								(int id_esi);
 void 						hay_que_bloquear_esi_activo					(char* clave, bool fue_bloqueado_por_consola);
 void 						bloquear_esi_activo							(char* clave, bool fue_bloqueado_por_consola);
 void 						imprimir_estado_cola_bloqueados				(char* clave);
+t_ready* 					encontrar_esi_de_socket						(int socket);
+void 						finalizado_destroyer						(void* elem);
 
 // Funciones MOCK
 

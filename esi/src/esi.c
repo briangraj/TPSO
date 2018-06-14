@@ -20,6 +20,8 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
+	signal(SIGINT, signal_handler);
+
 	iniciar_esi();
 
 	FILE* script = fopen(argv[1], "r");

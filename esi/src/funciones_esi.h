@@ -16,6 +16,7 @@
 #include <conexiones/serializacion.h>
 #include <commons/log.h>
 #include <parsi/parser.h>
+#include <signal.h>
 
 //VARIABLES GLOBALES
 char* IP_PLANIFICADOR;
@@ -39,6 +40,7 @@ typedef struct{
 
 
 //FUNCIONES
+void 					signal_handler						(int sig_num);
 void					iniciar_esi							();
 void					crear_log							();
 void					leer_archivo_config					();
