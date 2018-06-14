@@ -105,17 +105,7 @@ int main(int argc, char* argv[]) {
 						// GESTIONO PETICIONES DE LOS CLIENTES CONOCIDOS
 						protocolo_cliente = recibir_protocolo(socket);
 
-						if(protocolo_cliente < 0){
-							if(socket == SOCKET_COORDINADOR){
-								log_error(log_planif, "Se perdio la conexion con el coordinador.");
-
-								finalizar();
-							}
-							desconectar_cliente(socket);
-						} else {
-
-							atender_protocolo(protocolo_cliente, socket);
-						}
+						atender_protocolo(protocolo_cliente, socket);
 
 					}
 				}

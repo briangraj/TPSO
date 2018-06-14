@@ -22,6 +22,7 @@ void iniciar_planificador(int loggear){
 
 	pthread_mutex_init(&semaforo_pausa, NULL);
 	pthread_mutex_init(&semaforo_cola_bloqueados, NULL);
+	pthread_mutex_init(&semaforo_cola_finalizados, NULL);
 	pthread_mutex_init(&semaforo_cola_listos, NULL);
 	pthread_mutex_init(&semaforo_asignaciones, NULL);
 	pthread_mutex_init(&semaforo_flag_bloqueo, NULL);
@@ -633,6 +634,13 @@ void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){
 
 	log_info(log_planif, "Acabo de sacar al esi %d de las listas", esi_finalizado->ID);
 
+	if(!cola_finalizados){
+		log_error(log_planif, "La cola de finalizados esta en null!!!");
+	}
+
+	pthread_mutex_lock(&semaforo_cola_finalizados);
+	list_add(cola_finalizados, esi_finalizado);
+	pthread_mutex_unlock(&semaforo_cola_finalizados);
 }
 
 void eliminar_de_bloqueados(t_ready* esi){
@@ -980,7 +988,9 @@ void finalizar(){
 	list_destroy_and_destroy_elements(cola_de_listos, funcion_al_pedo);
 	pthread_mutex_unlock(&semaforo_cola_listos);
 
+	pthread_mutex_lock(&semaforo_cola_finalizados);
 	list_destroy_and_destroy_elements(cola_finalizados, finalizado_destroyer);
+	pthread_mutex_unlock(&semaforo_cola_finalizados);
 
 	pthread_mutex_lock(&semaforo_cola_bloqueados);
 	list_destroy_and_destroy_elements(colas_de_bloqueados, clave_destroyer);
@@ -992,6 +1002,7 @@ void finalizar(){
 
 	pthread_mutex_destroy(&semaforo_pausa);
 	pthread_mutex_destroy(&semaforo_cola_bloqueados);
+	pthread_mutex_destroy(&semaforo_cola_finalizados);
 	pthread_mutex_destroy(&semaforo_cola_listos);
 	pthread_mutex_destroy(&semaforo_asignaciones);
 	pthread_mutex_destroy(&semaforo_flag_bloqueo);

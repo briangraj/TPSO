@@ -56,6 +56,7 @@ t_list* colas_de_asignaciones;
 
 pthread_mutex_t semaforo_pausa;
 pthread_mutex_t semaforo_cola_bloqueados;
+pthread_mutex_t semaforo_cola_finalizados;
 pthread_mutex_t semaforo_cola_listos;
 pthread_mutex_t semaforo_asignaciones;
 pthread_mutex_t semaforo_flag_bloqueo;

@@ -820,8 +820,32 @@ void imprimir_cola_bloqueados(char* clave){
 }
 
 int com_check(char* parametro){
+	char** parametros = controlar_y_obtener_parametros(parametro, 1);
+	// 1 : COLA DE LISTOS
+	// 2 : COLA DE FINALIZADOS
+	// 3 : LAS DOS
+	switch(atoi(parametros[0])){
+		case 1:
+			mostrar_cola_listos();
+			break;
+		case 2:
+			mostrar_cola_finalizados();
+			break;
+		case 3:
+			mostrar_cola_listos();
+			mostrar_cola_finalizados();
+			break;
+		default:
+			imprimir("No reconozco la opcion");
+	}
 
-	char* mensaje = string_from_format("El estado de la cola de listos es: [ ");
+	liberar_parametros(parametros, 1);
+
+	return 0;
+}
+
+void mostrar_cola_listos(){
+	char* mensaje = string_from_format("\n------- El estado de la cola de listos es: ------- \n\t[ ");
 
 	void imprimir_listo(void* elem){
 		t_ready* esi = (t_ready*) elem;
@@ -842,11 +866,25 @@ int com_check(char* parametro){
 	imprimir(mensaje_final);
 
 	free(mensaje_final);
-
-	return 0;
 }
 
+void mostrar_cola_finalizados(){
+	char* mensaje = string_from_format("\n------- El estado de la cola de finalizados es: ------- \n");
 
+	void imprimir_finalizado(void* elem){
+		t_ended* esi = (t_ended*) elem;
+
+		string_append_with_format(&mensaje, "\tESI %d, exit_text: %s \n", esi->ID, esi->exit_text);
+	}
+
+	pthread_mutex_lock(&semaforo_cola_finalizados);
+	list_iterate(cola_finalizados, imprimir_finalizado);
+	pthread_mutex_unlock(&semaforo_cola_finalizados);
+
+	imprimir(mensaje);
+
+	free(mensaje);
+}
 
 
 

@@ -11,7 +11,7 @@ void signal_handler(int sig_num){
 	if(sig_num == SIGINT){
 		log_warning(log_esi, "Se recibió la señal para finalizar el esi, se notificara al planificador");
 
-		enviar_paquete(3000, SOCKET_PLANIFICADOR, 0, NULL);
+		enviar_paquete(-1, SOCKET_PLANIFICADOR, 0, NULL);
 
 		finalizar();
 	}
