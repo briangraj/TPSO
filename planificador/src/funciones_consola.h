@@ -57,7 +57,7 @@ int 			com_check											(char* parametro);
 
 
 //VARIABLES GLOBALES
-t_comando comandos[9];
+t_comando comandos[10];
 
 
 //FUNCIONES

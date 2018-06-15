@@ -66,13 +66,17 @@ int main(int argc, char* argv[]) {
 
 	//CICLO PRINCIPAL DE EJECUCION
 
+
 	for(;;) {
 		read_fds = master;
+
+
 		if (select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1) {
 			log_error(log_planif, "Fallo en el select! Re raro.");
 			exit(1);
 
 		}else{
+
 			// explorar conexiones existentes en busca de datos que leer
 			for(socket = 0; socket <= fdmax; socket++) {
 				if (FD_ISSET(socket, &read_fds)) { // ¡¡tenemos datos!!
@@ -83,6 +87,8 @@ int main(int argc, char* argv[]) {
 						if ((newfd = accept(listener, (struct sockaddr *)&remoteaddr, &addrlen)) == -1) {
 							log_error(log_planif, "ERROR: no se pudo aceptar la conexion del socket");
 						} else {
+
+
 							aniadir_cliente(&master, newfd, &fdmax);
 
 							t_ready nuevo_esi = {
@@ -93,6 +99,7 @@ int main(int argc, char* argv[]) {
 									.ultima_rafaga_real = 0.0,
 									.estimacion_actual = 0.0
 							};
+
 
 							proximo_id ++;
 

@@ -17,6 +17,8 @@ void iniciar_planificador(int loggear){
 
 	cola_de_listos = list_create();
 	cola_finalizados = list_create();
+
+
 	colas_de_bloqueados = list_create();
 	colas_de_asignaciones = list_create();
 
@@ -32,6 +34,7 @@ void iniciar_planificador(int loggear){
 	flag_bloqueo.fue_bloqueado_consola = false;
 
 	PLANIFICADOR_PID = getpid();
+
 }
 
 void leer_archivo_config(){
@@ -110,11 +113,11 @@ void atender_handshake(int socket_cliente){
 
 	}
 
-
 }
 
 void atender_protocolo(int protocolo, int socket_cliente){
 //	// SOLO PARA PROBAR QUE ANDE EL ESI
+
 
 	switch (protocolo){
 		case EJECUCION_EXITOSA:
@@ -466,13 +469,18 @@ void desconectar_cliente(int cliente){
 int conectarse_a_coordinador(int remitente){
 
 	int socket;
+	char* proceso = string_new();
 
-	if((socket = conectarse_a_server("Planificador", remitente, "Coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, log_planif)) == -1){
+	if(remitente == PLANIFICADOR) proceso = string_duplicate("Planificador");
+	if(remitente == CONSOLA_PLANIFICADOR) proceso = string_duplicate("Consola del Planificador");
+
+	if((socket = conectarse_a_server(proceso, remitente, "Coordinador", IP_COORDINADOR, PUERTO_COORDINADOR, log_planif)) == -1){
 		log_destroy(log_planif);
 		config_destroy(archivo_config);
 		return -1;
 	}
 
+	free(proceso);
 	return socket;
 }
 

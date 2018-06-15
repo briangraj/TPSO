@@ -9,6 +9,7 @@
 
 void levantar_consola(void * param){
 
+
 	if((SOCKET_COORDINADOR_CONSOLA = conectarse_a_coordinador(CONSOLA_PLANIFICADOR)) == -1){
 		imprimir("No se pudo conectar la consola al coordinador");
 
@@ -19,31 +20,32 @@ void levantar_consola(void * param){
 
 	nueva_espera = malloc(sizeof(t_espera_circular));
 
+
 	setear_comandos();
 
-	  char * linea;
+	char * linea;
 
-	  while(1) {
-	    linea = readline("Consola > ");
+	while(1) {
+		linea = readline("Consola > ");
 
-	    linea = stripwhite(linea);
+		linea = stripwhite(linea);
 
-	    if(!strncmp(linea, "exit", 4)) {
-	       free(linea);
-	       free(nueva_espera);
-	       kill(PLANIFICADOR_PID, SIGUSR1);
-	       close(SOCKET_COORDINADOR_CONSOLA);
-	       break;
-	    }
+		if(!strncmp(linea, "exit", 4)) {
+		   free(linea);
+		   free(nueva_espera);
+		   kill(PLANIFICADOR_PID, SIGUSR1);
+		   close(SOCKET_COORDINADOR_CONSOLA);
+		   break;
+		}
 
-	    if(linea){
+		if(linea){
 			add_history(linea);
 			ejecutar_linea(linea);
 		}
 
 
-	    free(linea);
-	  }
+		free(linea);
+	}
 
 }
 
@@ -85,9 +87,9 @@ void setear_comandos(){
 	comandos[8].funcion = com_check;
 	comandos[8].descripcion = "Permitirá mostrar el estado de la cola de ready";
 
-	comandos[9].nombre = (char *)NULL;
-	comandos[9].funcion = (Function *)NULL;
-	comandos[9].descripcion = (char *)NULL;
+	comandos[9].nombre = NULL;
+	comandos[9].funcion = NULL;
+	comandos[9].descripcion = NULL;
 
 }
 
