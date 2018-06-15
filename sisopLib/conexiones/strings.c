@@ -21,3 +21,7 @@ char* leer_string(t_config* config, char* clave){
 	string_append(&aux, config_get_string_value(config, clave));
 	return aux;
 }
+
+bool string_equals(char* un_string, char* otro_string){
+	return !strcmp(un_string, otro_string);
+}
