@@ -1,2 +1,2 @@
 Casos de fallo : 
-A) Armamos el deadlock como siempre y debloqueamos para que termine de ejecutar el primero... antes de que termine de ejecutar el segundo, levantamos un tercero, y al pasar unos segundos estalla todo...
+A) En una vuelta nos paso que corrimos la espera triple con la simple y a lo ultimo quedaron de la triple bloqueados los que corren script2 y script3 por la clave fran, que nadie tenia asignada... despues matamos al que corria script3 y quedaba solo el del script2 ... pero el chabon se quedo bloqueado ahi... cuando quisimos matarlo con control c al del script2, el planificador tiro segmentation fault... => ERA TODO PORQUE SI VOS TIRAS CONTROL C CUANDO UN ESI ESTA BLOQUEADO SE ROMPE :/

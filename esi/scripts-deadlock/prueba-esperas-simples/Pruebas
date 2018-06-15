@@ -1,0 +1,7 @@
+* El esi que levanta con script1 hay que bloquearlo por consola para la clave alf
+* Levantar otro esi con script2 
+* Tirar deadlock :D
+
+* Idem para script3 y 4 pero bloquear al que usa script3 por la clave herni
+* Al tirar deadlock deberias ver dos esperas circulares :D
+

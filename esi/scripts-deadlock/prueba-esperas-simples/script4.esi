@@ -1,0 +1,4 @@
+GET herni
+    GET maser
+    STORE maser       
+STORE herni

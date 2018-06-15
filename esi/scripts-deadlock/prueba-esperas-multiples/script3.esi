@@ -1,0 +1,4 @@
+GET fran
+    GET jugador
+    STORE jugador       
+STORE fran

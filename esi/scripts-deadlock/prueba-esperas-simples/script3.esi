@@ -1,0 +1,3 @@
+GET maser
+    SET maser elMenosGroso
+    STORE maser       

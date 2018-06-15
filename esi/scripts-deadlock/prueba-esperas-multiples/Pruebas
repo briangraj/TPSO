@@ -1,0 +1,6 @@
+* El esi que levanta con script1 hay que bloquearlo por consola para la clave alf
+* Levantar otro esi con script3 
+* Levantar otro por script2 (porque si los levantas en orden no se bloquean solitos y tenes que bloquear al segundo por consola)
+
+* Al tirar deadlock deberias ver una espera circular triple :D
+

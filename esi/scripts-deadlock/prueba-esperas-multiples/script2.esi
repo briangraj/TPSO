@@ -1,4 +1,4 @@
-GET herni
+GET alf
     GET fran
     STORE fran       
-STORE herni
+STORE alf
