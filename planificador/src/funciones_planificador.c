@@ -825,9 +825,7 @@ void actualizar_privilegiado(t_bloqueados_por_clave* bloqueados_de_la_clave){
 		log_error(log_planif, "Proximo con derecho esta en null");
 	}
 
-	blocked_destroyer(proximo_con_derecho);
-
-	log_debug(log_planif, "Pase el blocked_destroyer");
+	eliminar_de_bloqueados(proximo_con_derecho->info_ejecucion);
 
 	free(proximo_con_derecho);
 }

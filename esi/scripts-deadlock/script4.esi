@@ -1,0 +1,4 @@
+GET herni
+    GET fran
+    STORE fran       
+STORE herni

@@ -1,1 +1,2 @@
-
+Casos de fallo : 
+A) Armamos el deadlock como siempre y debloqueamos para que termine de ejecutar el primero... antes de que termine de ejecutar el segundo, levantamos un tercero, y al pasar unos segundos estalla todo...
