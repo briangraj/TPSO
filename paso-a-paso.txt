@@ -8,6 +8,10 @@
 # Levanta 4 Putty con la ip que sacaste, el puerto es el 22, no hay que tocarlo
  ... (para pegar en putty es con click derecho solamente, lo hace automagico) y despues metete en la carpeta del tp
 
+# Desde una de las consolas hace mkdir workspace, metete ahi y ahi clonas el repo pegando la ruta: 
+    https://github.com/sisoputnfrba/tp-2018-1c-A-la-grande-le-puse-Jacketing.git 
+ ... (para pegar en putty es con click derecho solamente, lo hace automagico) y despues metete en la carpeta del tp
+
 # Parado en la carpeta del tp copiate esta linea y dale enter, el tipo hace todo, atento que puede pedirte la password de utnso y el usuario de git, depende las opciones que elijas: chmod +x deploy.sh && source ./deploy.sh
 
 # Si por alguna razon mistica queres borrar todo para empezar de cero, volve a correr el script y selecciona la opcion para no volver a clonar el repo, 
