@@ -417,7 +417,7 @@ void persistir(void* entrada_void){
 
 int atender_crear_clave(){
 	char* clave = recibir_string(socket_coordinador);
-	char* valor = "hola";//TODO recibir_string(socket_coordinador);
+	char* valor = "hola";//TODO recibir_string(socket_coordinador); //TODO SACAR MOCK PT
 
 	//puts(clave);
 	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));

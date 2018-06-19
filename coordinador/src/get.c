@@ -7,6 +7,34 @@
 
 #include "get.h"
 
+int realizar_get(t_solicitud* solicitud){
+	if(validar_existencia_clave(solicitud) == -1) { //TODO capaz no hace falta chequear
+		log_error(LOG_COORD, "No se pudo ejecutar el get del esi %d", solicitud->id_esi);
+
+		return -1;
+	}
+
+	log_trace(LOG_COORD, "Se valido la existencia de la clave %s", solicitud->clave);
+
+	t_mensaje get = serializar_get_a_planif(solicitud);
+
+	if(resultado_enviar_a_planif(get, solicitud) == -1){
+		return -1;
+	}
+
+	log_trace(LOG_COORD, "Se envio el get %s al planificador", solicitud->clave);
+
+	if(validar_resultado_planif(solicitud) == -1)
+		return -1;
+
+	log_info(LOG_COORD, "El resultado de ejecutar la instruccion %d fue %d",
+			solicitud->instruccion,
+			solicitud->respuesta_a_esi);
+
+	return 0;
+}
+
+
 t_solicitud* crear_get(int socket, int id){
 	t_solicitud* solicitud = crear_solicitud(OPERACION_GET, id, socket);
 
@@ -25,59 +53,6 @@ t_mensaje serializar_get_a_instancia(char* clave){
 	return mensaje;
 }
 
-int realizar_get(t_solicitud* solicitud){
-
-	if(validar_existencia_clave(solicitud) == -1) { //TODO capaz no hace falta chequear
-		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
-
-		log_error(LOG_COORD, "No se pudo ejecutar el get del esi %d", solicitud->id_esi);
-
-		return -10;
-	}
-
-	log_trace(LOG_COORD, "Se valido la existencia de la clave %s", solicitud->clave);
-
-	t_mensaje get = serializar_get_a_planif(solicitud);
-
-	if(enviar_a_planif(get) < 0){
-		log_error(LOG_COORD, "No se pudo enviar el get del esi %d de la clave %s al planificador",
-				solicitud->id_esi,
-				solicitud->clave
-		);
-
-		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
-
-
-		log_error(LOG_COORD, "Error de comunicacion con el planif");
-
-		return -1;
-	}
-
-	log_trace(LOG_COORD, "Se envio el get %s al planificador", solicitud->clave);
-
-	int resultado_planif = recibir_protocolo(SOCKET_PLANIF);
-
-	if(resultado_planif <= 0){
-		log_error(LOG_COORD, "No se pudo recibir el resultado del get del esi %d de la clave %s desde el planificador",
-				solicitud->id_esi,
-				solicitud->clave
-		);
-
-		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
-
-		log_error(LOG_COORD, "Error de comunicacion con el planif");
-
-		return -1;
-	}
-
-	solicitud->respuesta_a_esi = resultado_planif;
-
-	log_info(LOG_COORD, "El resultado de ejecutar la instruccion %d fue %d",
-			solicitud->instruccion,
-			solicitud->respuesta_a_esi);
-
-	return 0;
-}
 
 t_mensaje serializar_get_a_planif(t_solicitud* solicitud){
 	int tam_clave = strlen(solicitud->clave) + 1;
@@ -101,7 +76,13 @@ int validar_existencia_clave(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
 	if(instancia == NULL){
-		agregar_clave_a_crear( distribuir(solicitud), solicitud->clave); //TODO checkear errores
+		agregar_clave_a_crear(distribuir(solicitud), solicitud->clave);
+		/**
+		 * TODO
+		 * if(hay_error_en_distribuir())
+		 * 		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
+		 * 		return -algo;
+		 */
 
 		log_info(LOG_COORD, "La clave %s no existia y se creo en una instancia", solicitud->clave);
 	} else

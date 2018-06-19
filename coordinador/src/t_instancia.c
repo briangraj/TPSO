@@ -21,14 +21,18 @@ void* crear_instancia(int id, int socket){
 	return instancia;
 }
 
+bool contiene_clave(t_list* claves, t_solicitud* solicitud){
+	bool contiene_clave(char* clave){
+		return !strcmp(clave, solicitud->clave);
+	}
+
+	return list_any_satisfy(claves, contiene_clave);
+}
+
 t_instancia* instancia_con_clave(t_solicitud* solicitud){
 
 	bool instancia_contiene_clave(t_instancia* instancia){
-		bool contiene_clave(char* clave){
-			return !strcmp(clave, solicitud->clave);
-		}
-
-		return list_any_satisfy(instancia->claves, contiene_clave);
+		return contiene_clave(instancia->claves, solicitud) || contiene_clave(instancia->claves_a_crear, solicitud);
 	}
 
 	return (t_instancia*) list_find(INSTANCIAS, instancia_contiene_clave);

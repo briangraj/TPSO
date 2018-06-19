@@ -32,9 +32,12 @@ void* atender_esi(void* socket_esi){
 
 		if(atender_solicitud(solicitud) == -1){
 			log_error(LOG_COORD, "No se pudo atender la solicitud del esi %d", solicitud->id_esi);
+			abortar_esi(solicitud);
 			close((int) socket_esi);
+
 			destruir_solicitud(solicitud);
 			destruir_instancias();
+
 			pthread_exit(NULL);
 		}
 

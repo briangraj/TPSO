@@ -91,7 +91,7 @@ void bindear_socket_server(int listener){
 	bindear_socket(listener, IP_COORD, PUERTO_COORD, LOG_COORD);
 }
 
-void atender_handshake(int socket_cliente){
+void atender_handshake(int socket_cliente){//TODO delegar esta mierda
 	int remitente = recibir_handshake(socket_cliente);
 
 	switch(remitente){

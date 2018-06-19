@@ -38,3 +38,54 @@ void destruir_solicitud(t_solicitud* solicitud){
 	sem_destroy(&solicitud->solicitud_finalizada);
 	free(solicitud);
 }
+
+
+void log_error_envio_planif(t_solicitud* solicitud){
+	switch(solicitud->instruccion){
+
+	case OPERACION_GET:
+		log_error(LOG_COORD, "No se pudo enviar el get del esi %d de la clave %s al planificador",
+						solicitud->id_esi,
+						solicitud->clave);
+		break;
+
+	case OPERACION_SET:
+		log_error(LOG_COORD, "No se pudo enviar el mensaje %s %s del esi %d al planificador",
+				solicitud->clave,
+				solicitud->valor,
+				solicitud->id_esi
+		);
+		break;
+	}
+
+}
+
+void log_error_resultado_planif(t_solicitud* solicitud){
+	switch(solicitud->instruccion){
+
+	case OPERACION_GET:
+		log_error(LOG_COORD, "No se pudo recibir el resultado del get del esi %d de la clave %s desde el planificador",
+				solicitud->id_esi,
+				solicitud->clave
+		);
+		break;
+
+	case OPERACION_SET:
+		log_error(LOG_COORD, "No se pudo recibir el resultado del set %s %s del esi %d desde el planificador",
+					solicitud->clave,
+					solicitud->valor,
+					solicitud->id_esi
+			);
+		break;
+	}
+
+}
+
+
+
+
+
+
+
+
+
