@@ -7,7 +7,7 @@
 
 #include "set.h"
 
-int realizar_set(t_solicitud* solicitud){
+int set(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
 
@@ -63,25 +63,24 @@ t_solicitud* crear_set(int socket, int id){
 	return solicitud;
 }
 
-t_mensaje serializar_set_a_instancia(char* clave, char* valor){
-	int tam_clave = strlen(clave) + 1;
-	int tam_valor = strlen(valor) + 1;
+t_mensaje serializar_set_a_instancia(t_solicitud* solicitud){
+	int tam_clave = strlen(solicitud->clave) + 1;
+	int tam_valor = strlen(solicitud->valor) + 1;
 
 	int tam_payload = sizeof(int) + tam_clave + sizeof(int) + tam_valor;
 
-	t_mensaje mensaje = crear_mensaje(OPERACION_SET, tam_payload);
+	t_mensaje mensaje = crear_mensaje(solicitud->instruccion, tam_payload);
 
-	serializar_string(mensaje.payload, clave);
+	serializar_string(mensaje.payload, solicitud->clave);
 
-	serializar_string(mensaje.payload + sizeof(int) + tam_clave, valor);
+	serializar_string(mensaje.payload + sizeof(int) + tam_clave, solicitud->valor);
 
 	return mensaje;
 }
 
 t_mensaje serializar_set_a_planif(t_solicitud* solicitud){
 	int tam_payload = sizeof(int) * 3 + strlen(solicitud->clave) + strlen(solicitud->valor) + 2;
-
-	t_mensaje mensaje = crear_mensaje(GET_CLAVE, tam_payload);
+	t_mensaje mensaje = crear_mensaje(SET_CLAVE, tam_payload);
 
 	char* aux = mensaje.payload;
 
@@ -89,7 +88,7 @@ t_mensaje serializar_set_a_planif(t_solicitud* solicitud){
 	aux += sizeof(int);
 
 	serializar_string(aux, solicitud->clave);
-	aux += strlen(solicitud->clave) + 1;
+	aux += strlen(solicitud->clave) + sizeof(int) + 1;
 
 	serializar_string(aux, solicitud->valor);
 
@@ -136,13 +135,7 @@ int validar_comunicacion_instancia(t_solicitud* solicitud){
 		 * desencadena la compactacion
 		 */
 		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
-
-		log_error(LOG_COORD,
-			"ocurrio un error de comunicacion con la instancia al hacer un set %s %s del esi %d",
-			solicitud->clave,
-			solicitud->valor,
-			solicitud->id_esi);
-
+		log_error_comunicacion_instancia(solicitud);
 		return -1;
 	}
 

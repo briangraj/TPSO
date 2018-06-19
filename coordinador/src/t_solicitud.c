@@ -39,18 +39,47 @@ void destruir_solicitud(t_solicitud* solicitud){
 	free(solicitud);
 }
 
+void log_error_comunicacion_instancia(t_solicitud* solicitud){
+	switch(solicitud->instruccion){
 
+	case OPERACION_STORE:
+		log_error(LOG_COORD,
+			"ocurrio un error de comunicacion con la instancia al hacer un store %s del esi %d",
+			solicitud->clave,
+			solicitud->id_esi);
+		break;
+
+	case OPERACION_SET:
+
+		log_error(LOG_COORD,
+			"ocurrio un error de comunicacion con la instancia al hacer un set %s %s del esi %d",
+			solicitud->clave,
+			solicitud->valor,
+			solicitud->id_esi);
+		break;
+	}
+
+
+
+}
 void log_error_envio_planif(t_solicitud* solicitud){
 	switch(solicitud->instruccion){
 
 	case OPERACION_GET:
 		log_error(LOG_COORD, "No se pudo enviar el get del esi %d de la clave %s al planificador",
-						solicitud->id_esi,
-						solicitud->clave);
+				solicitud->id_esi,
+				solicitud->clave);
+		break;
+
+	case OPERACION_STORE:
+		log_error(LOG_COORD, "No se pudo enviar el store %s del esi %d al planificador",
+				solicitud->clave,
+				solicitud->id_esi
+		);
 		break;
 
 	case OPERACION_SET:
-		log_error(LOG_COORD, "No se pudo enviar el mensaje %s %s del esi %d al planificador",
+		log_error(LOG_COORD, "No se pudo enviar el set %s %s del esi %d al planificador",
 				solicitud->clave,
 				solicitud->valor,
 				solicitud->id_esi
@@ -71,14 +100,36 @@ void log_error_resultado_planif(t_solicitud* solicitud){
 		break;
 
 	case OPERACION_SET:
+		log_error(LOG_COORD, "No se pudo recibir el resultado del store %s del esi %d desde el planificador",
+				solicitud->clave,
+				solicitud->id_esi
+			);
+		break;
+
+	case OPERACION_SET:
 		log_error(LOG_COORD, "No se pudo recibir el resultado del set %s %s del esi %d desde el planificador",
-					solicitud->clave,
-					solicitud->valor,
-					solicitud->id_esi
+				solicitud->clave,
+				solicitud->valor,
+				solicitud->id_esi
 			);
 		break;
 	}
 
+}
+
+
+int protocolo_planif(t_solicitud* solicitud){
+	switch(solicitud->instruccion){
+
+	case OPERACION_GET:
+		return GET_CLAVE;
+
+	case OPERACION_STORE:
+		return STORE_CLAVE;
+
+	default:
+		return -1;
+	}
 }
 
 

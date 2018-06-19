@@ -68,11 +68,11 @@ void* atender_esi(void* socket_esi){
 int atender_solicitud(t_solicitud* solicitud){
 	switch(solicitud->instruccion){
 	case OPERACION_GET:
-		return realizar_get(solicitud);
+		return get(solicitud);
 	case OPERACION_SET:
-		return realizar_set(solicitud);
+		return set(solicitud);
 	case OPERACION_STORE:
-		return realizar_store(solicitud);
+		return store(solicitud);
 	default:
 		return -1;
 	}

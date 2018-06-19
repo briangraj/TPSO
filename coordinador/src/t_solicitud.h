@@ -17,5 +17,6 @@ void			setear_error_clave_inaccesible		(t_solicitud* solicitud);
 void			setear_operacion_exitosa_instancia	(t_solicitud* solicitud);
 void 			log_error_envio_planif				(t_solicitud* solicitud);
 void 			log_error_resultado_planif			(t_solicitud* solicitud);
-
+void 			log_error_comunicacion_instancia	(t_solicitud* solicitud);
+int 			protocolo_planif					(t_solicitud* solicitud);
 #endif /* T_SOLICITUD_H_ */

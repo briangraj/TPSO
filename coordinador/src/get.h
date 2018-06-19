@@ -16,10 +16,10 @@
 #include "t_solicitud.h"
 
 t_solicitud* crear_get			   		      (int socket, int id);
-int 		 realizar_get		   			  (t_solicitud* solicitud);
+int 		 get		   			  (t_solicitud* solicitud);
 int 		 validar_existencia_clave		  (t_solicitud* solicitud);
 t_mensaje 	 serializar_get_a_instancia		  (char* clave);
-t_mensaje 	 serializar_get_a_planif		  (t_solicitud* solicitud);
+t_mensaje 	 serializar_clave_a_planif		  (t_solicitud* solicitud);
 void 		 setear_respuesta_a_esi			  (t_solicitud* solicitud, int resultado_planif);
 bool         existe_clave_en_instancia_activa (t_solicitud* solicitud);
 

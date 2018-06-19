@@ -7,7 +7,7 @@
 
 #include "get.h"
 
-int realizar_get(t_solicitud* solicitud){
+int get(t_solicitud* solicitud){
 	if(validar_existencia_clave(solicitud) == -1) { //TODO capaz no hace falta chequear
 		log_error(LOG_COORD, "No se pudo ejecutar el get del esi %d", solicitud->id_esi);
 
@@ -16,7 +16,7 @@ int realizar_get(t_solicitud* solicitud){
 
 	log_trace(LOG_COORD, "Se valido la existencia de la clave %s", solicitud->clave);
 
-	t_mensaje get = serializar_get_a_planif(solicitud);
+	t_mensaje get = serializar_clave_a_planif(solicitud);
 
 	if(resultado_enviar_a_planif(get, solicitud) == -1){
 		return -1;
@@ -54,10 +54,11 @@ t_mensaje serializar_get_a_instancia(char* clave){
 }
 
 
-t_mensaje serializar_get_a_planif(t_solicitud* solicitud){
+t_mensaje serializar_clave_a_planif(t_solicitud* solicitud){
+	// GET | id_esi + tam_clave + clave
 	int tam_clave = strlen(solicitud->clave) + 1;
 
-	t_mensaje mensaje = crear_mensaje(GET_CLAVE, sizeof(int) * 2 + tam_clave);
+	t_mensaje mensaje = crear_mensaje(protocolo_planif(solicitud), sizeof(int) * 2 + tam_clave);
 
 	char* aux = mensaje.payload;
 

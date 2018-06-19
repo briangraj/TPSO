@@ -15,6 +15,7 @@
 
 t_solicitud*	crear_store						(int socket, int id);
 t_mensaje		serializar_store_a_instancia	(char* clave);
-int				realizar_store					(t_solicitud* solicitud);
+int				store							(t_solicitud* solicitud);
+t_mensaje 		serializar_store_a_planif		(t_solicitud* solicitud);
 
 #endif /* STORE_H_ */

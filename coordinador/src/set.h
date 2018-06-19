@@ -16,9 +16,9 @@
 #include "get.h"
 
 t_solicitud*	crear_set			   			(int socket, int id);
-int				realizar_set		   			(t_solicitud* solicitud);
+int				set		   			(t_solicitud* solicitud);
 t_mensaje		serializar_set_a_instancia		(char* clave, char* valor);
-t_mensaje		serializar_get_a_planif			(t_solicitud* solicitud);
+t_mensaje		serializar_clave_a_planif			(t_solicitud* solicitud);
 void 			actualizar_claves				(t_instancia* instancia, t_solicitud* solicitud);
 int 			validar_comunicacion_instancia	(t_solicitud* solicitud);
 int 			checkear_clave_valida		(t_instancia* instancia, t_solicitud* solicitud);
