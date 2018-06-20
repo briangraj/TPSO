@@ -107,6 +107,7 @@ typedef struct{
 void 						signal_handler								(int sig_num);
 void						iniciar_planificador						(int loggear);
 void						leer_archivo_config							();
+void 						bloquear_claves_config						();
 void						aniadir_cliente								(fd_set* master, int cliente, int* fdmax);
 void						atender_handshake							(int socket_cliente);
 void						atender_protocolo							(int protocolo, int socket_cliente);

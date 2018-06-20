@@ -212,6 +212,9 @@ int	com_bloquear(char* parametro){
 
 	liberar_parametros(parametros, 2);
 
+	bool flag_aux = false;
+	t_blocked* prox_no_bloqueado_por_consola = NULL;
+
 	bool coincide_el_id(void* elemento){
 		t_ready* esi = (t_ready*) elemento;
 
@@ -240,8 +243,40 @@ int	com_bloquear(char* parametro){
 		crear_entrada_bloqueados_del_recurso(0, clave);
 		bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
 
-	}else{
-		//TODO: Si el ESI bloqueado por este comando ya tenía esta clave asignada, se la desalojamos dandosela al siguiente ESI en la cola de bloqueados
+	}else{// Si el ESI bloqueado por este comando ya tenía esta clave asignada, se la desalojamos dandosela al siguiente ESI en la cola de bloqueados
+
+		bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
+
+		bool es_el_esi_con_el_recurso(void* elem){
+			t_recursos_por_esi* rec = (t_recursos_por_esi*)elem;
+
+			return rec->id_esi == esi_bloqueado->info_ejecucion->ID;
+		}
+
+		bool es_la_clave(void* elem){
+			char* recurso_del_esi = (char*) elem;
+
+			return string_equals_ignore_case(recurso_del_esi, clave);
+		}
+
+		pthread_mutex_lock(&semaforo_asignaciones);
+		t_recursos_por_esi* recursos_del_esi = list_find(colas_de_asignaciones, es_el_esi_con_el_recurso);
+		pthread_mutex_unlock(&semaforo_asignaciones);
+
+		if(list_any_satisfy(recursos_del_esi->recursos_asignados, es_la_clave)){
+
+			//TODO: Esperar respuesta del issue sobre que hacer cuando se bloquea un ESI por una clave que ya posee
+
+			t_blocked* prox_no_bloqueado_por_consola = proximo_no_bloqueado_por_consola(bloqueados_por_clave->bloqueados);
+
+			if(prox_no_bloqueado_por_consola){
+				bloqueados_por_clave->id_proximo_esi = prox_no_bloqueado_por_consola->info_ejecucion->ID;
+
+				flag_aux = true;
+			}
+
+		}
+
 	}
 
 
@@ -264,6 +299,13 @@ int	com_bloquear(char* parametro){
 
 		pthread_mutex_unlock(&semaforo_cola_listos);
 
+	}
+
+	if(flag_aux){
+
+		aniadir_a_listos(*(prox_no_bloqueado_por_consola->info_ejecucion));
+
+		eliminar_de_bloqueados(prox_no_bloqueado_por_consola->info_ejecucion);
 	}
 
 	free(clave);
@@ -296,7 +338,7 @@ int	com_desbloquear(char* parametro){
 
 	t_bloqueados_por_clave* bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
 
-	if(!bloqueados_por_clave)
+	if(!bloqueados_por_clave || list_is_empty(bloqueados_por_clave->bloqueados))
 		imprimir("La clave ingresada no se encuentra bloqueada actualmente ni hay ESIs bloqueados por ella");
 
 	else{
@@ -332,13 +374,15 @@ int	com_desbloquear(char* parametro){
 			imprimir("No hay ningun ESI desloqueable por consola para la clave solicitada. Se liberara la clave para los bloqueados por ejecucion y se desbloqueara al primero de ellos");
 
 			pthread_mutex_lock(&semaforo_cola_bloqueados);
-			t_blocked* blocked = list_get(bloqueados_por_clave->bloqueados, 0);
+			t_blocked* blocked = proximo_no_bloqueado_por_consola(bloqueados_por_clave->bloqueados);
 			pthread_mutex_unlock(&semaforo_cola_bloqueados);
 
-			bloqueados_por_clave->id_proximo_esi = blocked->info_ejecucion->ID;
+			if(blocked){
+				bloqueados_por_clave->id_proximo_esi = blocked->info_ejecucion->ID;
 
-			aniadir_a_listos(*(blocked->info_ejecucion));
-			eliminar_de_bloqueados(blocked->info_ejecucion);
+				aniadir_a_listos(*(blocked->info_ejecucion));
+				eliminar_de_bloqueados(blocked->info_ejecucion);
+			}
 
 			free(clave);
 			return 0;

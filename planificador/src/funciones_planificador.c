@@ -70,7 +70,7 @@ void leer_archivo_config(){
 		exit(1);
 	}
 
-	free(algoritmo);
+//	free(algoritmo);
 
 }
 
@@ -86,12 +86,12 @@ void bloquear_claves_config(){
 
 		list_add(colas_de_bloqueados, bloqueados_por_clave);
 
-		free(CLAVES_BLOQUEADAS[indice]);
+//		free(CLAVES_BLOQUEADAS[indice]);
 
 		indice++;
 	}
 
-	free(CLAVES_BLOQUEADAS);
+//	free(CLAVES_BLOQUEADAS);
 }
 
 void aniadir_cliente(fd_set* master, int cliente, int* fdmax){
@@ -190,7 +190,12 @@ void atender_protocolo(int protocolo, int socket_cliente){
 
 			t_ready* esi_desconectado = encontrar_esi_de_socket(socket_cliente);
 
-			if(esi_desconectado->ID == ((t_ready*)esi_activo())->ID){
+			if(!esi_desconectado)
+				log_error(log_planif, "No se encontro el ESI por numero de socket... WTF?!");
+
+			t_ready* esi_act = esi_activo();
+
+			if(esi_act && esi_desconectado->ID == esi_act->ID){
 				mover_a_finalizados(esi_desconectado, "Se perdio la conexion con el esi.");
 				mandar_a_ejecutar();
 			}else{
@@ -1016,8 +1021,8 @@ void finalizar(){
 	log_destroy(log_planif);
 	config_destroy(archivo_config);
 
-	free(IP_COORDINADOR);
-	free(IP_PLANIFICADOR);
+//	free(IP_COORDINADOR);
+//	free(IP_PLANIFICADOR);
 
 	pthread_mutex_lock(&semaforo_cola_listos);
 	list_destroy_and_destroy_elements(cola_de_listos, funcion_al_pedo);
