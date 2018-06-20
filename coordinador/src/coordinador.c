@@ -101,17 +101,9 @@ void atender_handshake(int socket_cliente){//TODO delegar esta mierda
 	switch(remitente){
 
 	case ESI:
-		if(!planif_conectado){
-			log_error(LOG_COORD, "El planificador no se encuentra conectado, se desconectara al esi en el socket %d", socket_cliente);
-			desconectar_cliente(socket_cliente);
-			break;
-		}
 
-		if(!hay_instancias_conectadas()){
-			log_error(LOG_COORD, "No hay instancias conectadas, se desconectara al esi en el socket %d", socket_cliente);
-			desconectar_cliente(socket_cliente);
+		if(se_puede_atender_esi())
 			break;
-		}
 
 		log_info(LOG_COORD, "Se recibio una conexion con un esi en el socket %d", socket_cliente);
 
@@ -124,13 +116,11 @@ void atender_handshake(int socket_cliente){//TODO delegar esta mierda
 		log_debug(LOG_COORD, "Se completo el handshake con el esi en el socket %d", socket_cliente);
 
 		crear_hilo_esi(socket_cliente);
+
 	break;
+
 	case PLANIFICADOR:
-		/**
-		 * TODO ¿El planificador puede conectarse al coordinador si no hay instancias conectadas?
-		 * ¿Cuantas instancias?
-		 * Deberia haber 1 solo planificador
-		 */
+
 		log_info(LOG_COORD, "Se recibio una conexion con el planificador en el socket %d", socket_cliente);
 
 		if(informar_conexion_exitosa_a(socket_cliente) < 0){
@@ -229,4 +219,19 @@ void desconectar_cliente(int cliente){
 	close(cliente);
 
 	log_trace(LOG_COORD, "Se desconecto al cliente %d", cliente);
+}
+
+bool se_puede_atender_esi(){
+
+	if(!planif_conectado){
+		log_error(LOG_COORD, "El planificador no se encuentra conectado, se desconectara al esi en el socket");
+		return false;
+	}
+
+	if(!hay_instancias_conectadas()){
+		log_error(LOG_COORD, "No hay instancias conectadas, se desconectara al esi en el socket");
+		return false;
+	}
+
+	return true;
 }

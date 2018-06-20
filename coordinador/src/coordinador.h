@@ -48,5 +48,6 @@ void			bindear_socket_server			(int listener);
 bool			hay_instancias_conectadas		();
 void			atender_handshake				(int socket_cliente);
 void			desconectar_cliente				(int cliente);
+bool 			se_puede_atender_esi				();
 
 #endif /* COORDINADOR_H_ */
