@@ -40,12 +40,12 @@ t_instancia* instancia_con_clave(t_solicitud* solicitud){
 
 void borrar_clave(t_solicitud* solicitud, t_instancia* instancia){
 	bool contiene_clave(char* clave){
-		return !strcmp(clave, solicitud->clave);
+		return string_equals(clave, solicitud->clave);
 	}
 
 	char* clave = (char*) list_remove_by_condition(instancia->claves, contiene_clave);
 
-//	list_add(instancia->claves_a_borrar, (void*) clave);
+	free(clave);
 }
 
 void agregar_clave(t_instancia* instancia, char* clave){

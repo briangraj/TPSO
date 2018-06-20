@@ -99,7 +99,7 @@ void log_error_resultado_planif(t_solicitud* solicitud){
 		);
 		break;
 
-	case OPERACION_SET:
+	case OPERACION_STORE:
 		log_error(LOG_COORD, "No se pudo recibir el resultado del store %s del esi %d desde el planificador",
 				solicitud->clave,
 				solicitud->id_esi

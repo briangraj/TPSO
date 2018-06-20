@@ -26,7 +26,7 @@ int store(t_solicitud* solicitud){
 		return -1;
 
 
-	t_mensaje store = serializar_store_a_planif(solicitud);
+	t_mensaje store = serializar_clave_a_planif(solicitud);
 
 
 	if(resultado_enviar_a_planif(store, solicitud) == -1)
@@ -38,6 +38,7 @@ int store(t_solicitud* solicitud){
 
 	if(validar_resultado_planif(solicitud) == -1)
 		return -1;
+
 
 
 	log_info(LOG_COORD, "El resultado de ejecutar la instruccion %d fue %d",

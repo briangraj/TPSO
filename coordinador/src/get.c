@@ -53,7 +53,6 @@ t_mensaje serializar_get_a_instancia(char* clave){
 	return mensaje;
 }
 
-
 t_mensaje serializar_clave_a_planif(t_solicitud* solicitud){
 	// GET | id_esi + tam_clave + clave
 	int tam_clave = strlen(solicitud->clave) + 1;
@@ -99,7 +98,7 @@ bool existe_clave_en_instancia_activa(t_solicitud* solicitud){
 }
 
 void abortar_esi(t_solicitud* solicitud){
-	if(enviar_paquete(solicitud->respuesta_a_esi, (int) solicitud->socket_esi, 0, NULL) <= 0){ // FIXME ENORME
+	if(enviar_paquete(solicitud->respuesta_a_esi, (int) solicitud->socket_esi, 0, NULL) <= 0){
 		log_error(
 			LOG_COORD,
 			"No se pudo enviar el resultado de la instruccion %d al esi %d",

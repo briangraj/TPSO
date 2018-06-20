@@ -67,7 +67,7 @@ void setup_coord(){
 	INSTANCIAS = list_create();//t_instancia
 }
 
-void leer_config(){//FIXME hardcodeado
+void leer_config(){
 	t_config* config = config_create(PATH_CONFIG);
 
 	IP_COORD = leer_string(config, "MI_IP");
@@ -91,22 +91,34 @@ void bindear_socket_server(int listener){
 	bindear_socket(listener, IP_COORD, PUERTO_COORD, LOG_COORD);
 }
 
+bool hay_instancias_conectadas(){
+	return list_any_satisfy(INSTANCIAS, (bool (*)(void*)) esta_activa);
+}
+
 void atender_handshake(int socket_cliente){//TODO delegar esta mierda
 	int remitente = recibir_handshake(socket_cliente);
 
 	switch(remitente){
 
 	case ESI:
-		/**
-		 * TODO ¿Hay que validar que haya un planificador conectado?
-		 * ¿E instancias conectadas?
-		 */
+		if(!planif_conectado){
+			log_error(LOG_COORD, "El planificador no se encuentra conectado, se desconectara al esi en el socket %d", socket_cliente);
+			desconectar_cliente(socket_cliente);
+			break;
+		}
+
+		if(!hay_instancias_conectadas()){
+			log_error(LOG_COORD, "No hay instancias conectadas, se desconectara al esi en el socket %d", socket_cliente);
+			desconectar_cliente(socket_cliente);
+			break;
+		}
+
 		log_info(LOG_COORD, "Se recibio una conexion con un esi en el socket %d", socket_cliente);
 
 		if(informar_conexion_exitosa_a(socket_cliente) < 0){
 			log_error(LOG_COORD, "No se pudo completar el handshake con el esi en el socket %d, se lo desconectara", socket_cliente);
 			desconectar_cliente(socket_cliente);
-			return;
+			break;
 		}
 
 		log_debug(LOG_COORD, "Se completo el handshake con el esi en el socket %d", socket_cliente);
@@ -124,7 +136,7 @@ void atender_handshake(int socket_cliente){//TODO delegar esta mierda
 		if(informar_conexion_exitosa_a(socket_cliente) < 0){
 			log_error(LOG_COORD, "No se pudo completar el handshake con el planificador en el socket %d, se lo desconectara", socket_cliente);
 			desconectar_cliente(socket_cliente);
-			return;
+			break;
 		}
 
 		log_debug(LOG_COORD, "Se completo el handshake con el planificador en el socket %d", socket_cliente);
@@ -141,7 +153,7 @@ void atender_handshake(int socket_cliente){//TODO delegar esta mierda
 		if(informar_conexion_exitosa_a(socket_cliente) < 0){
 			log_error(LOG_COORD, "No se pudo iniciar el handshake con la instancia en el socket %d, se la desconectara", socket_cliente);
 			desconectar_cliente(socket_cliente);
-			return;
+			break;
 		}
 
 		t_instancia* instancia = setup_conexion_con_instancia(socket_cliente);
@@ -153,7 +165,7 @@ void atender_handshake(int socket_cliente){//TODO delegar esta mierda
 					socket_cliente);
 
 			desconectar_cliente(socket_cliente);
-			return;
+			break;
 		}
 
 		log_debug(LOG_COORD,
@@ -210,6 +222,10 @@ void setup_conexion_con_planif(int socket){
 }
 
 void desconectar_cliente(int cliente){
+	/**
+	 * FIXME en cada lugar donde hay que cerrar un socket,
+	 * usar esto
+	 */
 	close(cliente);
 
 	log_trace(LOG_COORD, "Se desconecto al cliente %d", cliente);

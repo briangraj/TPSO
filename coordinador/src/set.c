@@ -104,7 +104,9 @@ int checkear_clave_valida(t_instancia* instancia, t_solicitud* solicitud){
 		return -1;
 	} else if(!esta_activa(instancia)){
 		solicitud->respuesta_a_esi = ERROR_CLAVE_INACCESIBLE;
-		//TODO hay que borrar la clave
+
+		borrar_clave(solicitud, instancia);
+
 		log_error(LOG_COORD, "ERROR_CLAVE_INACCESIBLE: La clave %s se encuentra en una instancia desconectada, se abortara al esi %d",
 				solicitud->clave,
 				solicitud->id_esi);
@@ -122,7 +124,7 @@ void actualizar_claves(t_instancia* instancia, t_solicitud* solicitud){
 			return string_equals(clave, solicitud->clave);
 		}
 
-		list_remove_by_condition(instancia->claves_a_crear, es_la_clave);
+		list_remove_by_condition(instancia->claves_a_crear, (void* (*)(void*)) es_la_clave);
 
 		list_add(instancia->claves, solicitud->clave);
 	}
@@ -142,7 +144,7 @@ int validar_comunicacion_instancia(t_solicitud* solicitud){
 	return 0;
 }
 
-int resultado_enviar_a_planif(t_mensaje* mensaje, t_solicitud* solicitud){
+int resultado_enviar_a_planif(t_mensaje mensaje, t_solicitud* solicitud){
 	if(enviar_a_planif(mensaje) < 0){
 
 		log_error_envio_planif(solicitud);
