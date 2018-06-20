@@ -81,5 +81,7 @@ bool 			hay_que_descartarla									(t_bloqueados_por_clave* bloqueados_por_clav
 t_list* 		duplicar_lista_involucrados							(t_list* involucrados);
 void 			mostrar_cola_finalizados							();
 void 			mostrar_cola_listos									();
+void 			mostrar_asignaciones								();
+void 			mostrar_todo										();
 
 #endif /* FUNCIONES_CONSOLA_H_ */

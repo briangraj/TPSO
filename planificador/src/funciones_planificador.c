@@ -35,6 +35,8 @@ void iniciar_planificador(int loggear){
 
 	PLANIFICADOR_PID = getpid();
 
+	bloquear_claves_config();
+
 }
 
 void leer_archivo_config(){
@@ -48,6 +50,7 @@ void leer_archivo_config(){
 	PUERTO_COORDINADOR = config_get_int_value(archivo_config, "PUERTO_COORDINADOR");
 	ESTIMACION_INICIAL = config_get_int_value(archivo_config, "ESTIMACION_INICIAL");
 	ALFA_PLANIFICACION = config_get_int_value(archivo_config, "ALFA_PLANIFICACION") / 100;
+	CLAVES_BLOQUEADAS = config_get_array_value(archivo_config, "CLAVES_BLOQUEADAS");
 
 	char* algoritmo = config_get_string_value(archivo_config, "ALGORITMO_PLANIFICACION");
 
@@ -66,6 +69,29 @@ void leer_archivo_config(){
 		config_destroy(archivo_config);
 		exit(1);
 	}
+
+	free(algoritmo);
+
+}
+
+void bloquear_claves_config(){
+	int indice = 0;
+
+	while(CLAVES_BLOQUEADAS[indice]){
+		t_bloqueados_por_clave* bloqueados_por_clave = malloc(sizeof(t_bloqueados_por_clave));
+
+		bloqueados_por_clave->clave = strdup(CLAVES_BLOQUEADAS[indice]);
+		bloqueados_por_clave->id_proximo_esi = -1;
+		bloqueados_por_clave->bloqueados = list_create();
+
+		list_add(colas_de_bloqueados, bloqueados_por_clave);
+
+		free(CLAVES_BLOQUEADAS[indice]);
+
+		indice++;
+	}
+
+	free(CLAVES_BLOQUEADAS);
 }
 
 void aniadir_cliente(fd_set* master, int cliente, int* fdmax){
@@ -288,7 +314,7 @@ int intentar_asignar(int id_esi, char* recurso){
 
 	t_bloqueados_por_clave* bloqueados_por_clave = encontrar_bloqueados_para_la_clave(recurso);
 
-	if(!bloqueados_por_clave){
+	if(!bloqueados_por_clave){//Si no existe la estructura
 		crear_entrada_bloqueados_del_recurso(id_esi, recurso);
 
 		asignar_recurso_al_esi(id_esi, recurso);
@@ -301,7 +327,7 @@ int intentar_asignar(int id_esi, char* recurso){
 		asignar_recurso_al_esi(id_esi, recurso);
 
 		return GET_EXITOSO;
-	}
+	} // si la clave esta bloqueada por archivo de config el proximo es -1 y nunca entra al if, se bloquea el esi siempre.
 
 	hay_que_bloquear_esi_activo(recurso, false);
 
@@ -989,6 +1015,9 @@ void finalizar(){
 	close(SOCKET_COORDINADOR);
 	log_destroy(log_planif);
 	config_destroy(archivo_config);
+
+	free(IP_COORDINADOR);
+	free(IP_PLANIFICADOR);
 
 	pthread_mutex_lock(&semaforo_cola_listos);
 	list_destroy_and_destroy_elements(cola_de_listos, funcion_al_pedo);

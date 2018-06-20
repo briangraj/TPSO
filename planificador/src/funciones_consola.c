@@ -288,12 +288,33 @@ int	com_desbloquear(char* parametro){
 
 	liberar_parametros(parametros, 1);
 
+	bool es_el_recurso(void* elem){
+		t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
+
+		return string_equals_ignore_case(bloq->clave, clave);
+	}
+
 	t_bloqueados_por_clave* bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
 
 	if(!bloqueados_por_clave)
-		imprimir("La clave ingresada no posee ESIs a la espera de su liberacion");
+		imprimir("La clave ingresada no se encuentra bloqueada actualmente ni hay ESIs bloqueados por ella");
 
 	else{
+
+		if(bloqueados_por_clave->id_proximo_esi == -1 && list_is_empty(bloqueados_por_clave->bloqueados)){
+
+			pthread_mutex_lock(&semaforo_cola_bloqueados);
+			list_remove_and_destroy_by_condition(colas_de_bloqueados, es_el_recurso, clave_destroyer);
+			pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+			log_trace(log_planif, "La clave %s, inicialmente bloqueda por config, ahora se encuentra desbloqueada", clave);
+			imprimir("La clave solicitada estaba bloqueada por archivo de configuración y ahora se encuentra desbloqueada");
+
+			free(clave);
+
+			return 0;
+
+		}
 
 		bool esta_bloqueado_por_consola(void* elem){
 			t_blocked* esi_block = (t_blocked*) elem;
@@ -308,7 +329,17 @@ int	com_desbloquear(char* parametro){
 
 		//Chequear que se haya encontrado algun ESI bloqueado por consola
 		if(!esi_bloqueado){
-			imprimir("No hay ningun ESI desloqueable por consola para la clave solicitada");
+			imprimir("No hay ningun ESI desloqueable por consola para la clave solicitada. Se liberara la clave para los bloqueados por ejecucion y se desbloqueara al primero de ellos");
+
+			pthread_mutex_lock(&semaforo_cola_bloqueados);
+			t_blocked* blocked = list_get(bloqueados_por_clave->bloqueados, 0);
+			pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+			bloqueados_por_clave->id_proximo_esi = blocked->info_ejecucion->ID;
+
+			aniadir_a_listos(*(blocked->info_ejecucion));
+			eliminar_de_bloqueados(blocked->info_ejecucion);
+
 			free(clave);
 			return 0;
 		}
@@ -411,6 +442,7 @@ int	com_kill(char* parametro){
 
 	if(!esi_buscado){
 		imprimir("El ESI ingresado no se encuentra activo en el sistema");
+		return 0;
 	}
 
 	mover_a_finalizados(esi_buscado, "Se envio el comando kill sobre el ESI");
@@ -823,9 +855,18 @@ void imprimir_cola_bloqueados(char* clave){
 
 int com_check(char* parametro){
 	char** parametros = controlar_y_obtener_parametros(parametro, 1);
+	// 0 : TODAS LAS SIGUIENTES
 	// 1 : COLA DE LISTOS
 	// 2 : COLA DE FINALIZADOS
-	// 3 : LAS DOS
+	// 3 : COLAS DE ASIGNACIONES
+
+	if(!parametros){
+		mostrar_todo();
+
+		return 0;
+	}
+
+
 	switch(atoi(parametros[0])){
 		case 1:
 			mostrar_cola_listos();
@@ -834,11 +875,10 @@ int com_check(char* parametro){
 			mostrar_cola_finalizados();
 			break;
 		case 3:
-			mostrar_cola_listos();
-			mostrar_cola_finalizados();
+			mostrar_asignaciones();
 			break;
 		default:
-			imprimir("No reconozco la opcion");
+			mostrar_todo();
 	}
 
 	liberar_parametros(parametros, 1);
@@ -887,6 +927,54 @@ void mostrar_cola_finalizados(){
 
 	free(mensaje);
 }
+
+void mostrar_asignaciones(){
+	char* mensaje = string_from_format("\n------- El estado de la cola de asignaciones es: ------- \n");
+//	char* mensaje_final =string_new();
+
+	void imprimir_recursos_del_esi(void* elem){
+		char* clave = (char*) elem;
+
+		string_append_with_format(&mensaje, "%s, ", clave);
+	}
+
+	void imprimir_asignaciones(void* elem){
+		t_recursos_por_esi* recursos_por_esi = (t_recursos_por_esi*) elem;
+
+		string_append_with_format(&mensaje, "\n\tESI %d =>\t[ ", recursos_por_esi->id_esi);
+
+		if(!list_is_empty(recursos_por_esi->recursos_asignados)){
+
+			list_iterate(recursos_por_esi->recursos_asignados, imprimir_recursos_del_esi);
+
+			mensaje = string_substring(mensaje, 0, strlen(mensaje) - 2);
+		}
+
+		string_append_with_format(&mensaje, "]");
+
+	}
+
+	pthread_mutex_lock(&semaforo_asignaciones);
+	list_iterate(colas_de_asignaciones, imprimir_asignaciones);
+	pthread_mutex_unlock(&semaforo_asignaciones);
+
+	imprimir(mensaje);
+
+	free(mensaje);
+}
+
+void mostrar_todo(){
+
+	mostrar_cola_listos();
+	mostrar_cola_finalizados();
+	mostrar_asignaciones();
+
+}
+
+
+
+
+
 
 
 
