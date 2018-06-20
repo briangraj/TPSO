@@ -44,6 +44,8 @@ int PLANIFICADOR_PID;
 
 t_algoritmo ALGORITMO_PLANIFICACION;
 
+bool PAUSA;
+
 t_log* log_planif;
 t_config* archivo_config;
 
