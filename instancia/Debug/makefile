@@ -26,7 +26,7 @@ endif
 all: instancia
 
 dependents:
-	-cd /home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/sisopLib/Debug && $(MAKE) clean all
+	-cd /home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/sisopLib/Debug && $(MAKE) all
 
 # Tool invocations
 instancia: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/sisopLib/Debug/libsisopLib.so
