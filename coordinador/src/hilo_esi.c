@@ -24,24 +24,28 @@ void* atender_esi(void* socket_esi){
 	while(true){
 		t_solicitud* solicitud = recibir_solicitud_esi((int) socket_esi, id_esi);
 
+		if(solicitud->instruccion == FIN_DEL_SCRIPT){
+			log_trace(LOG_COORD, "El esi %d termino el script", id_esi);
+			free(solicitud);
+			break;
+		}
+		
 		if(solicitud == NULL){
 			log_error(LOG_COORD, "No se pudo crear la solicitud del esi %d", id_esi);
-			close((int) socket_esi);
-			pthread_exit(NULL);
+			break;
 		}
 
 		if(atender_solicitud(solicitud) == -1){
 			log_error(LOG_COORD, "No se pudo atender la solicitud del esi %d", solicitud->id_esi);
 			abortar_esi(solicitud);
-			close((int) socket_esi);
 
 			destruir_solicitud(solicitud);
 			destruir_instancias();
 
-			pthread_exit(NULL);
+			break;
 		}
 
-		log_trace(LOG_COORD, "Se recibio la solicitud %d del esi %d", solicitud->instruccion, solicitud->id_esi);
+		log_trace(LOG_COORD, "Se atendio la instruccion %d del esi %d", solicitud->instruccion, solicitud->id_esi);
 
 		if(enviar_paquete(solicitud->respuesta_a_esi, (int) socket_esi, 0, NULL) <= 0){
 			log_error(
@@ -51,17 +55,17 @@ void* atender_esi(void* socket_esi){
 					solicitud->id_esi
 			);
 
-			close((int) socket_esi);
 			destruir_solicitud(solicitud);
-			pthread_exit(NULL);
+			break;
 		}
 
 		destruir_solicitud(solicitud);
 
 		log_info(LOG_COORD, "Se envio la respuesta %d al esi %d", solicitud->respuesta_a_esi, solicitud->id_esi);
+
 	}
 
-	close((int) socket_esi);
+	desconectar_cliente((int) socket_esi);
 	pthread_exit(NULL);
 }
 
@@ -79,20 +83,21 @@ int atender_solicitud(t_solicitud* solicitud){
 }
 
 int enviar_a_planif(t_mensaje mensaje){
-	pthread_mutex_lock(&SEM_SOCKET_PLANIF);
-
 	int resultado_envio = enviar_mensaje(mensaje, SOCKET_PLANIF);
-
-	pthread_mutex_unlock(&SEM_SOCKET_PLANIF);
 
 	return resultado_envio;
 }
 
 t_solicitud* recibir_solicitud_esi(int socket, int id){
+	t_solicitud* solicitud;
 
 	int protocolo = recibir_protocolo(socket);
 
-	t_solicitud* solicitud;
+	if(protocolo == FIN_DEL_SCRIPT){
+		solicitud = malloc(sizeof(t_solicitud));
+		solicitud->instruccion = FIN_DEL_SCRIPT;
+		return solicitud;
+	}
 
 	if(protocolo == -1){
 		log_info(LOG_COORD, "Se desconecto el esi %d", id);

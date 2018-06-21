@@ -33,7 +33,8 @@ void setear_operacion_exitosa_instancia(t_solicitud* solicitud){
 
 void destruir_solicitud(t_solicitud* solicitud){
 	free(solicitud->clave);
-	free(solicitud->valor);
+	if(solicitud->instruccion == OPERACION_SET)
+		free(solicitud->valor);
 	sem_close(&solicitud->solicitud_finalizada);
 	sem_destroy(&solicitud->solicitud_finalizada);
 	free(solicitud);

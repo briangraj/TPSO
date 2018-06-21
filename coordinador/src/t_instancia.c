@@ -105,5 +105,5 @@ void destruir_instancia(t_instancia* instancia){
 
 	pthread_cancel(instancia->id_hilo);
 
-	close(instancia->socket);
+	desconectar_cliente(instancia->socket);
 }

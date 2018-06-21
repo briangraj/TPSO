@@ -60,6 +60,7 @@ int main(int argc, char** argv) {
 					log_trace(log_esi, "Se ejecutaron todas las sentencias correctamente. Congratulaciones!");
 
 					enviar_paquete(FIN_DEL_SCRIPT, SOCKET_PLANIFICADOR, 0, NULL);
+					enviar_paquete(FIN_DEL_SCRIPT, SOCKET_COORDINADOR, 0, NULL); //TODO EL CHAKAL ESTUVO AQUI
 
 					break;
 				}

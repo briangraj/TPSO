@@ -151,6 +151,8 @@ int resultado_enviar_a_planif(t_mensaje mensaje, t_solicitud* solicitud){
 
 		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
 
+		desconectar_planif();
+
 		return -1;
 	}
 
@@ -165,6 +167,8 @@ int validar_resultado_planif(t_solicitud* solicitud){
 		log_error_resultado_planif(solicitud);
 
 		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
+
+		desconectar_planif();
 
 		return -1;
 	}

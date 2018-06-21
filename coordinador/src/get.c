@@ -108,23 +108,6 @@ void abortar_esi(t_solicitud* solicitud){
 	}
 }
 
-void setear_respuesta_a_esi(t_solicitud* solicitud, int resultado_planif){
-
-	switch (solicitud->resultado_instancia){
-	case ERROR_CLAVE_INACCESIBLE:
-		solicitud->respuesta_a_esi = ERROR_CLAVE_INACCESIBLE;
-		break;
-	case ERROR_DE_COMUNICACION:
-		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
-		break;
-	case ERROR_CLAVE_NO_IDENTIFICADA:
-//	case FG_EI:
-//	case FG_NC:
-	default:
-		solicitud->respuesta_a_esi = resultado_planif;
-	}
-}
-
 
 
 
