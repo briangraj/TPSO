@@ -171,12 +171,19 @@ void imprimir(char* cadena){
 //COMANDOS
 
 int	com_pausar(char* parametro){
-	if(parametro){
+
+	char** parametros = controlar_y_obtener_parametros(parametro, 0);
+
+	if(!parametros){
 		imprimir("El comando pausar no recibe parametros");
 		return 0;
 	}
 
+	free(parametros);
+
 	pthread_mutex_lock(&semaforo_pausa);
+	PAUSA = true;
+	pthread_mutex_unlock(&semaforo_pausa);
 
 	imprimir("El planificador esta en pausa, escriba continuar para reanudar su ejecucion.");
 
@@ -184,14 +191,23 @@ int	com_pausar(char* parametro){
 }
 
 int	com_continuar(char* parametro){
-	if(parametro){
+
+	char** parametros = controlar_y_obtener_parametros(parametro, 0);
+
+	if(!parametros){
 		imprimir("El comando continuar no recibe parametros");
 		return 0;
 	}
 
+	free(parametros);
+
+	pthread_mutex_lock(&semaforo_pausa);
+	PAUSA = false;
 	pthread_mutex_unlock(&semaforo_pausa);
 
 	imprimir("El planificador reanudo su ejecucion.");
+
+	mandar_a_ejecutar();
 
 	return 0;
 }

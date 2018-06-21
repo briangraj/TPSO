@@ -37,6 +37,8 @@ void iniciar_planificador(int loggear){
 
 	bloquear_claves_config();
 
+	PAUSA = false;
+
 }
 
 void leer_archivo_config(){
@@ -455,6 +457,8 @@ void atender_store(){
 	int id_esi = recibir_id_esi();
 	char* clave = recibir_clave();
 
+	log_trace(log_planif, "Recibi una operacion STORE por parte del ESI %d para la clave %s", id_esi, clave);
+
 	int resultado_store = actualizar_cola_de_bloqueados_para(id_esi, clave);
 
 	free(clave);
@@ -471,14 +475,21 @@ void atender_set(){
 	char* clave = recibir_clave();
 	int resultado_set;
 
+	log_trace(log_planif, "Recibi una operacion SET por parte del ESI %d para la clave %s", id_esi, clave);
+
 	pthread_mutex_lock(&semaforo_asignaciones);
 	bool tiene_la_clave = verificar_tenencia_de_la_clave(id_esi, clave);
 	pthread_mutex_unlock(&semaforo_asignaciones);
 
-	if(tiene_la_clave)
+	if(tiene_la_clave){
+		log_trace(log_planif, "El ESI posee la clave solicitada");
 		resultado_set = SET_EXITOSO;
-	else
+	}
+
+	else{
+		log_error(log_planif, "El ESI no posee la clave solicitada");
 		resultado_set = SET_INVALIDO;
+	}
 
 	free(clave);
 
@@ -610,7 +621,11 @@ void mandar_a_ejecutar(){//Enviar orden de ejecucion al primer ESI de la cola de
 
 
 	pthread_mutex_lock(&semaforo_pausa);
+	bool aux = PAUSA;
 	pthread_mutex_unlock(&semaforo_pausa);
+
+	if(aux)
+		return;
 
 	pthread_mutex_lock(&semaforo_cola_listos);
 	if(list_is_empty(cola_de_listos)){
@@ -759,9 +774,12 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 
 	// el tipo que hizo store no tiene en verdad la clave!
 	// solo se llega a este if haciendo store, sino siempre va a coincidir el id
-	if(!(verificar_tenencia_de_la_clave(id_esi_que_lo_libero, recurso)))
+	if(!(verificar_tenencia_de_la_clave(id_esi_que_lo_libero, recurso))){
+		log_error(log_planif, "El ESI no posee la clave solicitada");
+
 		return STORE_INVALIDO;
 
+	}
 	bool es_el_esi_con_el_recurso(void* elem){
 		t_recursos_por_esi* rec = (t_recursos_por_esi*)elem;
 
@@ -807,6 +825,7 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 		actualizar_privilegiado(bloqueados_de_la_clave);
 	}
 
+	log_trace(log_planif, "El STORE fue todo un exito");
 	return STORE_EXITOSO;
 }
 
