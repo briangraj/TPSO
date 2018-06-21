@@ -5,10 +5,6 @@ void signal_handler(int sig_num){
 		log_warning(log_planif, "Se recibió la señal para finalizar el planificador");
 		finalizar();
 	}
-	else if(sig_num == SIGUSR2){
-		log_trace(log_planif, "El planificador deja de estar pausado, voy a mandar a ejecutar al proximo ESI");
-		mandar_a_ejecutar();
-	}
 }
 
 void iniciar_planificador(int loggear){

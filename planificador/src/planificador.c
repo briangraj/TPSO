@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	signal(SIGUSR1, signal_handler);
-	signal(SIGUSR2, signal_handler);
+
 	// CREO SOCKET PARA ESCUCHAR CONEXIONES ENTRANTES
 
 	listener = crear_socket();

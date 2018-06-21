@@ -205,8 +205,6 @@ int	com_continuar(char* parametro){
 	PAUSA = false;
 	pthread_mutex_unlock(&semaforo_pausa);
 
-//	kill(PLANIFICADOR_PID, SIGUSR2);
-
 	imprimir("El planificador reanudo su ejecucion.");
 
 	mandar_a_ejecutar();
