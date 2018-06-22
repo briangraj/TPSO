@@ -145,6 +145,7 @@ void verificar_estado_valido(){
 
 		close(LISTENER);
 		destruir_instancias();
+		list_destroy(INSTANCIAS);
 		free(ALGORITMO_DISTRIBUCION);
 		free(IP_COORD);
 		log_destroy(LOG_COORD);
@@ -185,4 +186,26 @@ t_mensaje serializar_a_planif(t_solicitud* solicitud){
 	default:
 		return serializar_clave_a_planif(solicitud);
 	}
+}
+
+int checkear_clave_valida(t_instancia* instancia, t_solicitud* solicitud){
+	if(instancia == NULL){
+		solicitud->respuesta_a_esi = ERROR_CLAVE_NO_IDENTIFICADA;
+
+		log_error(LOG_COORD, "ERROR_CLAVE_NO_IDENTIFICADA: No se encontro la clave %s, se abortara al esi %d", solicitud->clave, solicitud->id_esi);
+
+		return -1;
+	} else if(!esta_activa(instancia)){
+		solicitud->respuesta_a_esi = ERROR_CLAVE_INACCESIBLE;
+
+		agregar_clave_a_borrar(instancia, solicitud->clave);
+
+		log_error(LOG_COORD, "ERROR_CLAVE_INACCESIBLE: La clave %s se encuentra en una instancia desconectada, se abortara al esi %d",
+				solicitud->clave,
+				solicitud->id_esi);
+
+		return -1;
+	}
+
+	return 0;
 }

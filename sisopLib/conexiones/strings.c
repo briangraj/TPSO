@@ -25,3 +25,7 @@ char* leer_string(t_config* config, char* clave){
 bool string_equals(char* un_string, char* otro_string){
 	return !strcmp(un_string, otro_string);
 }
+
+int string_size(char* string){
+	return strlen(string) + 1;
+}

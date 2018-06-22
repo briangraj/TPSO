@@ -15,7 +15,7 @@ void* atender_instancia(void* instancia_void){
 	t_instancia* instancia = (t_instancia*) instancia_void;
 	t_solicitud* solicitud;
 
-	instancia->id_hilo = pthread_self();
+	instancia->id_hilo = pthread_self();//FIXME al final usamos esto? o se puede ir?
 
 	while(true) {
 		sem_wait(&instancia->solicitud_lista);
@@ -31,6 +31,8 @@ void* atender_instancia(void* instancia_void){
 			);
 
 			setear_error_comunicacion_instancia(solicitud);
+
+			desconectar_instancia(instancia);
 
 			pthread_exit(NULL);
 		}
@@ -49,14 +51,16 @@ void* atender_instancia(void* instancia_void){
 	pthread_exit(NULL);
 }
 
-void evaluar_resultado_instr(t_solicitud* solicitud, int socket_instancia){
+void evaluar_resultado_instr(t_solicitud* solicitud, t_instancia* instancia){
 
-	switch(recibir_protocolo(socket_instancia)){
+	switch(recibir_protocolo(instancia->socket)){
 	case OPERACION_EXITOSA:
 		setear_operacion_exitosa_instancia(solicitud);
 	break;
 	default:
 		setear_error_comunicacion_instancia(solicitud);//TODO ver que errores puede tirar la instancia
+
+		desconectar_instancia(instancia);
 	;
 	}
 
@@ -71,10 +75,10 @@ t_mensaje serializar_config_instancia(){
 	return config;
 }
 
-int enviar_config_instancia(int socket_instancia){
+int enviar_config_instancia(t_instancia* instancia){
 	t_mensaje config = serializar_config_instancia();
 
-	return enviar_mensaje(config, socket_instancia);
+	return enviar_mensaje(config, instancia->socket);
 }
 
 int enviar_solicitud(t_solicitud* solicitud, int socket){

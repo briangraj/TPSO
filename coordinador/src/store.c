@@ -32,7 +32,7 @@ t_solicitud* crear_store(int socket, int id){
 }
 
 t_mensaje serializar_store_a_instancia(t_solicitud* solicitud){
-	int tam_clave = strlen(solicitud->clave) + 1;
+	int tam_clave = string_size(solicitud->clave);
 
 	t_mensaje mensaje = crear_mensaje(solicitud->instruccion, sizeof(int) + tam_clave);
 

@@ -21,7 +21,6 @@ t_mensaje		serializar_set_a_instancia		(t_solicitud* solicitud);
 t_mensaje 		serializar_set_a_planif			(t_solicitud* solicitud);
 void 			actualizar_claves				(t_instancia* instancia, t_solicitud* solicitud);
 int 			validar_comunicacion_instancia	(t_solicitud* solicitud);
-int 			checkear_clave_valida			(t_instancia* instancia, t_solicitud* solicitud);
 int 			resultado_enviar_a_planif		(t_mensaje mensaje, t_solicitud* solicitud);
 int 			validar_resultado_planif		(t_solicitud* solicitud);
 

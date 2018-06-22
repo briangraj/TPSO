@@ -17,8 +17,8 @@
 void		crear_hilo_instancia		(t_instancia* instancia);
 void*		atender_instancia			(void* socket_instancia);
 t_mensaje	serializar_config_instancia	();
-int			enviar_config_instancia		(int socket_instancia);
-int			enviar_solicitud				(t_solicitud* pedido, int socket);
-void		evaluar_resultado_instr		(t_solicitud* solicitud, int socket_instancia);
+int			enviar_config_instancia		(t_instancia* instancia);
+int			enviar_solicitud			(t_solicitud* pedido, int socket);
+void		evaluar_resultado_instr		(t_solicitud* solicitud, t_instancia* instancia);
 
 #endif /* HILO_INSTANCIA_H_ */

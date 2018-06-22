@@ -39,6 +39,7 @@ int SOCKET_PLANIF;
 bool PLANIF_CONECTADO;
 
 void 			setup_coord						();
+void 			setup_listener					();
 void 			setup_conexion_con_planif		(int socket);
 t_instancia*	setup_conexion_con_instancia	(int socket);
 void			leer_config						();
@@ -48,5 +49,8 @@ void			atender_handshake				(int socket_cliente);
 void			desconectar_cliente				(int cliente);
 bool 			se_puede_atender_esi			();
 void			desconectar_planif				();
-void 			setup_listener					();
+void 			atender_conexion_esi			(int socket_cliente);
+void 			atender_conexion_planif			(int socket_cliente);
+void 			atender_conexion_instancia		(int socket_cliente);
+
 #endif /* COORDINADOR_H_ */

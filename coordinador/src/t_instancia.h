@@ -13,6 +13,8 @@
 #include "t_solicitud.h"
 
 void*			crear_instancia				(int id, int socket);
+void			desconectar_instancia		(t_instancia* instancia);
+void 			eliminar_instancia			(t_instancia* instancia);
 void			destruir_instancia			(t_instancia* instancia);
 void			destruir_instancias			();
 void			agregar_clave				(t_instancia* instancia, char* clave);
@@ -24,6 +26,8 @@ void			borrar_clave				(t_solicitud* solicitud, t_instancia* instancia);
 t_instancia*	instancia_con_clave			(t_solicitud* solicitud);
 void			agregar_clave_a_crear		(t_instancia* instancia, char* clave);
 bool			contiene_clave				(t_list* claves, t_solicitud* solicitud);
-
+t_instancia*	instancia_de_id				(int id);
+int				reconectar_instancia		(t_instancia* instancia, int socket);
+int 			conectar_instancia_nueva	(t_instancia* instancia);
 
 #endif /* T_INSTANCIA_H_ */

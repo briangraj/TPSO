@@ -27,7 +27,7 @@ t_solicitud* crear_get(int socket, int id){
 }
 
 t_mensaje serializar_get_a_instancia(char* clave){
-	int tam_clave = strlen(clave) + 1;
+	int tam_clave = string_size(clave);
 
 	t_mensaje mensaje = crear_mensaje(CREAR_CLAVE, sizeof(int) + tam_clave);
 
@@ -38,7 +38,7 @@ t_mensaje serializar_get_a_instancia(char* clave){
 
 t_mensaje serializar_clave_a_planif(t_solicitud* solicitud){
 	// GET | id_esi + tam_clave + clave
-	int tam_clave = strlen(solicitud->clave) + 1;
+	int tam_clave = string_size(solicitud->clave);
 
 	t_mensaje mensaje = crear_mensaje(protocolo_planif(solicitud), sizeof(int) * 2 + tam_clave);
 

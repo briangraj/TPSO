@@ -17,6 +17,7 @@ void* crear_instancia(int id, int socket){
 	instancia->esta_activa = true;
 	instancia->claves = list_create();
 	instancia->claves_a_crear = list_create();
+	instancia->claves_a_borrar = list_create();
 
 	return instancia;
 }
@@ -56,6 +57,10 @@ void agregar_clave_a_crear(t_instancia* instancia, char* clave){
 	list_add(instancia->claves_a_crear, clave);
 }
 
+void agregar_clave_a_borrar(t_instancia* instancia, char* clave){
+	list_add(instancia->claves_a_borrar, clave);
+}
+
 bool esta_activa(t_instancia* instancia){
 	return instancia->esta_activa;
 }
@@ -92,6 +97,7 @@ int recibir_claves(t_instancia* instancia){
 
 void destruir_instancias(){
 	list_iterate(INSTANCIAS, (void (*)(void*)) destruir_instancia);
+	list_clean(INSTANCIAS);
 }
 
 void destruir_instancia(t_instancia* instancia){
@@ -106,4 +112,102 @@ void destruir_instancia(t_instancia* instancia){
 	pthread_cancel(instancia->id_hilo);
 
 	desconectar_cliente(instancia->socket);
+}
+
+t_instancia* instancia_de_id(int id){
+	bool mismo_id(t_instancia* instancia){
+		return instancia->id == id;
+	}
+
+	return list_find(INSTANCIAS, (bool (*)(void*)) mismo_id);
+}
+
+int conectar_instancia_nueva(t_instancia* instancia){
+	if(enviar_config_instancia(instancia) == -1){
+		log_error(LOG_COORD, "No se pudo enviar la config a la instancia %d", instancia->id);
+		return -1;
+	}
+
+	if(recibir_claves(instancia) == -1){
+		log_error(LOG_COORD, "No se pudieron recibir las claves de la instancia %d", instancia->id);
+		return -1;
+	}
+
+	list_add(INSTANCIAS, (void*) instancia);
+
+	log_trace(LOG_COORD, "Se agrego la instancia de id %d al sistema");
+
+	return 0;
+}
+
+int	reconectar_instancia(t_instancia* instancia, int socket){
+	instancia->socket = socket;
+
+	if(!list_is_empty(instancia->claves_a_borrar)){
+		if(enviar_claves_a_borrar(instancia) <= 0){
+			log_error(LOG_COORD, "No se pudieron enviar las claves a borrar a la instancia %d", instancia->id);
+			return -1;
+		}
+	}
+
+	instancia->esta_activa = true;
+
+	return 0;
+}
+
+int list_sum(t_list* numeros){
+	int acum = 0;
+
+	void acumular(int numero){
+		acum += numero;
+	}
+
+	list_iterate(numeros, (void (*)(void*)) acumular);
+
+	return acum;
+}
+
+t_mensaje serializar_claves_a_borrar(t_instancia* instancia){//TODO testear
+//	CLAVES_A_BORRAR | cant_claves + (tam_clave + clave)+
+	int cant_claves = list_size(instancia->claves_a_borrar);
+	int cant_letras = list_sum(list_map(instancia->claves_a_borrar, (void* (*)(void*)) string_size));
+
+	t_mensaje mensaje = crear_mensaje(CLAVES_A_BORRAR, sizeof(int) + cant_claves + cant_letras);
+
+	char* aux = mensaje.payload;
+
+	memcpy(aux, &cant_claves, sizeof(int));
+
+	void copiar_clave(char* clave){
+		serializar_string(aux, clave);
+		aux += sizeof(int) + string_size(clave);
+	}
+
+	list_iterate(instancia->claves_a_borrar, (void (*)(void*)) copiar_clave);
+
+	return mensaje;
+}
+
+int enviar_claves_a_borrar(t_instancia* instancia){
+	t_mensaje claves_a_borrar = serializar_claves_a_borrar(instancia);
+
+	return enviar_mensaje(claves_a_borrar, instancia->socket);
+}
+
+void eliminar_instancia(t_instancia* una_instancia){
+	bool misma_instancia(t_instancia* otra_instancia){
+		return una_instancia->id == otra_instancia->id;
+	}
+
+	list_remove_by_condition(INSTANCIAS, (bool (*)(void*)) misma_instancia);
+
+	destruir_instancia(una_instancia);
+}
+
+void desconectar_instancia(t_instancia* instancia){
+	instancia->esta_activa = false;
+
+	close(instancia->socket);
+
+	log_trace(LOG_COORD, "Se desconecto la instancia %d", instancia->id);
 }

@@ -56,7 +56,8 @@ typedef enum {
 	FS_EI,//fallo set: espacio insuficiente
 	FS_NC,//fallo set: necesita compactar
 	//TODO FG_EI, FG_NC
-	FALLO_REEMPLAZO
+	FALLO_REEMPLAZO,
+	CLAVES_A_BORRAR
 } t_protocolo;
 
 typedef enum {

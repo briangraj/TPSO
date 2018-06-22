@@ -85,84 +85,15 @@ void atender_handshake(int socket_cliente){
 	int remitente = recibir_handshake(socket_cliente);
 
 	switch(remitente){
-
 	case ESI:
-
-		if(!se_puede_atender_esi()){
-			desconectar_cliente(socket_cliente);
-			break;
-		}
-
-		log_info(LOG_COORD, "Se recibio una conexion con un esi en el socket %d", socket_cliente);
-
-		if(informar_conexion_exitosa_a(socket_cliente) < 0){
-			log_error(LOG_COORD, "No se pudo completar el handshake con el esi en el socket %d, se lo desconectara", socket_cliente);
-			desconectar_cliente(socket_cliente);
-			break;
-		}
-
-		log_debug(LOG_COORD, "Se completo el handshake con el esi en el socket %d", socket_cliente);
-
-		crear_hilo_esi(socket_cliente);
-
+		atender_conexion_esi(socket_cliente);
 	break;
-
 	case PLANIFICADOR:
-
-		if(PLANIF_CONECTADO){
-			log_error(LOG_COORD, "Ya hay un planificador conectado, se desconectara al cliente del socket %d", socket_cliente);
-			desconectar_cliente(socket_cliente);
-			break;
-		}
-
-		log_info(LOG_COORD, "Se recibio una conexion con el planificador en el socket %d", socket_cliente);
-
-		if(informar_conexion_exitosa_a(socket_cliente) < 0){
-			log_error(LOG_COORD, "No se pudo completar el handshake con el planificador en el socket %d, se lo desconectara", socket_cliente);
-			desconectar_cliente(socket_cliente);
-			break;
-		}
-
-		log_debug(LOG_COORD, "Se completo el handshake con el planificador en el socket %d", socket_cliente);
-
-		setup_conexion_con_planif(socket_cliente);
-
+		atender_conexion_planif(socket_cliente);
 	break;
-
-	case INSTANCIA: {
-		log_info(LOG_COORD, "Se recibio una conexion con una instancia en el socket %d", socket_cliente);
-
-		if(informar_conexion_exitosa_a(socket_cliente) < 0){
-			log_error(LOG_COORD, "No se pudo iniciar el handshake con la instancia en el socket %d, se la desconectara", socket_cliente);
-			desconectar_cliente(socket_cliente);
-			break;
-		}
-
-		t_instancia* instancia = setup_conexion_con_instancia(socket_cliente);
-
-		if(instancia->claves_a_borrar.length() > 0)
-			borrar_claves_a_instancia()
-
-		if(instancia == NULL){
-			log_error(LOG_COORD,
-					"No se pudo completar el handshake con la instancia %d en el socket %d, se la desconectara",
-					instancia->id,
-					socket_cliente);
-
-			desconectar_cliente(socket_cliente);
-			break;
-		}
-
-		log_debug(LOG_COORD,
-				"Se completo el handshake con la instancia %d en el socket %d",
-				instancia->id,
-				socket_cliente);
-
-		crear_hilo_instancia(instancia);
-	}
-
+	case INSTANCIA:
+		atender_conexion_instancia(socket_cliente);
 	break;
-
 	default:
 //		errores
 	;
@@ -186,25 +117,23 @@ t_instancia* setup_conexion_con_instancia(int socket){
 	if(instancia == NULL){
 		instancia = crear_instancia(id, socket);
 
-		if(enviar_config_instancia(socket) == -1){
+		log_trace(LOG_COORD, "Se creo la instancia de id %d con exito", instancia->id);
+
+		if(conectar_instancia_nueva(instancia) == -1){
 			log_error(LOG_COORD, "No se pudo enviar la config a la instancia %d", instancia->id);
 			destruir_instancia(instancia);
 			return NULL;
 		}
+	} else {
+		log_trace(LOG_COORD, "La instancia %d esta intentando reconectarse", instancia->id);
 
-		if(recibir_claves(instancia) == -1){
-			log_error(LOG_COORD, "No se pudieron recibir las claves de la instancia %d", instancia->id);
-			destruir_instancia(instancia);
+		if(reconectar_instancia(instancia, socket) == -1){
+			log_error(LOG_COORD, "No se pudo reconectar_instancia la instancia %d", instancia->id);
+			desconectar_instancia(instancia);
 			return NULL;
 		}
 
-		log_trace(LOG_COORD, "Se creo la instancia de id %d con exito", id);
-
-		list_add(INSTANCIAS, (void*) instancia);
-
-		log_trace(LOG_COORD, "Se agrego a la instancia de id %d al sistema");
-	} else {
-		//
+		log_info(LOG_COORD, "La instancia %d se reconecto con exito", instancia->id);
 	}
 
 	return instancia;
@@ -263,4 +192,73 @@ void setup_listener(){
 
 	log_info(LOG_COORD, "El socket %d esta escuchando conexiones...", LISTENER);
 
+}
+
+void atender_conexion_esi(int socket_cliente){
+	if(!se_puede_atender_esi()){
+		desconectar_cliente(socket_cliente);
+		return;
+	}
+
+	log_info(LOG_COORD, "Se recibio una conexion con un esi en el socket %d", socket_cliente);
+
+	if(informar_conexion_exitosa_a(socket_cliente) < 0){
+		log_error(LOG_COORD, "No se pudo completar el handshake con el esi en el socket %d, se lo desconectara", socket_cliente);
+		desconectar_cliente(socket_cliente);
+		return;
+	}
+
+	log_debug(LOG_COORD, "Se completo el handshake con el esi en el socket %d", socket_cliente);
+
+	crear_hilo_esi(socket_cliente);
+
+}
+
+void atender_conexion_planif(int socket_cliente){
+	if(PLANIF_CONECTADO){
+		log_error(LOG_COORD, "Ya hay un planificador conectado, se desconectara al cliente del socket %d", socket_cliente);
+		desconectar_cliente(socket_cliente);
+		return;
+	}
+
+	log_info(LOG_COORD, "Se recibio una conexion con el planificador en el socket %d", socket_cliente);
+
+	if(informar_conexion_exitosa_a(socket_cliente) < 0){
+		log_error(LOG_COORD, "No se pudo completar el handshake con el planificador en el socket %d, se lo desconectara", socket_cliente);
+		desconectar_cliente(socket_cliente);
+		return;
+	}
+
+	log_debug(LOG_COORD, "Se completo el handshake con el planificador en el socket %d", socket_cliente);
+
+	setup_conexion_con_planif(socket_cliente);
+}
+
+void atender_conexion_instancia(int socket_cliente){
+	log_info(LOG_COORD, "Se recibio una conexion con una instancia en el socket %d", socket_cliente);
+
+	if(informar_conexion_exitosa_a(socket_cliente) < 0){
+		log_error(LOG_COORD, "No se pudo iniciar el handshake con la instancia en el socket %d, se la desconectara", socket_cliente);
+		desconectar_cliente(socket_cliente);
+		return;
+	}
+
+	t_instancia* instancia = setup_conexion_con_instancia(socket_cliente);
+
+	if(instancia == NULL){
+		log_error(LOG_COORD,
+				"No se pudo completar el handshake con la instancia %d en el socket %d, se la desconectara",
+				instancia->id,
+				socket_cliente);
+
+		desconectar_cliente(socket_cliente);
+		return;
+	}
+
+	log_debug(LOG_COORD,
+			"Se completo el handshake con la instancia %d en el socket %d",
+			instancia->id,
+			socket_cliente);
+
+	crear_hilo_instancia(instancia);
 }

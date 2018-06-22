@@ -37,8 +37,8 @@ t_solicitud* crear_set(int socket, int id){
 }
 
 t_mensaje serializar_set_a_instancia(t_solicitud* solicitud){
-	int tam_clave = strlen(solicitud->clave) + 1;
-	int tam_valor = strlen(solicitud->valor) + 1;
+	int tam_clave = string_size(solicitud->clave);
+	int tam_valor = string_size(solicitud->valor);
 
 	int tam_payload = sizeof(int) + tam_clave + sizeof(int) + tam_valor;
 
@@ -52,7 +52,7 @@ t_mensaje serializar_set_a_instancia(t_solicitud* solicitud){
 }
 
 t_mensaje serializar_set_a_planif(t_solicitud* solicitud){
-	int tam_payload = sizeof(int) * 3 + strlen(solicitud->clave) + strlen(solicitud->valor) + 2;
+	int tam_payload = sizeof(int) * 3 + string_size(solicitud->clave) + string_size(solicitud->valor);
 	t_mensaje mensaje = crear_mensaje(SET_CLAVE, tam_payload);
 
 	char* aux = mensaje.payload;
@@ -61,33 +61,11 @@ t_mensaje serializar_set_a_planif(t_solicitud* solicitud){
 	aux += sizeof(int);
 
 	serializar_string(aux, solicitud->clave);
-	aux += strlen(solicitud->clave) + sizeof(int) + 1;
+	aux += string_size(solicitud->clave) + sizeof(int);
 
 	serializar_string(aux, solicitud->valor);
 
 	return mensaje;
-}
-
-int checkear_clave_valida(t_instancia* instancia, t_solicitud* solicitud){
-	if(instancia == NULL){
-		solicitud->respuesta_a_esi = ERROR_CLAVE_NO_IDENTIFICADA;
-
-		log_error(LOG_COORD, "ERROR_CLAVE_NO_IDENTIFICADA: No se encontro la clave %s, se abortara al esi %d", solicitud->clave, solicitud->id_esi);
-
-		return -1;
-	} else if(!esta_activa(instancia)){
-		solicitud->respuesta_a_esi = ERROR_CLAVE_INACCESIBLE;
-
-		borrar_clave(solicitud, instancia);
-
-		log_error(LOG_COORD, "ERROR_CLAVE_INACCESIBLE: La clave %s se encuentra en una instancia desconectada, se abortara al esi %d",
-				solicitud->clave,
-				solicitud->id_esi);
-
-		return -1;
-	}
-
-	return 0;
 }
 
 void actualizar_claves(t_instancia* instancia, t_solicitud* solicitud){
