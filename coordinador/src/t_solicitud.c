@@ -15,7 +15,6 @@ t_solicitud* crear_solicitud(int instruccion, int id, int socket){
 	sem_init(&solicitud->solicitud_finalizada, 0, 0);
 	solicitud->respuesta_a_esi = 0;
 	solicitud->resultado_instancia = 0;
-
 	return solicitud;
 }
 
@@ -33,8 +32,10 @@ void setear_operacion_exitosa_instancia(t_solicitud* solicitud){
 
 void destruir_solicitud(t_solicitud* solicitud){
 	free(solicitud->clave);
+	desconectar_cliente(solicitud->socket_esi);
 	if(solicitud->instruccion == OPERACION_SET)
 		free(solicitud->valor);
+
 	sem_close(&solicitud->solicitud_finalizada);
 	sem_destroy(&solicitud->solicitud_finalizada);
 	free(solicitud);

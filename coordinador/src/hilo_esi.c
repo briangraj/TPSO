@@ -36,12 +36,13 @@ void* atender_esi(void* socket_esi){
 		}
 
 		if(atender_solicitud(solicitud) == -1){
-			log_error(LOG_COORD, "No se pudo atender la solicitud del esi %d", solicitud->id_esi);
+			log_error(LOG_COORD, "No se pudo atender la solicitud del esi %d, se abortara", solicitud->id_esi);
+
 			abortar_esi(solicitud);
 
 			destruir_solicitud(solicitud);
-			destruir_instancias();
 
+			verificar_estado_valido();
 			break;
 		}
 
@@ -65,27 +66,26 @@ void* atender_esi(void* socket_esi){
 
 	}
 
-	desconectar_cliente((int) socket_esi);
 	pthread_exit(NULL);
 }
 
 int atender_solicitud(t_solicitud* solicitud){
 	switch(solicitud->instruccion){
 	case OPERACION_GET:
+		log_trace(LOG_COORD, "Se ejecutara un GET %s", solicitud->clave);
+
 		return get(solicitud);
 	case OPERACION_SET:
+		log_trace(LOG_COORD, "Se ejecutara un SET %s %s", solicitud->clave, solicitud->valor);
+
 		return set(solicitud);
 	case OPERACION_STORE:
+		log_trace(LOG_COORD, "Se ejecutara un STORE %s", solicitud->clave);
+
 		return store(solicitud);
 	default:
 		return -1;
 	}
-}
-
-int enviar_a_planif(t_mensaje mensaje){
-	int resultado_envio = enviar_mensaje(mensaje, SOCKET_PLANIF);
-
-	return resultado_envio;
 }
 
 t_solicitud* recibir_solicitud_esi(int socket, int id){
@@ -137,4 +137,52 @@ int recibir_id(int socket){
 		return -1;
 
 	return id;
+}
+
+void verificar_estado_valido(){
+	if(!PLANIF_CONECTADO){
+		log_error(LOG_COORD, "Se desconecto el planificador, se abortara el coordinador");
+
+		close(LISTENER);
+		destruir_instancias();
+		free(ALGORITMO_DISTRIBUCION);
+		free(IP_COORD);
+		log_destroy(LOG_COORD);
+
+		exit(EXIT_FAILURE);
+	}
+}
+
+int ejecutar(t_solicitud* solicitud, t_instancia* instancia){
+	agregar_solicitud(instancia, solicitud);
+
+	sem_wait(&solicitud->solicitud_finalizada);
+
+	if(validar_comunicacion_instancia(solicitud) == -1)
+		return -1;
+
+	return 0;
+}
+
+int enviar_a_planif(t_solicitud* solicitud){
+	t_mensaje mensaje = serializar_a_planif(solicitud);
+
+	if(resultado_enviar_a_planif(mensaje, solicitud) == -1)
+		return -1;
+
+	log_trace(LOG_COORD, "Se envio al planificador");
+
+	if(validar_resultado_planif(solicitud) == -1)
+		return -1;
+
+	return 0;
+}
+
+t_mensaje serializar_a_planif(t_solicitud* solicitud){
+	switch(solicitud->instruccion){
+	case OPERACION_SET:
+		return serializar_set_a_planif(solicitud);
+	default:
+		return serializar_clave_a_planif(solicitud);
+	}
 }

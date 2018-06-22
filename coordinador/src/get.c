@@ -8,28 +8,11 @@
 #include "get.h"
 
 int get(t_solicitud* solicitud){
-	if(validar_existencia_clave(solicitud) == -1) { //TODO capaz no hace falta chequear
-		log_error(LOG_COORD, "No se pudo ejecutar el get del esi %d", solicitud->id_esi);
-
-		return -1;
-	}
-
-	log_trace(LOG_COORD, "Se valido la existencia de la clave %s", solicitud->clave);
-
-	t_mensaje get = serializar_clave_a_planif(solicitud);
-
-	if(resultado_enviar_a_planif(get, solicitud) == -1){
-		return -1;
-	}
-
-	log_trace(LOG_COORD, "Se envio el get %s al planificador", solicitud->clave);
-
-	if(validar_resultado_planif(solicitud) == -1)
+	if(validar_existencia_clave(solicitud) == -1)//FIXME capaz no hace falta chequear
 		return -1;
 
-	log_info(LOG_COORD, "El resultado de ejecutar la instruccion %d fue %d",
-			solicitud->instruccion,
-			solicitud->respuesta_a_esi);
+	if(enviar_a_planif(solicitud) == -1)
+		return -1;
 
 	return 0;
 }

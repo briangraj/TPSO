@@ -6,24 +6,7 @@
 
 int main(void) {
 	setup_coord();
-
-	int listener = crear_socket();// creo socket para escuchar conexiones entrantes
-
-	bindear_socket_server(listener);
-
-	log_trace(LOG_COORD,
-			"Se bindeo el socket %d en la ip %s y puerto %d",
-			listener,
-			IP_COORD,
-			PUERTO_COORD);
-
-	// lo pongo a escuchar conexiones nuevas
-	if (listen(listener, 10) == -1) {
-		log_error(LOG_COORD, "No se pudo poner el socket a escuchar");
-		exit(EXIT_FAILURE);
-	}
-
-	log_info(LOG_COORD, "El socket %d esta escuchando conexiones...", listener);
+	setup_listener();
 
 	struct sockaddr_in remoteaddr; // direccion del cliente
 	socklen_t addrlen;
@@ -32,9 +15,7 @@ int main(void) {
 
 		addrlen = sizeof(remoteaddr);
 
-
-
-		int socket_cliente = accept(listener, (struct sockaddr *) &remoteaddr, &addrlen);
+		int socket_cliente = accept(LISTENER, (struct sockaddr *) &remoteaddr, &addrlen);
 
 		if (socket_cliente == -1){
 			log_error(LOG_COORD, "No se pudo aceptar la conexion del socket %d", socket_cliente);
@@ -69,7 +50,7 @@ void setup_coord(){
 
 	INSTANCIAS = list_create();//t_instancia
 
-	planif_conectado = false;
+	PLANIF_CONECTADO = false;
 }
 
 void leer_config(){
@@ -85,15 +66,15 @@ void leer_config(){
 	config_destroy(config);
 }
 
-void bindear_socket_server(int listener){
+void bindear_socket_server(){
 	int yes = 1;
 
-	if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof (int)) == -1){
+	if (setsockopt(LISTENER, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof (int)) == -1){
 		log_error(LOG_COORD, "Error en el setsockopt");
 		exit(EXIT_FAILURE);
 	}
 
-	bindear_socket(listener, IP_COORD, PUERTO_COORD, LOG_COORD);
+	bindear_socket(LISTENER, IP_COORD, PUERTO_COORD, LOG_COORD);
 }
 
 bool hay_instancias_conectadas(){
@@ -128,7 +109,7 @@ void atender_handshake(int socket_cliente){
 
 	case PLANIFICADOR:
 
-		if(planif_conectado){
+		if(PLANIF_CONECTADO){
 			log_error(LOG_COORD, "Ya hay un planificador conectado, se desconectara al cliente del socket %d", socket_cliente);
 			desconectar_cliente(socket_cliente);
 			break;
@@ -158,6 +139,9 @@ void atender_handshake(int socket_cliente){
 		}
 
 		t_instancia* instancia = setup_conexion_con_instancia(socket_cliente);
+
+		if(instancia->claves_a_borrar.length() > 0)
+			borrar_claves_a_instancia()
 
 		if(instancia == NULL){
 			log_error(LOG_COORD,
@@ -197,31 +181,37 @@ t_instancia* setup_conexion_con_instancia(int socket){
 
 	log_trace(LOG_COORD, "Se recibio el id %d", id);
 
-	t_instancia* instancia = crear_instancia(id, socket);
+	t_instancia* instancia = instancia_de_id(id);
 
-	if(enviar_config_instancia(socket) == -1){
-		log_error(LOG_COORD, "No se pudo enviar la config a la instancia %d", instancia->id);
-		destruir_instancia(instancia);
-		return NULL;
+	if(instancia == NULL){
+		instancia = crear_instancia(id, socket);
+
+		if(enviar_config_instancia(socket) == -1){
+			log_error(LOG_COORD, "No se pudo enviar la config a la instancia %d", instancia->id);
+			destruir_instancia(instancia);
+			return NULL;
+		}
+
+		if(recibir_claves(instancia) == -1){
+			log_error(LOG_COORD, "No se pudieron recibir las claves de la instancia %d", instancia->id);
+			destruir_instancia(instancia);
+			return NULL;
+		}
+
+		log_trace(LOG_COORD, "Se creo la instancia de id %d con exito", id);
+
+		list_add(INSTANCIAS, (void*) instancia);
+
+		log_trace(LOG_COORD, "Se agrego a la instancia de id %d al sistema");
+	} else {
+		//
 	}
-
-	if(recibir_claves(instancia) == -1){
-		log_error(LOG_COORD, "No se pudieron recibir las claves de la instancia %d", instancia->id);
-		destruir_instancia(instancia);
-		return NULL;
-	}
-
-	log_trace(LOG_COORD, "Se creo la instancia de id %d con exito", id);
-
-	list_add(INSTANCIAS, (void*) instancia);
-
-	log_trace(LOG_COORD, "Se agrego a la instancia de id %d al sistema");
 
 	return instancia;
 }
 
 void setup_conexion_con_planif(int socket){
-	planif_conectado = true;
+	PLANIF_CONECTADO = true;
 
 	SOCKET_PLANIF = socket;
 }
@@ -234,7 +224,7 @@ void desconectar_cliente(int cliente){
 
 bool se_puede_atender_esi(){
 
-	if(!planif_conectado){
+	if(!PLANIF_CONECTADO){
 		log_error(LOG_COORD, "El planificador no se encuentra conectado, se desconectara al esi en el socket");
 		return false;
 	}
@@ -248,7 +238,29 @@ bool se_puede_atender_esi(){
 }
 
 void desconectar_planif(){
-	planif_conectado = false;
+	PLANIF_CONECTADO = false;
 
 	desconectar_cliente(SOCKET_PLANIF);
+}
+
+void setup_listener(){
+
+	LISTENER = crear_socket();// creo socket para escuchar conexiones entrantes
+
+	bindear_socket_server();
+
+	log_trace(LOG_COORD,
+			"Se bindeo el socket %d en la ip %s y puerto %d",
+			LISTENER,
+			IP_COORD,
+			PUERTO_COORD);
+
+	// lo pongo a escuchar conexiones nuevas
+	if (listen(LISTENER, 10) == -1) {
+		log_error(LOG_COORD, "No se pudo poner el socket a escuchar");
+		exit(EXIT_FAILURE);
+	}
+
+	log_info(LOG_COORD, "El socket %d esta escuchando conexiones...", LISTENER);
+
 }

@@ -10,46 +10,19 @@
 int set(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
-
 	if(checkear_clave_valida(instancia, solicitud) == -1)
 		return -1;
-
 
 	if(contiene_clave(instancia->claves_a_crear, solicitud))
 		solicitud->instruccion = CREAR_CLAVE;
 
-
-	agregar_solicitud(instancia, solicitud);
-
-
-	sem_wait(&solicitud->solicitud_finalizada);
-
-
-	if(validar_comunicacion_instancia(solicitud) == -1)
+	if(ejecutar(solicitud, instancia) == -1)
 		return -1;
-
 
 	actualizar_claves(instancia, solicitud);
 
-
-	t_mensaje set = serializar_set_a_planif(solicitud);
-
-
-	if(resultado_enviar_a_planif(set, solicitud) == -1)
+	if(enviar_a_planif(solicitud) == -1)
 		return -1;
-
-
-	log_trace(LOG_COORD, "Se envio el set %s %s al planificador", solicitud->clave, solicitud->valor);
-
-
-	if(validar_resultado_planif(solicitud) == -1)
-		return -1;
-
-
-	log_info(LOG_COORD, "El resultado de ejecutar la instruccion %d fue %d",
-			solicitud->instruccion,
-			solicitud->respuesta_a_esi);
-
 
 	return 0;
 }
@@ -145,7 +118,11 @@ int validar_comunicacion_instancia(t_solicitud* solicitud){
 }
 
 int resultado_enviar_a_planif(t_mensaje mensaje, t_solicitud* solicitud){
-	if(enviar_a_planif(mensaje) < 0){
+	int resultado_enviar_a_planif = enviar_mensaje(mensaje, SOCKET_PLANIF);
+
+	destruir_mensaje(mensaje);
+
+	if(resultado_enviar_a_planif < 0){
 
 		log_error_envio_planif(solicitud);
 

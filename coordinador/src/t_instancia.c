@@ -26,7 +26,7 @@ bool contiene_clave(t_list* claves, t_solicitud* solicitud){
 		return !strcmp(clave, solicitud->clave);
 	}
 
-	return list_any_satisfy(claves, contiene_clave);
+	return list_any_satisfy(claves, (bool (*)(void*)) contiene_clave);
 }
 
 t_instancia* instancia_con_clave(t_solicitud* solicitud){
@@ -35,7 +35,7 @@ t_instancia* instancia_con_clave(t_solicitud* solicitud){
 		return contiene_clave(instancia->claves, solicitud) || contiene_clave(instancia->claves_a_crear, solicitud);
 	}
 
-	return (t_instancia*) list_find(INSTANCIAS, instancia_contiene_clave);
+	return (t_instancia*) list_find(INSTANCIAS, (bool (*)(void*)) instancia_contiene_clave);
 }
 
 void borrar_clave(t_solicitud* solicitud, t_instancia* instancia){
@@ -43,7 +43,7 @@ void borrar_clave(t_solicitud* solicitud, t_instancia* instancia){
 		return string_equals(clave, solicitud->clave);
 	}
 
-	char* clave = (char*) list_remove_by_condition(instancia->claves, contiene_clave);
+	char* clave = (char*) list_remove_by_condition(instancia->claves, (bool (*)(void*)) contiene_clave);
 
 	free(clave);
 }
@@ -101,7 +101,7 @@ void destruir_instancia(t_instancia* instancia){
 	list_destroy_and_destroy_elements(instancia->claves, free);
 	list_destroy_and_destroy_elements(instancia->claves_a_crear, free);
 
-	queue_destroy_and_destroy_elements(instancia->solicitudes, destruir_solicitud);
+	queue_destroy_and_destroy_elements(instancia->solicitudes, (void (*)(void*)) destruir_solicitud);
 
 	pthread_cancel(instancia->id_hilo);
 
