@@ -21,6 +21,10 @@ int enviar_mensaje(t_mensaje mensaje, int socket){
 	return enviar_paquete(mensaje.header, socket, mensaje.tam_payload, mensaje.payload);
 }
 
+int enviar_mensaje_v2(int socket, t_mensaje (*serializer)(void*), void* target){
+	return enviar_mensaje(serializer(target), socket);//TODO proponerle esto al chakl xd
+}
+
 void destruir_mensaje(t_mensaje mensaje){
 	free(mensaje.payload);
 }

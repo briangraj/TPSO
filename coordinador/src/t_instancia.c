@@ -14,7 +14,6 @@ void* crear_instancia(int id, int socket){
 	instancia->solicitudes = queue_create();
 	sem_init(&instancia->solicitud_lista, 0, 0);
 	instancia->socket = socket;
-	instancia->esta_activa = true;
 	instancia->claves = list_create();
 	instancia->claves_a_crear = list_create();
 	instancia->claves_a_borrar = list_create();
@@ -106,10 +105,11 @@ void destruir_instancia(t_instancia* instancia){
 
 	list_destroy_and_destroy_elements(instancia->claves, free);
 	list_destroy_and_destroy_elements(instancia->claves_a_crear, free);
+	list_destroy_and_destroy_elements(instancia->claves_a_borrar, free);
 
 	queue_destroy_and_destroy_elements(instancia->solicitudes, (void (*)(void*)) destruir_solicitud);
 
-	pthread_cancel(instancia->id_hilo);
+	pthread_cancel(instancia->id_hilo);//FIXME me parece que esto no va aca
 
 	desconectar_cliente(instancia->socket);
 }
@@ -134,6 +134,8 @@ int conectar_instancia_nueva(t_instancia* instancia){
 	}
 
 	list_add(INSTANCIAS, (void*) instancia);
+
+	instancia->esta_activa = true;
 
 	log_trace(LOG_COORD, "Se agrego la instancia de id %d al sistema");
 
