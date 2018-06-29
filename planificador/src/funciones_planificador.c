@@ -592,6 +592,9 @@ t_ready* duplicar_esi_ready(t_ready esi){
 	resultado->tiempo_espera = esi.tiempo_espera;
 	resultado->ultima_estimacion = esi.ultima_estimacion;
 	resultado->ultima_rafaga_real = esi.ultima_rafaga_real;
+	resultado->tiempo_total_bloqueado = esi.tiempo_total_bloqueado;
+	resultado->tiempo_total_espera = esi.tiempo_total_espera;
+	resultado->total_instrucciones_ejecutadas = esi.total_instrucciones_ejecutadas;
 
 	return resultado;
 }
@@ -655,6 +658,9 @@ void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){
 	t_ended* esi_finalizado = (t_ended*) malloc(sizeof(t_ended));
 
 	esi_finalizado->ID = esi_ejecucion->ID;
+	esi_finalizado->tiempo_total_bloqueado = esi_ejecucion->tiempo_total_bloqueado;
+	esi_finalizado->tiempo_total_espera = esi_ejecucion->tiempo_total_espera;
+	esi_finalizado->total_instrucciones_ejecutadas = esi_ejecucion->total_instrucciones_ejecutadas;
 	esi_finalizado->exit_text = strdup(exit_text);
 
 	bool coincide_el_id(void* elemento){
@@ -903,6 +909,7 @@ void actualizar_esperas(){
 	t_ready* primer_esi = list_remove(cola_de_listos, 0);
 	pthread_mutex_unlock(&semaforo_cola_listos);
 
+	primer_esi->total_instrucciones_ejecutadas++;
 	primer_esi->tiempo_espera = 0.0;
 	primer_esi->ultima_rafaga_real += 1.0;
 
@@ -910,14 +917,35 @@ void actualizar_esperas(){
 		t_ready* esi = (t_ready*) elemento;
 
 		esi->tiempo_espera += 1.0;
+		esi->tiempo_total_espera++;
 	}
 
 	pthread_mutex_lock(&semaforo_cola_listos);
 	list_iterate(cola_de_listos, aumentar_espera);
 
-	list_add_in_index(cola_de_listos, 0, primer_esi);//TODO: REVISAR SI ESTO HACE LO QUE QUEREMOS
+	list_add_in_index(cola_de_listos, 0, primer_esi);
 	pthread_mutex_unlock(&semaforo_cola_listos);
 
+	pthread_mutex_lock(&semaforo_cola_bloqueados);
+	actualizar_esperas_bloqueados();
+	pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+}
+
+void actualizar_esperas_bloqueados(){
+	void sumar_tiempo(void* elem2){
+		t_blocked* bloq = (t_blocked*)elem2;
+
+		bloq->info_ejecucion->tiempo_total_bloqueado++;
+	}
+
+	void aumentar_esperas(void* elem){
+		t_bloqueados_por_clave* bloq_x_clave = (t_bloqueados_por_clave*)elem;
+
+		list_iterate(bloq_x_clave->bloqueados, sumar_tiempo);
+	}
+
+	list_iterate(colas_de_bloqueados, aumentar_esperas);
 }
 
 t_ready* buscar_en_bloqueados(int id_esi){

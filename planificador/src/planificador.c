@@ -98,9 +98,11 @@ int main(int argc, char* argv[]) {
 									.tiempo_espera = 0.0,
 									.ultima_estimacion = ESTIMACION_INICIAL,
 									.ultima_rafaga_real = 0.0,
-									.estimacion_actual = 0.0
+									.estimacion_actual = 0.0,
+									.tiempo_total_bloqueado = 0,
+									.tiempo_total_espera = 0,
+									.total_instrucciones_ejecutadas = 0
 							};
-
 
 							proximo_id ++;
 

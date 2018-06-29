@@ -999,7 +999,8 @@ void mostrar_cola_finalizados(){
 	void imprimir_finalizado(void* elem){
 		t_ended* esi = (t_ended*) elem;
 
-		string_append_with_format(&mensaje, "\tESI %d, exit_text: %s \n", esi->ID, esi->exit_text);
+		string_append_with_format(&mensaje, "\tESI %d: \n\t exit_text: %s\n\t tiempo_total_espera: %d \n\t tiempo_total_bloqueado: %d \n\t total_instrucciones_ejecutadas: %d\n",
+				esi->ID, esi->exit_text, esi->tiempo_total_espera, esi->tiempo_total_bloqueado, esi->total_instrucciones_ejecutadas);
 	}
 
 	pthread_mutex_lock(&semaforo_cola_finalizados);

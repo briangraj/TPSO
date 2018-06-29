@@ -80,6 +80,9 @@ typedef struct{
 	float ultima_rafaga_real;
 	float ultima_estimacion;
 	float tiempo_espera;
+	int tiempo_total_espera;
+	int total_instrucciones_ejecutadas;
+	int tiempo_total_bloqueado;
 	float estimacion_actual;
 }t_ready;
 
@@ -91,6 +94,9 @@ typedef struct{
 
 typedef struct{
 	int ID;
+	int tiempo_total_espera;
+	int total_instrucciones_ejecutadas;
+	int tiempo_total_bloqueado;
 	char* exit_text;
 }t_ended;
 
@@ -122,6 +128,7 @@ void 						planificar									(t_ready* esi_ready);
 void 						mandar_a_ejecutar							();
 void 						mover_a_finalizados							(t_ready* esi_ejecucion, char* exit_text);
 void 						actualizar_esperas							();
+void						actualizar_esperas_bloqueados				();
 void 						insertar_ordenado							(t_ready* esi_ready);
 float 						estimacion									(t_ready* esi_ready);
 void 						comparar_desde								(int indice_comparacion, bool (*funcion_comparacion)(void*, void*), t_ready* esi_ready);
