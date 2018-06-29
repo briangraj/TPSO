@@ -246,7 +246,7 @@ t_ready* encontrar_esi_de_socket(int socket){
 }
 
 void aniadir_a_colas_de_asignaciones(t_ready nuevo_esi){
-	t_recursos_por_esi* recursos_por_esi = (t_recursos_por_esi*) malloc(sizeof(t_recursos_por_esi));
+	t_recursos_por_esi* recursos_por_esi = malloc(sizeof(t_recursos_por_esi));
 
 	recursos_por_esi->id_esi = nuevo_esi.ID;
 
@@ -297,6 +297,8 @@ void atender_get_clave(){
 	char* clave = recibir_clave();
 
 	int resultado_get = intentar_asignar(id_esi, clave);
+
+	free(clave);
 
 	if(enviar_paquete(resultado_get, SOCKET_COORDINADOR, 0, NULL) < 0){
 		log_error(log_planif, "Se perdio la conexion con el coordinador");

@@ -1,0 +1,61 @@
+==8105== Memcheck, a memory error detector
+==8105== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==8105== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==8105== Command: ./planificador
+==8105== Parent PID: 5367
+==8105== 
+==8105== 
+==8105== HEAP SUMMARY:
+==8105==     in use at exit: 64,632 bytes in 196 blocks
+==8105==   total heap usage: 834 allocs, 638 frees, 106,968 bytes allocated
+==8105== 
+==8105== 
+==8105== 8 bytes in 1 blocks are definitely lost in loss record 5 of 50
+==8105==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==8105==    by 0x804C20E: aniadir_a_colas_de_asignaciones (funciones_planificador.c:249)
+==8105==    by 0x804E715: main (planificador.c:109)
+==8105== 
+
+==8105== 
+==8105== 12 bytes in 1 blocks are definitely lost in loss record 12 of 50
+==8105==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==8105==    by 0x804C6FC: crear_entrada_bloqueados_del_recurso (funciones_planificador.c:394)
+==8105==    by 0x804C4DC: intentar_asignar (funciones_planificador.c:327)
+==8105==    by 0x804C3C3: atender_get_clave (funciones_planificador.c:299)
+==8105==    by 0x804BF5E: atender_protocolo (funciones_planificador.c:177)
+==8105==    by 0x804E75F: main (planificador.c:118)
+==8105== 
+
+==8105== 
+==8105== 20 bytes in 1 blocks are definitely lost in loss record 17 of 50
+==8105==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==8105==    by 0x804D165: mover_a_finalizados (funciones_planificador.c:660)
+==8105==    by 0x804BF36: atender_protocolo (funciones_planificador.c:172)
+==8105==    by 0x804E75F: main (planificador.c:118)
+==8105== 
+
+==8105== 
+==8105== 24 bytes in 2 blocks are definitely lost in loss record 20 of 50
+==8105==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==8105==    by 0x804BCA7: bloquear_claves_config (funciones_planificador.c:83)
+==8105==    by 0x804BACC: iniciar_planificador (funciones_planificador.c:38)
+==8105==    by 0x804E436: main (planificador.c:30)
+
+
+==8105== 36 bytes in 1 blocks are definitely lost in loss record 21 of 50
+==8105==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==8105==    by 0x804CEF0: duplicar_esi_ready (funciones_planificador.c:589)
+==8105==    by 0x804CC6D: aniadir_a_listos (funciones_planificador.c:532)
+==8105==    by 0x804E73B: main (planificador.c:111)
+==8105== 
+
+==8105== 
+==8105== LEAK SUMMARY:
+==8105==    definitely lost: 110 bytes in 9 blocks
+==8105==    indirectly lost: 0 bytes in 0 blocks
+==8105==      possibly lost: 136 bytes in 1 blocks
+==8105==    still reachable: 64,386 bytes in 186 blocks
+==8105==         suppressed: 0 bytes in 0 blocks
+==8105== 
+==8105== For counts of detected and suppressed errors, rerun with: -v
+==8105== ERROR SUMMARY: 9 errors from 9 contexts (suppressed: 0 from 0)
