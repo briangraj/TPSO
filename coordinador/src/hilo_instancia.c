@@ -22,14 +22,13 @@ void* atender_instancia(void* instancia_void){
 
 		solicitud = sacar_solicitud(instancia);
 
-		if(enviar_solicitud(solicitud, instancia->socket) == -1){
+		if(enviar_solicitud(solicitud, instancia->socket_instancia) == -1){
 			log_error(
 					LOG_COORD,
 					"No se pudo enviar la solicitud de la instruccion %d a la instancia %d",
 					solicitud->instruccion,
 					instancia->id
 			);
-
 			setear_error_comunicacion_instancia(solicitud);
 
 			desconectar_instancia(instancia);
@@ -41,7 +40,7 @@ void* atender_instancia(void* instancia_void){
 			solicitud->instruccion,
 			instancia->id);
 
-		evaluar_resultado_instr(solicitud, instancia->socket);
+		evaluar_resultado_instr(solicitud, instancia);
 
 		sem_post(&solicitud->solicitud_finalizada);
 
@@ -53,7 +52,7 @@ void* atender_instancia(void* instancia_void){
 
 void evaluar_resultado_instr(t_solicitud* solicitud, t_instancia* instancia){
 
-	switch(recibir_protocolo(instancia->socket)){
+	switch(recibir_protocolo(instancia->socket_instancia)){
 	case OPERACION_EXITOSA:
 		setear_operacion_exitosa_instancia(solicitud);
 	break;
@@ -78,7 +77,7 @@ t_mensaje serializar_config_instancia(){
 int enviar_config_instancia(t_instancia* instancia){
 	t_mensaje config = serializar_config_instancia();
 
-	return enviar_mensaje(config, instancia->socket);
+	return enviar_mensaje(config, instancia->socket_instancia);
 }
 
 int enviar_solicitud(t_solicitud* solicitud, int socket){

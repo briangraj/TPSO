@@ -24,14 +24,14 @@ void* atender_esi(void* socket_esi){
 	while(true){
 		t_solicitud* solicitud = recibir_solicitud_esi((int) socket_esi, id_esi);
 
-		if(solicitud->instruccion == FIN_DEL_SCRIPT){
-			log_trace(LOG_COORD, "El esi %d termino el script", id_esi);
-			free(solicitud);
-			break;
-		}
-		
 		if(solicitud == NULL){
 			log_error(LOG_COORD, "No se pudo crear la solicitud del esi %d", id_esi);
+			break;
+		}
+
+		if(solicitud->instruccion == FIN_DEL_SCRIPT){
+			log_trace(LOG_COORD, "El esi %d termino el script", id_esi);
+			destruir_solicitud(solicitud);
 			break;
 		}
 
@@ -60,10 +60,9 @@ void* atender_esi(void* socket_esi){
 			break;
 		}
 
-		destruir_solicitud(solicitud);
-
 		log_info(LOG_COORD, "Se envio la respuesta %d al esi %d", solicitud->respuesta_a_esi, solicitud->id_esi);
 
+		liberar_solicitud(solicitud);
 	}
 
 	pthread_exit(NULL);

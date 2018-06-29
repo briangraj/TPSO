@@ -13,7 +13,7 @@ void* crear_instancia(int id, int socket){
 	instancia->id = id;
 	instancia->solicitudes = queue_create();
 	sem_init(&instancia->solicitud_lista, 0, 0);
-	instancia->socket = socket;
+	instancia->socket_instancia = socket;
 	instancia->claves = list_create();
 	instancia->claves_a_crear = list_create();
 	instancia->claves_a_borrar = list_create();
@@ -23,7 +23,7 @@ void* crear_instancia(int id, int socket){
 
 bool contiene_clave(t_list* claves, t_solicitud* solicitud){
 	bool contiene_clave(char* clave){
-		return !strcmp(clave, solicitud->clave);
+		return string_equals(clave, solicitud->clave);
 	}
 
 	return list_any_satisfy(claves, (bool (*)(void*)) contiene_clave);
@@ -77,7 +77,7 @@ void agregar_solicitud(t_instancia* instancia, t_solicitud* solicitud){
 int recibir_claves(t_instancia* instancia){
 	int cant_claves;
 
-	if(recv(instancia->socket, &cant_claves, sizeof(int), MSG_WAITALL) <= 0){
+	if(recv(instancia->socket_instancia, &cant_claves, sizeof(int), MSG_WAITALL) <= 0){
 		log_error(LOG_COORD, "No se pudo recibir la cantidad de claves de la instancia %d", instancia->id);
 		return -1;
 	}
@@ -86,7 +86,7 @@ int recibir_claves(t_instancia* instancia){
 
 	int i;
 	for(i = 0; i < cant_claves; i++){
-		char* clave = recibir_string(instancia->socket);
+		char* clave = recibir_string(instancia->socket_instancia);
 		agregar_clave(instancia, clave);
 	}
 
@@ -111,7 +111,7 @@ void destruir_instancia(t_instancia* instancia){
 
 	pthread_cancel(instancia->id_hilo);//FIXME me parece que esto no va aca
 
-	desconectar_cliente(instancia->socket);
+	desconectar_cliente(instancia->socket_instancia);
 }
 
 t_instancia* instancia_de_id(int id){
@@ -143,7 +143,7 @@ int conectar_instancia_nueva(t_instancia* instancia){
 }
 
 int	reconectar_instancia(t_instancia* instancia, int socket){
-	instancia->socket = socket;
+	instancia->socket_instancia = socket;
 
 	if(!list_is_empty(instancia->claves_a_borrar)){
 		if(enviar_claves_a_borrar(instancia) <= 0){
@@ -193,7 +193,7 @@ t_mensaje serializar_claves_a_borrar(t_instancia* instancia){//TODO testear
 int enviar_claves_a_borrar(t_instancia* instancia){
 	t_mensaje claves_a_borrar = serializar_claves_a_borrar(instancia);
 
-	return enviar_mensaje(claves_a_borrar, instancia->socket);
+	return enviar_mensaje(claves_a_borrar, instancia->socket_instancia);
 }
 
 void eliminar_instancia(t_instancia* una_instancia){
@@ -209,7 +209,7 @@ void eliminar_instancia(t_instancia* una_instancia){
 void desconectar_instancia(t_instancia* instancia){
 	instancia->esta_activa = false;
 
-	close(instancia->socket);
+	close(instancia->socket_instancia);
 
 	log_trace(LOG_COORD, "Se desconecto la instancia %d", instancia->id);
 }

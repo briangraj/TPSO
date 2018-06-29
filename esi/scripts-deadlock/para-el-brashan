@@ -1,0 +1,6 @@
+GET elB
+GET elBar
+	SET elB queLoMiraPorTim
+	SET elBar queLoMiraPorTim
+	STORE elB
+	STORE elBar

@@ -31,8 +31,12 @@ void setear_operacion_exitosa_instancia(t_solicitud* solicitud){
 }
 
 void destruir_solicitud(t_solicitud* solicitud){
-	free(solicitud->clave);
 	desconectar_cliente(solicitud->socket_esi);
+	liberar_solicitud(solicitud);
+}
+
+void liberar_solicitud(t_solicitud* solicitud){
+	free(solicitud->clave);
 	if(solicitud->instruccion == OPERACION_SET)
 		free(solicitud->valor);
 

@@ -26,7 +26,7 @@ typedef struct solicitud {
 
 typedef struct instancia {
 	int id;
-	int socket;
+	int socket_instancia;
 	pthread_t id_hilo;
 	sem_t solicitud_lista;
 	bool esta_activa;

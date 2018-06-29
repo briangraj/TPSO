@@ -16,15 +16,36 @@ int set(t_solicitud* solicitud){
 	if(contiene_clave(instancia->claves_a_crear, solicitud))
 		solicitud->instruccion = CREAR_CLAVE;
 
-	if(ejecutar(solicitud, instancia) == -1)
+	void* payload = malloc(sizeof(int) * 2 + string_size(solicitud->clave));
+
+	memcpy(payload, &solicitud->id_esi, sizeof(int));
+	serializar_string(payload + sizeof(int), solicitud->clave);
+
+	enviar_paquete(SET_CLAVE, SOCKET_PLANIF, sizeof(int) * 2 + string_size(solicitud->clave), payload);
+
+	switch(recibir_protocolo(SOCKET_PLANIF)){
+	//TODO ver que onda si se pierde la conexion con el planif
+	case SET_EXITOSO:
+		if(ejecutar(solicitud, instancia) == -1)
+			return -1;
+
+		actualizar_claves(instancia, solicitud);
+
+//		if(enviar_a_planif(solicitud) == -1)
+//			return -1;
+		solicitud->respuesta_a_esi = SET_EXITOSO;
+
+		return 0;
+	case SET_INVALIDO:
+//		enviar_paquete(SET_INVALIDO, solicitud->socket_esi, 0, NULL);
+		solicitud->respuesta_a_esi = SET_INVALIDO;
+
 		return -1;
-
-	actualizar_claves(instancia, solicitud);
-
-	if(enviar_a_planif(solicitud) == -1)
+		break;
+	default:
 		return -1;
+	}
 
-	return 0;
 }
 
 t_solicitud* crear_set(int socket, int id){
@@ -75,7 +96,7 @@ void actualizar_claves(t_instancia* instancia, t_solicitud* solicitud){
 			return string_equals(clave, solicitud->clave);
 		}
 
-		list_remove_by_condition(instancia->claves_a_crear, (void* (*)(void*)) es_la_clave);
+		list_remove_by_condition(instancia->claves_a_crear, (bool (*)(void*)) es_la_clave);
 
 		list_add(instancia->claves, solicitud->clave);
 	}

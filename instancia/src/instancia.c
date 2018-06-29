@@ -194,6 +194,7 @@ void crear_tabla_de_entradas(){
 	while((dir = readdir(d)) != NULL){
 		if(strcmp(dir->d_name, ".")!=0 && strcmp(dir->d_name, "..")!=0 ){
 			entrada = levantar_entrada(dir->d_name);
+			log_debug(log_instancia, "Se cargo la clave: %s", entrada->clave);
 			list_add(tabla_de_entradas, entrada);
 		}
 	}
@@ -378,6 +379,7 @@ int modificar_entrada(char* clave, char* valor){
 			actualizar_tamanio_entrada(entrada, valor);
 	}
 
+	log_trace(log_instancia, "Se seteo la clave: %s", clave);
 	free(valor);
 	free(clave);
 	return resultado;
@@ -416,10 +418,14 @@ int atender_store(){
 
 	t_entrada* entrada = buscar_entrada(clave, buscar_entrada_clave);
 
-	if(entrada == NULL)
+	if(entrada == NULL){
 		resultado = ERROR_CLAVE_NO_IDENTIFICADA;
-	else
+		log_error(log_instancia, "No se encontro la clave: %s", clave);
+	}
+	else {
 		persistir(entrada);
+		log_trace(log_instancia, "Se persistio la clave: %s", clave);
+	}
 
 	free(clave);
 	return resultado;
@@ -442,7 +448,7 @@ void persistir(void* entrada_void){
 
 int atender_crear_clave(){
 	char* clave = recibir_string(socket_coordinador);
-	char* valor = "hola";//TODO recibir_string(socket_coordinador); //TODO SACAR MOCK PT
+	char* valor = recibir_string(socket_coordinador); //TODO SACAR MOCK PT
 
 	//puts(clave);
 	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));
@@ -457,6 +463,7 @@ int atender_crear_clave(){
 		entrada->nro_entrada = nro_entrada;
 		actualizar_valor_entrada(entrada, valor);
 		list_add(tabla_de_entradas, entrada);
+		log_trace(log_instancia, "Se creo la clave: %s", clave);
 	}
 
 	free(clave);
@@ -468,8 +475,10 @@ int buscar_entrada_para_reemplazar(char* clave, char* valor){
 	int entrada_reemplazada = algoritmo_reemplazo(clave, valor);
 
 	//todo creo que solo seria si no hay entradas atomicas
-	if(entrada_reemplazada == -1)
+	if(entrada_reemplazada == -1){
+		log_error(log_instancia, "No se pudo crear la clave: %s", clave);
 		return FALLO_REEMPLAZO;
+	}
 
 	reemplazar_entrada(entrada_reemplazada, clave, valor);
 	return OPERACION_EXITOSA;

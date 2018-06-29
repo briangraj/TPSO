@@ -88,12 +88,12 @@ void bloquear_claves_config(){
 
 		list_add(colas_de_bloqueados, bloqueados_por_clave);
 
-//		free(CLAVES_BLOQUEADAS[indice]);
+		free(CLAVES_BLOQUEADAS[indice]);
 
 		indice++;
 	}
 
-//	free(CLAVES_BLOQUEADAS);
+	free(CLAVES_BLOQUEADAS);
 }
 
 void aniadir_cliente(fd_set* master, int cliente, int* fdmax){
@@ -1111,7 +1111,7 @@ void asignacion_destroyer(void* elemento){
 void clave_destroyer(void* elemento){
 	t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elemento;
 	free(bloqueados_por_clave->clave);
-	list_destroy(bloqueados_por_clave->bloqueados);
+	list_destroy_and_destroy_elements(bloqueados_por_clave->bloqueados, blocked_destroyer);
 }
 
 void finalizado_destroyer(void* elem){
