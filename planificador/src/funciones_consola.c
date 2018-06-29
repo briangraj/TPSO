@@ -228,9 +228,6 @@ int	com_bloquear(char* parametro){
 
 	liberar_parametros(parametros, 2);
 
-	bool flag_aux = false;
-	t_blocked* prox_no_bloqueado_por_consola = NULL;
-
 	bool coincide_el_id(void* elemento){
 		t_ready* esi = (t_ready*) elemento;
 
@@ -257,11 +254,8 @@ int	com_bloquear(char* parametro){
 
 	if(!bloqueados_por_clave){//Si no existe la cola de bloqueados, la creamos dejandola libre para que sea tomada por cualquiera (menos el bloqueado por consola)
 		crear_entrada_bloqueados_del_recurso(0, clave);
-		bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
 
-	}else{// Si el ESI bloqueado por este comando ya tenía esta clave asignada, se la desalojamos dandosela al siguiente ESI en la cola de bloqueados
-
-		bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
+	}else{
 
 		bool es_el_esi_con_el_recurso(void* elem){
 			t_recursos_por_esi* rec = (t_recursos_por_esi*)elem;
@@ -281,16 +275,9 @@ int	com_bloquear(char* parametro){
 
 		if(list_any_satisfy(recursos_del_esi->recursos_asignados, es_la_clave)){
 
-			//TODO: Esperar respuesta del issue sobre que hacer cuando se bloquea un ESI por una clave que ya posee
+			imprimir("El ESI ya tenía esta clave asignada, no hacemos nada, issue #1158");
 
-			t_blocked* prox_no_bloqueado_por_consola = proximo_no_bloqueado_por_consola(bloqueados_por_clave->bloqueados);
-
-			if(prox_no_bloqueado_por_consola){
-				bloqueados_por_clave->id_proximo_esi = prox_no_bloqueado_por_consola->info_ejecucion->ID;
-
-				flag_aux = true;
-			}
-
+			return 0;
 		}
 
 	}
@@ -300,6 +287,8 @@ int	com_bloquear(char* parametro){
 		hay_que_bloquear_esi_activo(clave, true);
 
 	else {
+
+		bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
 
 		pthread_mutex_lock(&semaforo_cola_bloqueados);
 
@@ -315,13 +304,6 @@ int	com_bloquear(char* parametro){
 
 		pthread_mutex_unlock(&semaforo_cola_listos);
 
-	}
-
-	if(flag_aux){
-
-		aniadir_a_listos(*(prox_no_bloqueado_por_consola->info_ejecucion));
-
-		eliminar_de_bloqueados(prox_no_bloqueado_por_consola->info_ejecucion);
 	}
 
 	free(clave);
@@ -354,10 +336,47 @@ int	com_desbloquear(char* parametro){
 
 	t_bloqueados_por_clave* bloqueados_por_clave = encontrar_bloqueados_para_la_clave(clave);
 
-	if(!bloqueados_por_clave || list_is_empty(bloqueados_por_clave->bloqueados))
+	if(!bloqueados_por_clave){
 		imprimir("La clave ingresada no se encuentra bloqueada actualmente ni hay ESIs bloqueados por ella");
 
-	else{
+		return 0;
+	}
+
+	if(bloqueados_por_clave->id_proximo_esi > 0 && list_is_empty(bloqueados_por_clave->bloqueados)){
+
+		// Despojamos al esi de la posesion de la clave, issue #1158
+
+		t_list* recursos_del_esi = asignados_para_el_esi(bloqueados_por_clave->id_proximo_esi);
+
+		bool es_la_clave(void* elem){
+			char* recurso = (char*)elem;
+
+			return string_equals_ignore_case(recurso, clave);
+		}
+
+		list_remove_and_destroy_by_condition(recursos_del_esi, es_la_clave, funcion_al_pedo);
+
+		// Borramos la estructura de bloqueados para la clave de las colas de bloqueados
+
+		bool es_el_recurso(void* elem){
+			t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
+
+			return string_equals_ignore_case(bloq->clave, clave);
+		}
+
+		char* mensaje = string_from_format("La clave fue desalojada del ESI %d quien la poseia, ya que no habia bloqueados para la misma", bloqueados_por_clave->id_proximo_esi);
+
+		imprimir(mensaje);
+
+		free(mensaje);
+
+		pthread_mutex_lock(&semaforo_cola_bloqueados);
+		list_remove_and_destroy_by_condition(colas_de_bloqueados, es_el_recurso, clave_destroyer);
+		pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+		return 0;
+
+	} else {
 
 		if(bloqueados_por_clave->id_proximo_esi == -1 && list_is_empty(bloqueados_por_clave->bloqueados)){
 
@@ -765,7 +784,11 @@ t_list* asignados_para_el_esi(int id_esi){
 		return id_esi == recursos_por_esi->id_esi;
 	}
 
-	return ((t_recursos_por_esi*)list_find(colas_de_asignaciones, es_el_esi))->recursos_asignados;
+	pthread_mutex_lock(&semaforo_asignaciones);
+	t_recursos_por_esi* rec_x_esi = list_find(colas_de_asignaciones, es_el_esi);
+	pthread_mutex_unlock(&semaforo_asignaciones);
+
+	return rec_x_esi->recursos_asignados;
 }
 
 bool hay_que_descartarla(t_bloqueados_por_clave* bloqueados_por_clave){
