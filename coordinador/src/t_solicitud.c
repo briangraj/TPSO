@@ -15,11 +15,12 @@ t_solicitud* crear_solicitud(int instruccion, int id, int socket){
 	sem_init(&solicitud->solicitud_finalizada, 0, 0);
 	solicitud->respuesta_a_esi = 0;
 	solicitud->resultado_instancia = 0;
+
 	return solicitud;
 }
 
-void setear_error_comunicacion_instancia(t_solicitud* solicitud){
-	solicitud->resultado_instancia = ERROR_DE_COMUNICACION;
+void setear_error_instancia_inactiva(t_solicitud* solicitud){
+	solicitud->resultado_instancia = ERROR_CLAVE_INACCESIBLE;
 }
 
 void setear_error_clave_inaccesible(t_solicitud* solicitud){

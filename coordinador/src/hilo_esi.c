@@ -158,7 +158,7 @@ int ejecutar(t_solicitud* solicitud, t_instancia* instancia){
 
 	sem_wait(&solicitud->solicitud_finalizada);
 
-	if(validar_comunicacion_instancia(solicitud) == -1)
+	if(validar_resultado_instancia(solicitud, instancia) == -1)
 		return -1;
 
 	return 0;

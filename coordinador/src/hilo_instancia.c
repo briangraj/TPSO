@@ -29,7 +29,13 @@ void* atender_instancia(void* instancia_void){
 					solicitud->instruccion,
 					instancia->id
 			);
-			setear_error_comunicacion_instancia(solicitud);
+
+			if(solicitud->instruccion != COMPACTACION){
+				setear_error_instancia_inactiva(solicitud);
+
+				agregar_clave_a_borrar(instancia, solicitud->clave);
+			} else
+				solicitud->resultado_instancia = ERROR_DE_COMUNICACION;
 
 			desconectar_instancia(instancia);
 
@@ -51,18 +57,25 @@ void* atender_instancia(void* instancia_void){
 }
 
 void evaluar_resultado_instr(t_solicitud* solicitud, t_instancia* instancia){
-
 	switch(recibir_protocolo(instancia->socket_instancia)){
 	case OPERACION_EXITOSA:
 		setear_operacion_exitosa_instancia(solicitud);
-	break;
+		break;
+	case FS_NC:
+		solicitud->respuesta_a_esi = FS_NC;
+		break;
+	case FS_EI:
+		solicitud->respuesta_a_esi = FS_EI;
+		break;
 	default:
-		setear_error_comunicacion_instancia(solicitud);//TODO ver que errores puede tirar la instancia
+		if(solicitud->instruccion != COMPACTACION){
+			setear_error_instancia_inactiva(solicitud);
+			agregar_clave_a_borrar(instancia, solicitud->clave);
+		} else
+			solicitud->resultado_instancia = ERROR_DE_COMUNICACION;
 
 		desconectar_instancia(instancia);
-	;
 	}
-
 }
 
 t_mensaje serializar_config_instancia(){
@@ -101,6 +114,12 @@ int enviar_solicitud(t_solicitud* solicitud, int socket){
 
 		break;
 	}
+
+	case COMPACTACION:{
+		mensaje = serializar_compactacion(solicitud);
+		break;
+	}
+
 	default:
 		return -1;
 	}

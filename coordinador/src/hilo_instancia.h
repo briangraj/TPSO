@@ -13,6 +13,7 @@
 #include "get.h"
 #include "set.h"
 #include "store.h"
+#include "compactacion.h"
 
 void		crear_hilo_instancia		(t_instancia* instancia);
 void*		atender_instancia			(void* socket_instancia);
