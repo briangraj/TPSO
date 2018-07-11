@@ -87,6 +87,9 @@ int atender_crear_clave();
 int buscar_entrada_para_reemplazar(char* clave, char* valor);
 void reemplazar_entrada(int nro_entrada, char* clave, char* valor);
 void eliminar_entrada(char* nombre);
+void atender_status();
+
+
 int reemplazo_circular(char* clave, char* valor);
 bool es_nro_entrada_atomica(int nro_entrada);
 t_entrada* buscar_entrada(void* buscado, bool (*comparador)(void*, void*));

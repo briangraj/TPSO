@@ -140,25 +140,8 @@ void leer_protocolo(int protocolo){
 		break;
 	case STATUS:
 //		TODO @chakl estuvo aqui
-		int tam_clave;
-
-		recv(socket_coordinador, &tam_clave, sizeof(int), MSG_WAITALL);
-
-		char* clave = malloc(tam_clave);
-
-		recv(socket_coordinador, clave, tam_clave, MSG_WAITALL);
-
-		char* valor = obtener_valor_de(buscar_entrada(clave, (bool (*)(void*, void*)) string_equals));
-
-		int tam_payload = sizeof(int) + string_size(valor);
-
-		void* payload = malloc(tam_payload);
-
-		serializar_string(payload, valor);
-
-		enviar_paquete(OPERACION_EXITOSA, socket_coordinador, tam_payload, payload);
-
-		break;
+		atender_status();
+		return;
 //	case CLAVES_A_BORRAR:
 //		TODO @chakl tens que borrar claves /cantclaves / tam 8 / clave / tam 5/ clave2
 //		borrar_claves_removidas();
@@ -520,6 +503,21 @@ void eliminar_entrada(char* nombre){
 	free(aux);
 }
 
+void atender_status(){
+	char* clave = recibir_string(socket_coordinador);
+
+	char* valor = obtener_valor_de(buscar_entrada(clave, buscar_entrada_clave));
+
+	int tam_payload = sizeof(int) + string_size(valor);
+
+	void* payload = malloc(tam_payload);
+
+	serializar_string(payload, valor);
+
+	enviar_paquete(OPERACION_EXITOSA, socket_coordinador, tam_payload, payload);
+}
+
+////////////////////////////////////////////////////// algoritmos de reemplazo //////////////////////////////////////////////////////////
 int reemplazo_circular(char* clave, char* valor){
 	int entrada_inicial = entrada_a_reemplazar;
 	bool hay_entrada = false;
@@ -560,7 +558,7 @@ t_entrada* buscar_entrada(void* buscado, bool (*comparador)(void*, void*)){
 bool buscar_entrada_clave(void* entrada_void, void* clave_void){
 	t_entrada* entrada_aux = (t_entrada*)entrada_void;
 
-	return string_equals_ignore_case(entrada_aux->clave, clave_void);
+	return string_equals(entrada_aux->clave, clave_void);
 }
 
 bool buscar_entrada_nro(void* entrada_void, void* nro_void){
