@@ -8,6 +8,9 @@ void signal_handler(int sig_num){
 }
 
 void iniciar_planificador(int loggear){
+	FILE* log = fopen("Planificador.log", "w");
+	fclose(log);
+
 	log_planif = log_create("Planificador.log", "Planificador", loggear, LOG_LEVEL_TRACE);
 
 	leer_archivo_config();
