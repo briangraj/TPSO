@@ -19,16 +19,12 @@ t_solicitud* crear_solicitud(int instruccion, int id, int socket){
 	return solicitud;
 }
 
-void setear_error_instancia_inactiva(t_solicitud* solicitud){
-	solicitud->resultado_instancia = ERROR_CLAVE_INACCESIBLE;
+void set_resultado_instancia(t_solicitud* solicitud, int resultado){
+	solicitud->resultado_instancia = resultado;
 }
 
-void setear_error_clave_inaccesible(t_solicitud* solicitud){
-	solicitud->respuesta_a_esi = ERROR_CLAVE_INACCESIBLE;
-}
-
-void setear_operacion_exitosa_instancia(t_solicitud* solicitud){
-	solicitud->resultado_instancia = OPERACION_EXITOSA;
+void set_respuesta_a_esi(t_solicitud* solicitud, int respuesta){
+	solicitud->respuesta_a_esi = respuesta;
 }
 
 void destruir_solicitud(t_solicitud* solicitud){
