@@ -89,20 +89,24 @@ int validar_resultado_instancia(t_solicitud* solicitud, t_instancia* instancia){
 	switch(solicitud->resultado_instancia){
 
 	case ERROR_CLAVE_INACCESIBLE:
-		setear_error_clave_inaccesible(solicitud);
+		set_respuesta_a_esi(solicitud, ERROR_CLAVE_INACCESIBLE);
+
 		log_error_comunicacion_instancia(solicitud);
 
 		return -1;
 	case FS_NC:
 		compactar_instancias();
-		if(!instancia->esta_activa)
+
+		if(!esta_activa(instancia))
 			return -1;
+
 		ejecutar(solicitud, instancia);
 
 		return 0;
 	case FS_EI:
 		log_error(LOG_COORD, "La instancia no tiene espacio para guardar el valor del set");
-		solicitud->respuesta_a_esi = FS_EI;
+
+		set_respuesta_a_esi(solicitud, FS_EI);
 
 		return -1;
 	default:
@@ -119,7 +123,7 @@ int resultado_enviar_a_planif(t_mensaje mensaje, t_solicitud* solicitud){
 
 		log_error_envio_planif(solicitud);
 
-		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
+		set_respuesta_a_esi(solicitud, ERROR_DE_COMUNICACION);
 
 		desconectar_planif();
 
@@ -136,14 +140,14 @@ int validar_resultado_planif(t_solicitud* solicitud){
 	if(resultado_planif <= 0){
 		log_error_resultado_planif(solicitud);
 
-		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
+		set_respuesta_a_esi(solicitud, ERROR_DE_COMUNICACION);
 
 		desconectar_planif();
 
 		return -1;
 	}
 
-	solicitud->respuesta_a_esi = resultado_planif;
+	set_respuesta_a_esi(solicitud, resultado_planif);
 
 	return 0;
 }

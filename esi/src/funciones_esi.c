@@ -201,6 +201,11 @@ int informar_resultado_al_usuario(t_resultado_ejecucion informe_ejecucion, FILE*
 			free(informe_ejecucion.sentencia_ejecutada);
 			 return FALLO_EN_EJECUCION;
 
+		case FS_EI:
+			log_error(log_esi, "No habia espacio en la instancia para setear el valor de la ultima instruccion.");
+			free(informe_ejecucion.sentencia_ejecutada);
+			 return FALLO_EN_EJECUCION;
+
 		default:
 			 log_error(log_esi, "Se perdio la conexion con el coordinador");
 			 free(informe_ejecucion.sentencia_ejecutada);
