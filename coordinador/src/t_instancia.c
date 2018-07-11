@@ -78,12 +78,24 @@ void agregar_solicitud(t_instancia* instancia, t_solicitud* solicitud){
 	sem_post(&instancia->solicitud_lista);
 }
 
-int recibir_claves(t_instancia* instancia){
+int recibir_claves_a_instancia(t_instancia* instancia){
+	t_list* claves = recibir_claves(instancia);
+
+	if(claves == NULL)
+		return -1;
+
+	list_add_all(instancia->claves, claves);
+
+	return 0;
+}
+
+t_list* recibir_claves(t_instancia* instancia){
 	int cant_claves;
+	t_list* claves = list_create();
 
 	if(recv(instancia->socket_instancia, &cant_claves, sizeof(int), MSG_WAITALL) <= 0){
 		log_error(LOG_COORD, "No se pudo recibir la cantidad de claves de la instancia %d", instancia->id);
-		return -1;
+		return NULL;
 	}
 
 	log_info(LOG_COORD, "Se recibieron las claves de la instancia");
@@ -91,11 +103,12 @@ int recibir_claves(t_instancia* instancia){
 	int i;
 	for(i = 0; i < cant_claves; i++){
 		char* clave = recibir_string(instancia->socket_instancia);
-		agregar_clave(instancia, clave);
+		list_add(claves, clave);
 	}
 
 	log_info(LOG_COORD, "Se agregaron las claves a la instancia %d", instancia->id);
-	return 0;
+
+	return claves;
 }
 
 void destruir_instancias(){
@@ -132,7 +145,7 @@ int conectar_instancia_nueva(t_instancia* instancia){
 		return -1;
 	}
 
-	if(recibir_claves(instancia) == -1){
+	if(recibir_claves_a_instancia(instancia) == -1){
 		log_error(LOG_COORD, "No se pudieron recibir las claves de la instancia %d", instancia->id);
 		return -1;
 	}

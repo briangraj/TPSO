@@ -69,6 +69,8 @@ void* atender_esi(void* socket_esi){
 }
 
 int atender_solicitud(t_solicitud* solicitud){
+	sleep(RETARDO);
+
 	switch(solicitud->instruccion){
 	case OPERACION_GET:
 		log_trace(LOG_COORD, "Se ejecutara un GET %s", solicitud->clave);

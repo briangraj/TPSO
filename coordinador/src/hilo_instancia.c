@@ -67,6 +67,9 @@ void evaluar_resultado_instr(t_solicitud* solicitud, t_instancia* instancia){
 	case FS_EI:
 		set_resultado_instancia(solicitud, FS_EI);
 		break;
+	case CLAVES_REEMPLAZADAS:
+		actualizar_tablas_y_reintentar(solicitud, instancia);
+		break;
 	default:
 		if(solicitud->instruccion != COMPACTACION){
 			set_resultado_instancia(solicitud, ERROR_CLAVE_INACCESIBLE);
@@ -77,6 +80,32 @@ void evaluar_resultado_instr(t_solicitud* solicitud, t_instancia* instancia){
 
 		desconectar_instancia(instancia);
 	}
+}
+
+void actualizar_tablas_y_reintentar(t_solicitud* solicitud, t_instancia* instancia){
+	t_list* claves = recibir_claves(instancia);
+
+	borrar_claves(instancia, claves);
+
+	list_destroy_and_destroy_elements(claves, free);
+
+	evaluar_resultado_instr(solicitud, instancia);
+}
+
+void borrar_claves(t_instancia* instancia, t_list* claves){
+
+	void remover_clave(char* clave){
+
+		bool misma_clave(char* clave_instancia){
+			return string_equals(clave_instancia, clave);
+		}
+
+		list_remove_by_condition(instancia->claves, (bool(*)(void*)) misma_clave);
+
+		//todo modificar el espacio del array
+	}
+
+	list_iterate(claves, (void(*)(void*))remover_clave);
 }
 
 t_mensaje serializar_config_instancia(){
