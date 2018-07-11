@@ -138,31 +138,51 @@ void leer_protocolo(int protocolo){
 	case CREAR_CLAVE:
 		resultado = atender_crear_clave();
 		break;
-//	case BORRAR_CLAVES_REMOVIDAS: //TODO @chakl tens que borrar claves /cantclaves / tam 8 / clave / tam 5/ clave2
+	case STATUS:
+//		TODO @chakl estuvo aqui
+		int tam_clave;
+
+		recv(socket_coordinador, &tam_clave, sizeof(int), MSG_WAITALL);
+
+		char* clave = malloc(tam_clave);
+
+		recv(socket_coordinador, clave, tam_clave, MSG_WAITALL);
+
+		char* valor = obtener_valor_de(buscar_entrada(clave, (bool (*)(void*, void*)) string_equals));
+
+		int tam_payload = sizeof(int) + string_size(valor);
+
+		void* payload = malloc(tam_payload);
+
+		serializar_string(payload, valor);
+
+		enviar_paquete(OPERACION_EXITOSA, socket_coordinador, tam_payload, payload);
+
+		break;
+//	case CLAVES_A_BORRAR:
+//		TODO @chakl tens que borrar claves /cantclaves / tam 8 / clave / tam 5/ clave2
 //		borrar_claves_removidas();
 //		return;
-
-		/*
-		int recibir_claves(t_instancia* instancia){
-			int cant_claves;
-
-			if(recv(instancia->socket, &cant_claves, sizeof(int), MSG_WAITALL) <= 0){
-				log_error(LOG_COORD, "No se pudo recibir la cantidad de claves de la instancia %d", instancia->id);
-				return -1;
-			}
-
-			log_info(LOG_COORD, "Se recibieron las claves de la instancia");
-
-			int i;
-			for(i = 0; i < cant_claves; i++){
-				char* clave = recibir_string(instancia->socket);
-				agregar_clave(instancia, clave);
-			}
-
-			log_info(LOG_COORD, "Se agregaron las claves a la instancia %d", instancia->id);
-			return 0;
-		}
-		 */
+//
+//		int recibir_claves(t_instancia* instancia){
+//			int cant_claves;
+//
+//			if(recv(instancia->socket, &cant_claves, sizeof(int), MSG_WAITALL) <= 0){
+//				log_error(LOG_COORD, "No se pudo recibir la cantidad de claves de la instancia %d", instancia->id);
+//				return -1;
+//			}
+//
+//			log_info(LOG_COORD, "Se recibieron las claves de la instancia");
+//
+//			int i;
+//			for(i = 0; i < cant_claves; i++){
+//				char* clave = recibir_string(instancia->socket);
+//				agregar_clave(instancia, clave);
+//			}
+//
+//			log_info(LOG_COORD, "Se agregaron las claves a la instancia %d", instancia->id);
+//			return 0;
+//		}
 	case COMPACTACION:
 		atender_compactacion();//todo ver si deberia retornar algo
 		return;

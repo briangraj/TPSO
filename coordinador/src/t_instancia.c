@@ -21,6 +21,10 @@ void* crear_instancia(int id, int socket){
 	return instancia;
 }
 
+bool es_clave_a_crear(t_instancia* instancia, t_solicitud* solicitud){
+	return contiene_clave(instancia->claves_a_crear, solicitud);
+}
+
 bool contiene_clave(t_list* claves, t_solicitud* solicitud){
 	bool contiene_clave(char* clave){
 		return string_equals(clave, solicitud->clave);

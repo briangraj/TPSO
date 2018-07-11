@@ -12,7 +12,7 @@ t_list* instancias_activas(){
 }
 
 void compactar_instancias(){
-	list_iterate(instancias_activas(), (void(*)(void*))compactar);
+	list_iterate(instancias_activas(), (void(*)(void*)) compactar);
 }
 
 void compactar(t_instancia* instancia){
@@ -21,9 +21,9 @@ void compactar(t_instancia* instancia){
 	agregar_solicitud(instancia, solicitud);
 	sem_wait(&solicitud->solicitud_finalizada);
 
-	free(solicitud);
 	sem_close(&solicitud->solicitud_finalizada);
 	sem_destroy(&solicitud->solicitud_finalizada);
+	free(solicitud);
 }
 
 t_mensaje serializar_compactacion(t_solicitud* solicitud){

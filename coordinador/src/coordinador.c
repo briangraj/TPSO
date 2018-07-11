@@ -94,10 +94,39 @@ void atender_handshake(int socket_cliente){
 	case INSTANCIA:
 		atender_conexion_instancia(socket_cliente);
 	break;
+	case CONSOLA_PLANIFICADOR:
+		atender_conexion_consola(socket_cliente);
+	break;
 	default:
 //		errores
 	;
 	}
+}
+
+void atender_conexion_consola(int socket_cliente){
+	if(!PLANIF_CONECTADO){
+		log_error(LOG_COORD, "No hay un planificador conectado, se desconectara al cliente del socket %d", socket_cliente);
+		desconectar_cliente(socket_cliente);
+		return;
+	}
+
+	log_info(LOG_COORD, "Se recibio una conexion con la consola del planificador en el socket %d", socket_cliente);
+
+	if(informar_conexion_exitosa_a(socket_cliente) < 0){
+		log_error(LOG_COORD, "No se pudo completar el handshake con la consola en el socket %d, se lo desconectara", socket_cliente);
+		desconectar_cliente(socket_cliente);
+		return;
+	}
+
+	log_debug(LOG_COORD, "Se completo el handshake con el planificador en el socket %d", socket_cliente);
+
+	setup_conexion_con_consola(socket_cliente);
+
+	crear_hilo_consola();
+}
+
+void setup_conexion_con_consola(int socket_cliente){
+	SOCKET_CONSOLA = socket_cliente;
 }
 
 t_instancia* setup_conexion_con_instancia(int socket){
@@ -170,6 +199,10 @@ void desconectar_planif(){
 	PLANIF_CONECTADO = false;
 
 	desconectar_cliente(SOCKET_PLANIF);
+
+	desconectar_cliente(SOCKET_CONSOLA);
+
+	//TODO desconectar la consola
 }
 
 void setup_listener(){

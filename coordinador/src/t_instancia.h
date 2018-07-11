@@ -18,6 +18,7 @@ void 			eliminar_instancia			(t_instancia* instancia);
 void			destruir_instancia			(t_instancia* instancia);
 void			destruir_instancias			();
 void			agregar_clave				(t_instancia* instancia, char* clave);
+bool			es_clave_a_crear			(t_instancia* instancia, t_solicitud* solicitud);
 bool			esta_activa					(t_instancia* instancia);
 void			agregar_solicitud			(t_instancia* instancia, t_solicitud* solicitud);
 t_solicitud*	sacar_solicitud				(t_instancia* instancia);
