@@ -134,8 +134,8 @@ void leer_protocolo(int protocolo){
 		resultado = atender_store();
 		break;
 	case CREAR_CLAVE:
-		resultado = atender_crear_clave();
-		break;
+		atender_crear_clave();
+		return;
 	case STATUS:
 //		@chakl estuvo aqui
 		atender_status();
@@ -378,6 +378,12 @@ int entradas_disponibles(){
 	return contador;
 }
 
+int entradas_disponibles_si_reemplazo(){
+	t_list* entradas_atomicas = list_filter(tabla_de_entradas, es_entrada_atomica);
+
+	return entradas_disponibles() + entradas_atomicas->elements_count;
+}
+
 void actualizar_tamanio_entrada(t_entrada* entrada, char* valor){
 	liberar_entradas_desde(entrada->nro_entrada, entrada->tamanio_entradas_clave);
 	actualizar_valor_entrada(entrada, valor);
@@ -432,43 +438,72 @@ void persistir(void* entrada_void){
 	close(file_desc);
 }
 
-int atender_crear_clave(){
+void atender_crear_clave(){
 	char* clave = recibir_string(socket_coordinador);
 	char* valor = recibir_string(socket_coordinador); //TODO SACAR MOCK PT
 
+	procesar_entrada_nueva(clave, valor);
+
+	free(clave);
+	//free(valor);
+}
+
+void procesar_entrada_nueva(char* clave, char* valor){
 	//puts(clave);
 	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));
 	int nro_entrada = entrada_para(entradas_nuevo_valor);
 	int resultado = OPERACION_EXITOSA;
 
-	//todo deberia usar el algoritmo para nuevos valores que ocupen mas de una entrada?
-	if(nro_entrada == -1 && entradas_nuevo_valor == 1){
-		resultado = buscar_entrada_para_reemplazar(clave, valor);
-	} else {
+	if(nro_entrada != -1){
 		t_entrada* entrada = crear_entrada(clave);
 		entrada->nro_entrada = nro_entrada;
 		actualizar_valor_entrada(entrada, valor);
 		list_add(tabla_de_entradas, entrada);
 		log_trace(log_instancia, "Se creo la clave: %s", clave);
+	} else if(entradas_disponibles() >= entradas_nuevo_valor){
+		resultado = FS_NC;
+		log_trace(log_instancia, "Se necesita compactar");
+	} else if(entradas_disponibles_si_reemplazo() >= entradas_nuevo_valor){
+		//todo hacerlo recursivo
+		reemplazar_entradas_para(entradas_nuevo_valor);
+		procesar_entrada_nueva(clave, valor);
+		return;
+	} else {
+		resultado = FS_EI;
+		log_trace(log_instancia, "No hay espacio para la entrada nueva");
 	}
 
-	free(clave);
-	//free(valor);
-	return resultado;
+	enviar_paquete(resultado, socket_coordinador, 0, NULL);
 }
 
-int buscar_entrada_para_reemplazar(char* clave, char* valor){
-	int entrada_reemplazada = algoritmo_reemplazo(clave, valor);
+void reemplazar_entradas_para(int entradas_necesarias){
+	int entradas_a_reemplazar = entradas_necesarias - entradas_disponibles();
 
-	//todo creo que solo seria si no hay entradas atomicas
-	if(entrada_reemplazada == -1){
-		log_error(log_instancia, "No se pudo crear la clave: %s", clave);
-		return FALLO_REEMPLAZO;
+	t_entrada* entrada_reemplazada;
+
+	int tamanio_paquete = sizeof(entradas_a_reemplazar);
+	int tamanio_clave;
+	void* paquete = malloc(tamanio_paquete);
+
+	memcpy(paquete, &entradas_a_reemplazar, tamanio_paquete);
+
+	for(; entradas_a_reemplazar > 0; entradas_a_reemplazar--){
+		entrada_reemplazada = algoritmo_reemplazo();
+
+		tamanio_clave = string_length(entrada_reemplazada->clave) + 1;
+
+		realloc(paquete, tamanio_paquete + sizeof(tamanio_clave) + tamanio_clave);
+
+		serializar_string(paquete + tamanio_paquete, entrada_reemplazada->clave);
+
+		tamanio_paquete += sizeof(tamanio_clave) + tamanio_clave;
+
+		log_trace(log_instancia, "Reemplazo la clave: %s", entrada_reemplazada->clave);
+
+		//todo borrar entrada: igual a atender_borrar_entrada => los algoritmos no deberian sacarla de la lista
 	}
 
-	reemplazar_entrada(entrada_reemplazada, clave, valor);
-	log_trace(log_instancia, "Se creo la clave: %s", clave);
-	return OPERACION_EXITOSA;
+	enviar_paquete(CLAVES_REEMPLAZADAS, socket_coordinador, tamanio_paquete, paquete);
 }
 
 void reemplazar_entrada(int nro_entrada, char* clave, char* valor){
@@ -606,9 +641,9 @@ int reemplazo_bsu(char* clave, char* valor){
 	if(list_is_empty(entradas_atomicas))
 		return -1;
 
-	list_sort(tabla_de_entradas, mayor_entrada);
+	list_sort(tabla_de_entradas, entrada_mayor_tamanio);
 
-	t_entrada* entrada_a_reemplazar = list_get(entradas_atomicas, 0);
+	t_entrada* entrada_a_reemplazar = list_remove(entradas_atomicas, 0);
 	//ToDO habria que ver si mas de una cumple y desempatar
 	return entrada_a_reemplazar->nro_entrada;
 }
@@ -619,7 +654,7 @@ bool es_entrada_atomica(void* entrada_void){
 	return entrada->tamanio_entradas_clave == 1;
 }
 
-bool mayor_entrada(void* entrada1, void* entrada2){
+bool entrada_mayor_tamanio(void* entrada1, void* entrada2){
 	return ((t_entrada*)entrada1)->tamanio_bytes_clave > ((t_entrada*)entrada2)->tamanio_bytes_clave;
 }
 
