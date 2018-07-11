@@ -85,6 +85,7 @@ void liberar_entradas_desde(int desde_entrada, int cantidad);
 int atender_store();
 void persistir(void* entrada_void);
 void atender_crear_clave();
+void procesar_entrada_nueva(char* clave, char* valor);
 void reemplazar_entradas_para(int entradas_necesarias);
 void reemplazar_entrada(int nro_entrada, char* clave, char* valor);
 void borrar_entrada_de_disco(char* nombre);

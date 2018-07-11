@@ -490,7 +490,7 @@ void reemplazar_entradas_para(int entradas_necesarias){
 
 		tamanio_clave = string_length(entrada_reemplazada->clave) + 1;
 
-		realloc(paquete, tamanio_paquete + sizeof(tamanio_clave) + tamanio_clave);
+		paquete = realloc(paquete, tamanio_paquete + sizeof(tamanio_clave) + tamanio_clave);
 
 		serializar_string(paquete + tamanio_paquete, entrada_reemplazada->clave);
 
@@ -598,7 +598,7 @@ t_entrada* reemplazo_circular(){
 		return NULL;
 	}
 
-	t_entrada* entrada = buscar_entrada(entrada_a_reemplazar, buscar_entrada_nro);
+	t_entrada* entrada = buscar_entrada(&entrada_a_reemplazar, buscar_entrada_nro);
 	entrada_a_reemplazar = siguiente_entrada(entrada_a_reemplazar);
 	return entrada;
 }
