@@ -139,33 +139,13 @@ void leer_protocolo(int protocolo){
 		resultado = atender_crear_clave();
 		break;
 	case STATUS:
-//		TODO @chakl estuvo aqui
+//		@chakl estuvo aqui
 		atender_status();
 		return;
-//	case CLAVES_A_BORRAR:
+	case CLAVES_A_BORRAR:
 //		TODO @chakl tens que borrar claves /cantclaves / tam 8 / clave / tam 5/ clave2
-//		borrar_claves_removidas();
-//		return;
-//
-//		int recibir_claves(t_instancia* instancia){
-//			int cant_claves;
-//
-//			if(recv(instancia->socket, &cant_claves, sizeof(int), MSG_WAITALL) <= 0){
-//				log_error(LOG_COORD, "No se pudo recibir la cantidad de claves de la instancia %d", instancia->id);
-//				return -1;
-//			}
-//
-//			log_info(LOG_COORD, "Se recibieron las claves de la instancia");
-//
-//			int i;
-//			for(i = 0; i < cant_claves; i++){
-//				char* clave = recibir_string(instancia->socket);
-//				agregar_clave(instancia, clave);
-//			}
-//
-//			log_info(LOG_COORD, "Se agregaron las claves a la instancia %d", instancia->id);
-//			return 0;
-//		}
+		atender_claves_a_borrar();
+		return;
 	case COMPACTACION:
 		atender_compactacion();//todo ver si deberia retornar algo
 		return;
@@ -490,14 +470,14 @@ int buscar_entrada_para_reemplazar(char* clave, char* valor){
 void reemplazar_entrada(int nro_entrada, char* clave, char* valor){
 	t_entrada* entrada = buscar_entrada(&nro_entrada, buscar_entrada_nro);
 
-	eliminar_entrada(entrada->clave);
+	borrar_entrada_de_disco(entrada->clave);
 	actualizar_valor_entrada(entrada, valor);
 	free(entrada->clave);
 	entrada->clave = string_new();
 	string_append(&entrada->clave, clave);
 }
 
-void eliminar_entrada(char* nombre){
+void borrar_entrada_de_disco(char* nombre){
 	char* aux = ruta_absoluta(nombre);
 	remove(aux);
 	free(aux);
@@ -515,6 +495,48 @@ void atender_status(){
 	serializar_string(payload, valor);
 
 	enviar_paquete(OPERACION_EXITOSA, socket_coordinador, tam_payload, payload);
+
+	free(payload);
+	free(valor);
+	free(clave);
+}
+
+void atender_claves_a_borrar(){
+	int cant_claves;
+
+	recv(socket_coordinador, &cant_claves, sizeof(int), MSG_WAITALL);
+
+	log_info(log_instancia, "Se van a borrar claves");
+
+	int i;
+	char* clave;
+
+	for(i = 0; i < cant_claves; i++){
+		clave = recibir_string(socket_coordinador);
+		borrar_entrada(clave);
+		log_info(log_instancia, "Se borro la clave: %s", clave);
+		free(clave);
+	}
+}
+
+void borrar_entrada(char* clave){
+
+	bool comparar_clave(void* void_clave){
+		return string_equals(((t_entrada*)void_clave)->clave, clave);
+	}
+
+	t_entrada* entrada = list_remove_by_condition(tabla_de_entradas, comparar_clave);
+
+	borrar_entrada_de_disco(entrada->clave);
+
+	liberar_entradas_desde(entrada->nro_entrada, entrada->tamanio_entradas_clave);
+
+	free_entrada(entrada);
+}
+
+void free_entrada(t_entrada* entrada){
+	free(entrada->clave);
+	free(entrada);
 }
 
 ////////////////////////////////////////////////////// algoritmos de reemplazo //////////////////////////////////////////////////////////
@@ -546,7 +568,6 @@ bool es_nro_entrada_atomica(int nro_entrada){
 }
 
 t_entrada* buscar_entrada(void* buscado, bool (*comparador)(void*, void*)){
-	//TODO ver que esto funcione
 	bool comparar_clave(void* void_clave){
 		return comparador(void_clave, buscado);
 	}

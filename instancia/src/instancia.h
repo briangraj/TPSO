@@ -86,8 +86,11 @@ void persistir(void* entrada_void);
 int atender_crear_clave();
 int buscar_entrada_para_reemplazar(char* clave, char* valor);
 void reemplazar_entrada(int nro_entrada, char* clave, char* valor);
-void eliminar_entrada(char* nombre);
+void borrar_entrada_de_disco(char* nombre);
 void atender_status();
+void atender_claves_a_borrar();
+void borrar_entrada(char* clave);
+void free_entrada(t_entrada* entrada);
 
 
 int reemplazo_circular(char* clave, char* valor);
