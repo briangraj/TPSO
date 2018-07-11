@@ -42,7 +42,7 @@ int socket_coordinador;
 void* memoria;
 pthread_mutex_t mutex_dump;
 
-t_entrada* (*algoritmo_reemplazo)(char*, char*);
+t_entrada* (*algoritmo_reemplazo)();
 
 //para reemplazo circular
 int entrada_a_reemplazar;
@@ -94,16 +94,16 @@ void borrar_entrada(char* clave);
 void free_entrada(t_entrada* entrada);
 
 
-t_entrada* reemplazo_circular(char* clave, char* valor);
+t_entrada* reemplazo_circular();
 bool es_nro_entrada_atomica(int nro_entrada);
 t_entrada* buscar_entrada(void* buscado, bool (*comparador)(void*, void*));
 bool buscar_entrada_clave(void* entrada_void, void* clave_void);
 bool buscar_entrada_nro(void* entrada_void, void* nro_void);
 int siguiente_entrada(int nro_entrada);
-t_entrada* reemplazo_bsu(char* clave, char* valor);
+t_entrada* reemplazo_bsu();
 bool es_entrada_atomica(void* entrada_void);
 bool entrada_mayor_tamanio(void* entrada1, void* entrada2);
-t_entrada* reemplazo_lru(char* clave, char* valor);
+t_entrada* reemplazo_lru();
 void atender_compactacion();
 bool menor_nro_entrada(void* entrada1, void* entrada2);
 char* obtener_valor_de(t_entrada* entrada);

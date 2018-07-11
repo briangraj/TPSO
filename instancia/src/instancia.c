@@ -440,7 +440,7 @@ void persistir(void* entrada_void){
 
 void atender_crear_clave(){
 	char* clave = recibir_string(socket_coordinador);
-	char* valor = recibir_string(socket_coordinador); //TODO SACAR MOCK PT
+	char* valor = recibir_string(socket_coordinador);
 
 	procesar_entrada_nueva(clave, valor);
 
@@ -449,7 +449,6 @@ void atender_crear_clave(){
 }
 
 void procesar_entrada_nueva(char* clave, char* valor){
-	//puts(clave);
 	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));
 	int nro_entrada = entrada_para(entradas_nuevo_valor);
 	int resultado = OPERACION_EXITOSA;
@@ -464,7 +463,6 @@ void procesar_entrada_nueva(char* clave, char* valor){
 		resultado = FS_NC;
 		log_trace(log_instancia, "Se necesita compactar");
 	} else if(entradas_disponibles_si_reemplazo() >= entradas_nuevo_valor){
-		//todo hacerlo recursivo
 		reemplazar_entradas_para(entradas_nuevo_valor);
 		procesar_entrada_nueva(clave, valor);
 		return;
@@ -500,7 +498,7 @@ void reemplazar_entradas_para(int entradas_necesarias){
 
 		log_trace(log_instancia, "Reemplazo la clave: %s", entrada_reemplazada->clave);
 
-		//todo borrar entrada: igual a atender_borrar_entrada => los algoritmos no deberian sacarla de la lista
+		borrar_entrada(entrada_reemplazada->clave);
 	}
 
 	enviar_paquete(CLAVES_REEMPLAZADAS, socket_coordinador, tamanio_paquete, paquete);
@@ -583,7 +581,7 @@ void free_entrada(t_entrada* entrada){
 }
 
 ////////////////////////////////////////////////////// algoritmos de reemplazo //////////////////////////////////////////////////////////
-int reemplazo_circular(char* clave, char* valor){
+t_entrada* reemplazo_circular(){
 	int entrada_inicial = entrada_a_reemplazar;
 	bool hay_entrada = false;
 	do {
@@ -595,10 +593,12 @@ int reemplazo_circular(char* clave, char* valor){
 		entrada_a_reemplazar = siguiente_entrada(entrada_a_reemplazar);
 	} while(entrada_a_reemplazar != entrada_inicial);
 
-	if(!hay_entrada)//todo si dio toda la vuelta, deberia avanzar la entrada_a_reemplazar?
-		return -1;
+	if(!hay_entrada){//todo si dio toda la vuelta, deberia avanzar la entrada_a_reemplazar?
+		log_error(log_instancia, "No hay entradas para reemplazar (no deberia llegar a esto)");
+		return NULL;
+	}
 
-	int entrada = entrada_a_reemplazar;
+	t_entrada* entrada = buscar_entrada(entrada_a_reemplazar, buscar_entrada_nro);
 	entrada_a_reemplazar = siguiente_entrada(entrada_a_reemplazar);
 	return entrada;
 }
@@ -635,7 +635,7 @@ int siguiente_entrada(int nro_entrada){
 	return nro_entrada == CANTIDAD_ENTRADAS_TOTALES - 1 ? 0 : nro_entrada + 1;
 }
 
-int reemplazo_bsu(char* clave, char* valor){
+t_entrada* reemplazo_bsu(){
 	t_list* entradas_atomicas = list_filter(tabla_de_entradas, es_entrada_atomica);
 
 	if(list_is_empty(entradas_atomicas))
@@ -658,7 +658,7 @@ bool entrada_mayor_tamanio(void* entrada1, void* entrada2){
 	return ((t_entrada*)entrada1)->tamanio_bytes_clave > ((t_entrada*)entrada2)->tamanio_bytes_clave;
 }
 
-int reemplazo_lru(char* clave, char* valor){
+t_entrada* reemplazo_lru(){
 	return -1;//buscador_generico()
 }
 
