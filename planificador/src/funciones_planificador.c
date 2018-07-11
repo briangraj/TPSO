@@ -1,8 +1,8 @@
 #include "funciones_planificador.h"
 
 void signal_handler(int sig_num){
-	if(sig_num == SIGUSR1){
-		log_warning(log_planif, "Se recibió la señal para finalizar el planificador");
+	if(sig_num == SIGUSR1 || sig_num == SIGINT){
+		log_warning(log_planif, "Se recibio la senial para finalizar el planificador");
 		finalizar();
 	}
 }
@@ -1115,6 +1115,7 @@ void clave_destroyer(void* elemento){
 	t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elemento;
 	free(bloqueados_por_clave->clave);
 	list_destroy_and_destroy_elements(bloqueados_por_clave->bloqueados, blocked_destroyer);
+	free(bloqueados_por_clave);
 }
 
 void finalizado_destroyer(void* elem){

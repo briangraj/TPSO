@@ -38,6 +38,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	signal(SIGUSR1, signal_handler);
+	signal(SIGINT, signal_handler);
 
 	// CREO SOCKET PARA ESCUCHAR CONEXIONES ENTRANTES
 
