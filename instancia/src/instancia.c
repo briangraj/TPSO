@@ -94,9 +94,7 @@ void* hilo_dump(void* _){
 	while(true){
 		sleep(INTERVALO_DUMP);
 		pthread_mutex_lock(&mutex_dump);
-		//wait() seria para que la instancia no atienda pedidos
 		list_iterate(tabla_de_entradas, persistir);
-		//signal()
 		pthread_mutex_unlock(&mutex_dump);
 	}
 	return NULL;
@@ -111,13 +109,13 @@ void escuchar_coordinador(){
 		//printf("leer_protocolo %d\n", protocolo);
 		if (protocolo <= 0) {
 			log_error(log_instancia, "se desconecto el coordinador");
-			//rutina_final();
 			break;//exit(1);
 		}
 		leer_protocolo(protocolo);
 		pthread_mutex_unlock(&mutex_dump);
 	}
 
+	//rutina_final();
 	close(socket_coordinador);
 
 }
@@ -342,6 +340,8 @@ int atender_set(){
 	char* clave = recibir_string(socket_coordinador);
 	char* valor = recibir_string(socket_coordinador);
 
+	log_trace(log_instancia, "Atiendo set de clave: %s", clave);
+
 	//todo tendria que actualizar cosas de lsu
 	return modificar_entrada(clave, valor);
 }
@@ -356,8 +356,9 @@ int modificar_entrada(char* clave, char* valor){
 		actualizar_valor_entrada(entrada, valor);
 	} else {
 		int entradas_libres = entradas_libres_desde(entrada->nro_entrada + entrada->tamanio_entradas_clave);
-		if(entradas_nuevo_valor > entrada->tamanio_bytes_clave && entradas_libres < entradas_faltantes)
+		if(entradas_nuevo_valor > entrada->tamanio_bytes_clave && entradas_libres < entradas_faltantes){
 			resultado = entradas_disponibles() > entradas_faltantes ? FS_NC : FS_EI;//todo es necesario el FS_NC? o deberia ver si entra en otra parte?
+		}
 		else
 			actualizar_tamanio_entrada(entrada, valor);
 	}
@@ -400,6 +401,8 @@ int atender_store(){
 	int resultado = OPERACION_EXITOSA;
 
 	t_entrada* entrada = buscar_entrada(clave, buscar_entrada_clave);
+
+	log_trace(log_instancia, "Atiendo store de: %s", clave);
 
 	if(entrada == NULL){
 		resultado = ERROR_CLAVE_NO_IDENTIFICADA;
@@ -464,6 +467,7 @@ int buscar_entrada_para_reemplazar(char* clave, char* valor){
 	}
 
 	reemplazar_entrada(entrada_reemplazada, clave, valor);
+	log_trace(log_instancia, "Se creo la clave: %s", clave);
 	return OPERACION_EXITOSA;
 }
 
@@ -486,6 +490,8 @@ void borrar_entrada_de_disco(char* nombre){
 void atender_status(){
 	char* clave = recibir_string(socket_coordinador);
 
+	log_trace(log_instancia, "Atiendo status de: %s", clave);
+
 	char* valor = obtener_valor_de(buscar_entrada(clave, buscar_entrada_clave));
 
 	int tam_payload = sizeof(int) + string_size(valor);
@@ -495,6 +501,8 @@ void atender_status(){
 	serializar_string(payload, valor);
 
 	enviar_paquete(OPERACION_EXITOSA, socket_coordinador, tam_payload, payload);
+
+	log_trace(log_instancia, "Envio status de: %s", clave);
 
 	free(payload);
 	free(valor);
@@ -623,8 +631,12 @@ void atender_compactacion(){
 	list_sort(tabla_de_entradas, menor_nro_entrada);
 	int primer_entrada_libre = entrada_para(1);
 
-	if(primer_entrada_libre == -1)
-		return;//quiere decir que no hay espacio libre
+	log_trace(log_instancia, "Arranco la compactacion");
+
+	if(primer_entrada_libre == -1){
+		log_trace(log_instancia, "No hay nada para compactar");
+		return;
+	}
 
 	void compactar_entrada(void* void_entrada){
 		t_entrada* entrada = (t_entrada*)void_entrada;
@@ -640,6 +652,8 @@ void atender_compactacion(){
 	}
 
 	list_iterate(tabla_de_entradas, compactar_entrada);
+
+	log_trace(log_instancia, "Termino la compactacion");
 }
 
 bool menor_nro_entrada(void* entrada1, void* entrada2){
