@@ -45,7 +45,7 @@ pthread_mutex_t mutex_dump;
 t_entrada* (*algoritmo_reemplazo)();
 
 //para reemplazo circular
-int entrada_a_reemplazar;
+int nro_entrada_a_reemplazar;
 
 t_log* log_instancia;
 t_list* tabla_de_entradas;
@@ -98,6 +98,7 @@ void free_entrada(t_entrada* entrada);
 t_entrada* reemplazo_circular();
 bool es_nro_entrada_atomica(int nro_entrada);
 t_entrada* buscar_entrada(void* buscado, bool (*comparador)(void*, void*));
+t_entrada* buscar_entrada_en(void* buscado, bool (*comparador)(void*, void*), t_list* lista);
 bool buscar_entrada_clave(void* entrada_void, void* clave_void);
 bool buscar_entrada_nro(void* entrada_void, void* nro_void);
 int siguiente_entrada(int nro_entrada);

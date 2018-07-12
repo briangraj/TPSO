@@ -52,13 +52,13 @@ void leer_config(){
 void setup_algoritmo_reemplazo(){
 	if(string_equals_ignore_case(ALGORITMO_REEMPLAZO, "CIRC")){
 		algoritmo_reemplazo = &reemplazo_circular;
-		entrada_a_reemplazar = 0;
 	} else if(string_equals_ignore_case(ALGORITMO_REEMPLAZO, "LRU")){
 		algoritmo_reemplazo = reemplazo_lru;
 	} else if(string_equals_ignore_case(ALGORITMO_REEMPLAZO, "BSU")){
 		algoritmo_reemplazo = &reemplazo_bsu;
 	}
 
+	nro_entrada_a_reemplazar = 0;
 }
 
 void conectar_con_coordinador(){
@@ -582,24 +582,24 @@ void free_entrada(t_entrada* entrada){
 
 ////////////////////////////////////////////////////// algoritmos de reemplazo //////////////////////////////////////////////////////////
 t_entrada* reemplazo_circular(){
-	int entrada_inicial = entrada_a_reemplazar;
+	int entrada_inicial = nro_entrada_a_reemplazar;
 	bool hay_entrada = false;
 	do {
-		if(es_nro_entrada_atomica(entrada_a_reemplazar)){
+		if(es_nro_entrada_atomica(nro_entrada_a_reemplazar)){
 			hay_entrada = true;
 			break;
 		}
 
-		entrada_a_reemplazar = siguiente_entrada(entrada_a_reemplazar);
-	} while(entrada_a_reemplazar != entrada_inicial);
+		nro_entrada_a_reemplazar = siguiente_entrada(nro_entrada_a_reemplazar);
+	} while(nro_entrada_a_reemplazar != entrada_inicial);
 
 	if(!hay_entrada){//todo si dio toda la vuelta, deberia avanzar la entrada_a_reemplazar?
 		log_error(log_instancia, "No hay entradas para reemplazar (no deberia llegar a esto)");
 		return NULL;
 	}
 
-	t_entrada* entrada = buscar_entrada(&entrada_a_reemplazar, buscar_entrada_nro);
-	entrada_a_reemplazar = siguiente_entrada(entrada_a_reemplazar);
+	t_entrada* entrada = buscar_entrada(&nro_entrada_a_reemplazar, buscar_entrada_nro);
+	nro_entrada_a_reemplazar = siguiente_entrada(nro_entrada_a_reemplazar);
 	return entrada;
 }
 
@@ -611,10 +611,14 @@ bool es_nro_entrada_atomica(int nro_entrada){
 }
 
 t_entrada* buscar_entrada(void* buscado, bool (*comparador)(void*, void*)){
+	return buscar_entrada_en(buscado, comparador, tabla_de_entradas);
+}
+
+t_entrada* buscar_entrada_en(void* buscado, bool (*comparador)(void*, void*), t_list* lista){
 	bool comparar_clave(void* void_clave){
 		return comparador(void_clave, buscado);
 	}
-	t_entrada* entrada = (t_entrada*)list_find(tabla_de_entradas, comparar_clave);
+	t_entrada* entrada = (t_entrada*)list_find(lista, comparar_clave);
 
 	return entrada;
 }
@@ -638,14 +642,40 @@ int siguiente_entrada(int nro_entrada){
 t_entrada* reemplazo_bsu(){
 	t_list* entradas_atomicas = list_filter(tabla_de_entradas, es_entrada_atomica);
 
-	if(list_is_empty(entradas_atomicas))
-		return -1;
+	if(list_is_empty(entradas_atomicas)){
+		log_error(log_instancia, "No hay entradas para reemplazar (no deberia llegar a esto)");
+		return NULL;
+	}
 
 	list_sort(tabla_de_entradas, entrada_mayor_tamanio);
 
-	t_entrada* entrada_a_reemplazar = list_remove(entradas_atomicas, 0);
-	//ToDO habria que ver si mas de una cumple y desempatar
-	return entrada_a_reemplazar->nro_entrada;
+	t_entrada* entrada_a_reemplazar = list_get(entradas_atomicas, 0);
+
+	bool es_maxima(void* entrada){
+		return ((t_entrada*)entrada)->tamanio_bytes_clave == entrada_a_reemplazar->tamanio_bytes_clave;
+	}
+
+	t_list* entradas_reemplazables = list_filter(entradas_atomicas, es_maxima);
+
+	log_debug(log_instancia, "Hay %d entradas de %d bytes", entradas_reemplazables->elements_count + 1, entrada_a_reemplazar->tamanio_bytes_clave);
+
+	if(entradas_reemplazables->elements_count > 1){
+		while(1){
+			entrada_a_reemplazar = buscar_entrada_en(&nro_entrada_a_reemplazar, buscar_entrada_nro, entradas_reemplazables);
+			if(entrada_a_reemplazar != NULL){
+				break;
+			}
+
+			nro_entrada_a_reemplazar = siguiente_entrada(nro_entrada_a_reemplazar);
+		}
+
+		nro_entrada_a_reemplazar = siguiente_entrada(nro_entrada_a_reemplazar);
+	}
+
+	list_destroy(entradas_atomicas);
+	list_destroy(entradas_reemplazables);
+
+	return entrada_a_reemplazar;
 }
 
 bool es_entrada_atomica(void* entrada_void){
