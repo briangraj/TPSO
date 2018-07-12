@@ -376,7 +376,7 @@ void bloquear_esi_activo(char* clave, bool fue_bloqueado_por_consola){
 	list_add(bloqueados_por_clave->bloqueados, esi_bloqueado);
 
 	pthread_mutex_lock(&semaforo_cola_listos);
-	list_remove_and_destroy_element(cola_de_listos, 0, funcion_al_pedo);
+	list_remove_and_destroy_element(cola_de_listos, 0, free_elem);
 	pthread_mutex_unlock(&semaforo_cola_listos);
 
 	log_debug(log_planif, "Despues de bloquear al ESI %d", esi_bloqueado->info_ejecucion->ID);
@@ -516,7 +516,7 @@ void desconectar_cliente(int cliente){
 int conectarse_a_coordinador(int remitente){
 
 	int socket;
-	char* proceso = string_new();
+	char* proceso;
 
 	if(remitente == PLANIFICADOR) proceso = string_duplicate("Planificador");
 	if(remitente == CONSOLA_PLANIFICADOR) proceso = string_duplicate("Consola del Planificador");
@@ -685,7 +685,7 @@ void mover_a_finalizados(t_ready* esi_ejecucion, char* exit_text){
 	log_debug(log_planif, "El esi de ID %d aparece %d veces en la cola de ready", esi_finalizado->ID, cantidad_ocurrencias);
 
 	pthread_mutex_lock(&semaforo_cola_listos);
-	list_remove_and_destroy_by_condition(cola_de_listos, coincide_el_id, funcion_al_pedo);
+	list_remove_and_destroy_by_condition(cola_de_listos, coincide_el_id, free_elem);
 	pthread_mutex_unlock(&semaforo_cola_listos);
 
 	// si esta en la cola de bloqueados pasa esto
@@ -805,7 +805,7 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 		return string_equals_ignore_case(clave, recurso);
 	}
 
-	list_remove_and_destroy_by_condition(recursos_del_esi->recursos_asignados, es_el_recurso_asignado, funcion_al_pedo);
+	list_remove_and_destroy_by_condition(recursos_del_esi->recursos_asignados, es_el_recurso_asignado, free_elem);
 
 	bool es_el_recurso(void* elem){
 		t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
@@ -906,6 +906,7 @@ t_blocked* proximo_no_bloqueado_por_consola(t_list* bloqueados){
 void blocked_destroyer(void* elem){
 	t_blocked* bloqueado = (t_blocked*) elem;
 	free(bloqueado->info_ejecucion);
+	free(bloqueado);
 }
 
 void actualizar_esperas(){
@@ -1077,7 +1078,7 @@ void finalizar(){
 //	free(IP_PLANIFICADOR);
 
 	pthread_mutex_lock(&semaforo_cola_listos);
-	list_destroy_and_destroy_elements(cola_de_listos, funcion_al_pedo);
+	list_destroy_and_destroy_elements(cola_de_listos, free_elem);
 	pthread_mutex_unlock(&semaforo_cola_listos);
 
 	pthread_mutex_lock(&semaforo_cola_finalizados);
@@ -1105,10 +1106,16 @@ void finalizar(){
 	exit(1);
 }
 
+void free_elem(void* elemento){
+	free(elemento);
+}
+
 void asignacion_destroyer(void* elemento){
 	t_recursos_por_esi* recursos_por_esi = (t_recursos_por_esi*) elemento;
 
-	list_destroy_and_destroy_elements(recursos_por_esi->recursos_asignados, funcion_al_pedo);
+	list_destroy_and_destroy_elements(recursos_por_esi->recursos_asignados, free_elem);
+
+	free(recursos_por_esi);
 }
 
 void clave_destroyer(void* elemento){
@@ -1122,9 +1129,9 @@ void finalizado_destroyer(void* elem){
 	t_ended* finalizado = (t_ended*) elem;
 
 	free(finalizado->exit_text);
-}
 
-void funcion_al_pedo(void* esi){}
+	free(finalizado);
+}
 
 // MOCKS
 
