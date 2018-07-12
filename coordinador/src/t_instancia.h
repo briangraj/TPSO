@@ -33,5 +33,5 @@ t_instancia*	instancia_de_id				(int id);
 int				reconectar_instancia		(t_instancia* instancia, int socket);
 int 			conectar_instancia_nueva	(t_instancia* instancia);
 int 			enviar_claves_a_borrar		(t_instancia* instancia);
-
+int 			recibir_entradas			(t_instancia* instancia);
 #endif /* T_INSTANCIA_H_ */

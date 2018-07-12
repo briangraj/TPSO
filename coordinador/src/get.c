@@ -59,7 +59,7 @@ int validar_existencia_clave(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
 	if(instancia == NULL){
-		agregar_clave_a_crear(distribuir(solicitud), solicitud->clave);
+		agregar_clave_a_crear(distribucion.algoritmo(solicitud), solicitud->clave);
 		/**
 		 * TODO
 		 * if(hay_error_en_distribuir())

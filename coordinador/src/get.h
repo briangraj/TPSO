@@ -10,7 +10,8 @@
 
 #include "coordinador.h"
 #include "conexiones/estructuras_coord.h"
-#include "distribucion.h"
+
+#include "t_distribucion.h"
 #include "t_mensaje.h"
 #include "t_instancia.h"
 #include "t_solicitud.h"

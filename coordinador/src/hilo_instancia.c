@@ -60,7 +60,7 @@ void evaluar_resultado_instr(t_solicitud* solicitud, t_instancia* instancia){
 	switch(recibir_protocolo(instancia->socket_instancia)){
 	case OPERACION_EXITOSA:
 		if(solicitud->instruccion == OPERACION_SET || solicitud->instruccion == CREAR_CLAVE)
-			instancia->entradas_disponibles = recibir_cantidad_entradas(instancia);
+			instancia->entradas_disponibles = recibir_entradas(instancia);
 
 		set_resultado_instancia(solicitud, OPERACION_EXITOSA);
 		break;

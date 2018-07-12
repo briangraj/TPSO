@@ -216,7 +216,7 @@ int enviar_claves_a_borrar(t_instancia* instancia){
 	return enviar_mensaje(claves_a_borrar, instancia->socket_instancia);
 }
 
-int recibir_cantidad_entradas(t_instancia* instancia){
+int recibir_entradas(t_instancia* instancia){
 	int cant_entradas;
 	recv(instancia->socket_instancia, &cant_entradas, sizeof(int), MSG_WAITALL);
 
