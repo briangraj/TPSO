@@ -283,8 +283,13 @@ int	com_bloquear(char* parametro){
 	}
 
 
-	if(id_esi_activo == id_esi)
+	if(id_esi_activo == id_esi){
 		hay_que_bloquear_esi_activo(clave, true);
+
+		free(esi_bloqueado->info_ejecucion);
+
+		free(esi_bloqueado);
+	}
 
 	else {
 
@@ -300,7 +305,7 @@ int	com_bloquear(char* parametro){
 
 		pthread_mutex_lock(&semaforo_cola_listos);
 
-		list_remove_and_destroy_by_condition(cola_de_listos, coincide_el_id, funcion_al_pedo);
+		list_remove_and_destroy_by_condition(cola_de_listos, coincide_el_id, free_elem);
 
 		pthread_mutex_unlock(&semaforo_cola_listos);
 
@@ -339,6 +344,7 @@ int	com_desbloquear(char* parametro){
 	if(!bloqueados_por_clave){
 		imprimir("La clave ingresada no se encuentra bloqueada actualmente ni hay ESIs bloqueados por ella");
 
+		free(clave);
 		return 0;
 	}
 
@@ -354,7 +360,7 @@ int	com_desbloquear(char* parametro){
 			return string_equals_ignore_case(recurso, clave);
 		}
 
-		list_remove_and_destroy_by_condition(recursos_del_esi, es_la_clave, funcion_al_pedo);
+		list_remove_and_destroy_by_condition(recursos_del_esi, es_la_clave, free_elem);
 
 		// Borramos la estructura de bloqueados para la clave de las colas de bloqueados
 
@@ -373,6 +379,8 @@ int	com_desbloquear(char* parametro){
 		pthread_mutex_lock(&semaforo_cola_bloqueados);
 		list_remove_and_destroy_by_condition(colas_de_bloqueados, es_el_recurso, clave_destroyer);
 		pthread_mutex_unlock(&semaforo_cola_bloqueados);
+
+		free(clave);
 
 		return 0;
 
@@ -420,11 +428,13 @@ int	com_desbloquear(char* parametro){
 			}
 
 			free(clave);
+
 			return 0;
 		}
 
 		int id_esi = esi_bloqueado->info_ejecucion->ID;
-		char* informe = string_new();
+
+		char* informe;
 
 		if(esi_bloqueado->bloqueado_por_ejecucion){
 
