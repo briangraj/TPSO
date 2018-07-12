@@ -144,7 +144,6 @@ t_blocked* 					crear_t_bloqueado							(t_ready* esi_ready);
 void 						eliminar_de_bloqueados						(t_ready* esi);
 t_blocked* 					proximo_no_bloqueado_por_consola			(t_list* bloqueados);
 void 						blocked_destroyer							(void* elem);
-void 						funcion_al_pedo								(void* esi);
 void 						actualizar_disponibilidad_recursos			(int id_esi);
 int 						intentar_asignar							(int id_esi,char* clave);
 void 						atender_get_clave							();
@@ -164,6 +163,7 @@ void 						bloquear_esi_activo							(char* clave, bool fue_bloqueado_por_consol
 void 						imprimir_estado_cola_bloqueados				(char* clave);
 t_ready* 					encontrar_esi_de_socket						(int socket);
 void 						finalizado_destroyer						(void* elem);
+void 						free_elem									(void* elemento);
 
 // Funciones MOCK
 

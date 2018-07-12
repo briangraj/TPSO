@@ -17,6 +17,7 @@ void* crear_instancia(int id, int socket){
 	instancia->claves = list_create();
 	instancia->claves_a_crear = list_create();
 	instancia->claves_a_borrar = list_create();
+	instancia->entradas_disponibles = CANTIDAD_ENTRADAS_TOTALES;
 
 	return instancia;
 }
@@ -171,6 +172,8 @@ int	reconectar_instancia(t_instancia* instancia, int socket){
 
 	instancia->esta_activa = true;
 
+	instancia->entradas_disponibles = recibir_entradas(instancia);
+
 	return 0;
 }
 
@@ -211,6 +214,13 @@ int enviar_claves_a_borrar(t_instancia* instancia){
 	t_mensaje claves_a_borrar = serializar_claves_a_borrar(instancia);
 
 	return enviar_mensaje(claves_a_borrar, instancia->socket_instancia);
+}
+
+int recibir_cantidad_entradas(t_instancia* instancia){
+	int cant_entradas;
+	recv(instancia->socket_instancia, &cant_entradas, sizeof(int), MSG_WAITALL);
+
+	return cant_entradas;
 }
 
 void eliminar_instancia(t_instancia* una_instancia){
