@@ -28,6 +28,7 @@ typedef struct {
 	char* clave;
 	int tamanio_bytes_clave;
 	int tamanio_entradas_clave;
+	int ultima_referencia;
 }t_entrada;
 
 char* PUNTO_MONTAJE;
@@ -106,6 +107,8 @@ t_entrada* reemplazo_bsu();
 bool es_entrada_atomica(void* entrada_void);
 bool entrada_mayor_tamanio(void* entrada1, void* entrada2);
 t_entrada* reemplazo_lru();
+bool entrada_mayor_tiempo_sin_usar(void* entrada1, void* entrada2);
+void actualizar_ultimas_referencias(char* clave);
 void atender_compactacion();
 bool menor_nro_entrada(void* entrada1, void* entrada2);
 char* obtener_valor_de(t_entrada* entrada);

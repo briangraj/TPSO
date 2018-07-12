@@ -223,6 +223,7 @@ t_entrada* crear_entrada(char* clave){
 	t_entrada* entrada = malloc(sizeof(t_entrada));
 	entrada->clave = string_new();
 	string_append(&entrada->clave, clave);
+	entrada->ultima_referencia = 0;
 
 	return entrada;
 }
@@ -349,6 +350,7 @@ int atender_set(){
 	log_trace(log_instancia, "Atiendo set de clave: %s", clave);
 
 	//todo tendria que actualizar cosas de lsu
+	actualizar_ultimas_referencias(clave);
 	return modificar_entrada(clave, valor);
 }
 
@@ -425,6 +427,7 @@ int atender_store(){
 		log_trace(log_instancia, "Se persistio la clave: %s", clave);
 	}
 
+	actualizar_ultimas_referencias(clave);
 	free(clave);
 	return resultado;
 }
@@ -454,6 +457,7 @@ void atender_crear_clave(){
 	//free(valor);
 }
 
+//TODO este es el que hay que testear bien para ver si actualiza bien la ultima referencia
 void procesar_entrada_nueva(char* clave, char* valor){
 	int entradas_nuevo_valor = entradas_ocupadas(string_length(valor));
 	int nro_entrada = entrada_para(entradas_nuevo_valor);
@@ -477,6 +481,7 @@ void procesar_entrada_nueva(char* clave, char* valor){
 		log_trace(log_instancia, "No hay espacio para la entrada nueva");
 	}
 
+	actualizar_ultimas_referencias(clave);
 	enviar_paquete(resultado, socket_coordinador, 0, NULL);
 }
 
@@ -653,7 +658,7 @@ t_entrada* reemplazo_bsu(){
 		return NULL;
 	}
 
-	list_sort(tabla_de_entradas, entrada_mayor_tamanio);
+	list_sort(entradas_atomicas, entrada_mayor_tamanio);
 
 	t_entrada* entrada_a_reemplazar = list_get(entradas_atomicas, 0);
 
@@ -695,7 +700,60 @@ bool entrada_mayor_tamanio(void* entrada1, void* entrada2){
 }
 
 t_entrada* reemplazo_lru(){
-	return -1;//buscador_generico()
+	t_list* entradas_atomicas = list_filter(tabla_de_entradas, es_entrada_atomica);
+
+	if(list_is_empty(entradas_atomicas)){
+		log_error(log_instancia, "No hay entradas para reemplazar (no deberia llegar a esto)");
+		return NULL;
+	}
+
+	list_sort(entradas_atomicas, entrada_mayor_tiempo_sin_usar);
+
+	t_entrada* entrada_a_reemplazar = list_get(entradas_atomicas, 0);
+
+	bool es_maxima(void* entrada){
+		return ((t_entrada*)entrada)->ultima_referencia == entrada_a_reemplazar->ultima_referencia;
+	}
+
+	t_list* entradas_reemplazables = list_filter(entradas_atomicas, es_maxima);
+
+	log_debug(log_instancia, "Hay %d entradas de %d ulitma referencia", entradas_reemplazables->elements_count + 1, entrada_a_reemplazar->ultima_referencia);
+
+	if(entradas_reemplazables->elements_count > 1){
+		while(1){
+			entrada_a_reemplazar = buscar_entrada_en(&nro_entrada_a_reemplazar, buscar_entrada_nro, entradas_reemplazables);
+			if(entrada_a_reemplazar != NULL){
+				break;
+			}
+
+			nro_entrada_a_reemplazar = siguiente_entrada(nro_entrada_a_reemplazar);
+		}
+
+		nro_entrada_a_reemplazar = siguiente_entrada(nro_entrada_a_reemplazar);
+	}
+
+	list_destroy(entradas_atomicas);
+	list_destroy(entradas_reemplazables);
+
+	return entrada_a_reemplazar;
+}
+
+bool entrada_mayor_tiempo_sin_usar(void* entrada1, void* entrada2){
+	return ((t_entrada*)entrada1)->ultima_referencia > ((t_entrada*)entrada2)->ultima_referencia;
+}
+
+void actualizar_ultimas_referencias(char* clave){
+	void actualizar_ultima_referencia(void* entrada){
+		t_entrada* aux = (t_entrada*)entrada;
+		if(string_equals(aux->clave, clave))
+			aux->ultima_referencia = 0;
+		else
+			aux->ultima_referencia++;
+
+		log_debug(log_instancia, "Actualize la clave %s y quedo con %d de ultima referencia", aux->clave, aux->ultima_referencia);
+	}
+
+	list_iterate(tabla_de_entradas, actualizar_ultima_referencia);
 }
 
 void atender_compactacion(){
