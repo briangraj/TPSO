@@ -71,13 +71,21 @@ t_info_status armar_status(t_status status){
 	if(instancia == NULL){
 		log_error(LOG_COORD, "La clave %s no se encontro en ninguna instancia", solicitud->clave);
 
-		info_status = info_status_clave_inexistente();
+		info_status = info_status_clave_inexistente(solicitud->clave);
+
+		liberar_solicitud(solicitud);
+
+		return info_status;
 	}
 
 	if(!esta_activa(instancia)){
 		log_error(LOG_COORD, "La clave %s esta en una instancia inactiva", solicitud->clave);
 
-		info_status = info_status_clave_inaccesible();
+		info_status = info_status_clave_inaccesible(instancia->id);
+
+		liberar_solicitud(solicitud);
+
+		return info_status;
 	}
 
 	if(es_clave_a_crear(instancia, solicitud)){
@@ -98,7 +106,7 @@ t_info_status enviar_status_a_instancia(t_instancia* instancia, t_solicitud* sol
 	if(solicitud->resultado_instancia == ERROR_CLAVE_INACCESIBLE){
 		log_error(LOG_COORD, "La clave %s esta en una instancia inactiva", solicitud->clave);
 
-		return info_status_clave_inaccesible();
+		return info_status_clave_inaccesible(instancia->id);
 	}
 
 	return info_status_clave_existente(solicitud, instancia);
@@ -113,11 +121,11 @@ t_info_status info_status_clave_existente(t_solicitud* solicitud, t_instancia* i
 	};
 }
 
-t_info_status info_status_clave_inaccesible(){
+t_info_status info_status_clave_inaccesible(int id){
 	return (t_info_status) {
 			.tamanio_mensaje = string_size("CLAVE INACCESIBLE"),
 			.mensaje = "CLAVE INACCESIBLE",
-			.id_instancia_actual = -1,
+			.id_instancia_actual = id,
 			.id_instancia_posible = -1
 	};
 }
@@ -131,13 +139,19 @@ t_info_status info_status_clave_a_crear(t_instancia* instancia){
 	};
 }
 
-t_info_status info_status_clave_inexistente(){
-	return (t_info_status) {
+t_info_status info_status_clave_inexistente(char* clave){
+	int proxima_instancia = distribucion.proxima_instancia;
+
+	t_info_status info_status = {
 			.tamanio_mensaje = string_size("CLAVE SIN VALOR"),
 			.mensaje = "CLAVE SIN VALOR",
 			.id_instancia_actual = -1,
-			.id_instancia_posible = -1
+			.id_instancia_posible = distribucion.algoritmo(clave)->id
 	};
+
+	distribucion.proxima_instancia = proxima_instancia;
+
+	return info_status;
 }
 
 t_mensaje serializar_status(t_solicitud* solicitud){

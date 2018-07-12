@@ -14,7 +14,7 @@
 
 typedef struct distr{
 	int proxima_instancia;
-	t_instancia* (*algoritmo)(t_solicitud*);
+	t_instancia* (*algoritmo)(char*);
 	t_list* rangos;
 } t_distribucion;
 
@@ -24,9 +24,9 @@ typedef struct {
 	int id_instancia;
 }t_rango;
 
-t_instancia* equitative_load				(t_solicitud* solicitud);
-t_instancia* least_space_used				(t_solicitud* solicitud);
-t_instancia* key_explicit					(t_solicitud* solicitud);
+t_instancia* equitative_load				(char* clave);
+t_instancia* least_space_used				(char* clave);
+t_instancia* key_explicit					(char* clave);
 void		 set_rangos						();
 t_instancia* elegir_instancia_segun_rango	(char* clave);
 int 		 ceiling						(double numero);

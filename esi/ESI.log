@@ -28,3 +28,55 @@
 [TRACE] 23:01:28:516 Esi/(14343:14343): El proceso Planificador confirmo la conexion con el proceso ESI
 [TRACE] 23:01:28:522 Esi/(14343:14343): Se inicio el handshake con el proceso Planificador
 [TRACE] 23:01:28:523 Esi/(14343:14343): Se completo el handshake con el proceso Planificador
+[TRACE] 17:09:35:43 Esi/(9585:9585): El archivo de log se creo correctamente.
+[TRACE] 17:09:35:43 Esi/(9585:9585): El proceso ESI se conecto al proceso Planificador con exito
+[TRACE] 17:09:35:43 Esi/(9585:9585): El proceso Planificador confirmo la conexion con el proceso ESI
+[TRACE] 17:09:35:43 Esi/(9585:9585): Se inicio el handshake con el proceso Planificador
+[TRACE] 17:09:35:44 Esi/(9585:9585): Se completo el handshake con el proceso Planificador
+[TRACE] 17:09:35:81 Esi/(9585:9585): El proceso ESI se conecto al proceso Coordinador con exito
+[TRACE] 17:09:35:81 Esi/(9585:9585): El proceso Coordinador confirmo la conexion con el proceso ESI
+[TRACE] 17:09:35:81 Esi/(9585:9585): Se inicio el handshake con el proceso Coordinador
+[TRACE] 17:09:35:81 Esi/(9585:9585): Se completo el handshake con el proceso Coordinador
+[INFO] 17:09:35:81 Esi/(9585:9585): ESI 1 iniciado con exito
+[DEBUG] 17:09:44:827 Esi/(9585:9585): Se recibio la orden de ejecucion de una instruccion.
+[DEBUG] 17:10:03:511 Esi/(9585:9585): Se intento ejecutar la sentencia GET jugador
+
+[TRACE] 17:10:03:511 Esi/(9585:9585): Se ejecuto correctamente la sentencia GET
+[DEBUG] 17:10:42:767 Esi/(9585:9585): Se recibio la orden de ejecucion de una instruccion.
+[DEBUG] 17:11:02:653 Esi/(9585:9585): Se intento ejecutar la sentencia     SET jugador messi
+
+[TRACE] 17:11:02:654 Esi/(9585:9585): Se ejecuto correctamente la sentencia SET
+[DEBUG] 17:11:19:905 Esi/(9585:9585): El planificador decidió abortar la ejecucion de este proceso
+[TRACE] 17:12:37:848 Esi/(9810:9810): El archivo de log se creo correctamente.
+[TRACE] 17:12:37:848 Esi/(9810:9810): El proceso ESI se conecto al proceso Planificador con exito
+[TRACE] 17:12:37:848 Esi/(9810:9810): El proceso Planificador confirmo la conexion con el proceso ESI
+[TRACE] 17:12:37:848 Esi/(9810:9810): Se inicio el handshake con el proceso Planificador
+[TRACE] 17:12:37:849 Esi/(9810:9810): Se completo el handshake con el proceso Planificador
+[TRACE] 17:12:37:885 Esi/(9810:9810): El proceso ESI se conecto al proceso Coordinador con exito
+[TRACE] 17:12:37:885 Esi/(9810:9810): El proceso Coordinador confirmo la conexion con el proceso ESI
+[TRACE] 17:12:37:885 Esi/(9810:9810): Se inicio el handshake con el proceso Coordinador
+[TRACE] 17:12:37:885 Esi/(9810:9810): Se completo el handshake con el proceso Coordinador
+[INFO] 17:12:37:886 Esi/(9810:9810): ESI 1 iniciado con exito
+[DEBUG] 17:12:44:862 Esi/(9810:9810): Se recibio la orden de ejecucion de una instruccion.
+[DEBUG] 17:12:49:49 Esi/(9810:9810): Se intento ejecutar la sentencia GET jugador
+
+[TRACE] 17:12:49:49 Esi/(9810:9810): Se ejecuto correctamente la sentencia GET
+[DEBUG] 17:12:57:983 Esi/(9810:9810): Se recibio la orden de ejecucion de una instruccion.
+[DEBUG] 17:13:00:401 Esi/(9810:9810): Se intento ejecutar la sentencia     SET jugador messi
+
+[TRACE] 17:13:00:401 Esi/(9810:9810): Se ejecuto correctamente la sentencia SET
+[TRACE] 17:20:54:567 Esi/(10062:10062): El archivo de log se creo correctamente.
+[TRACE] 17:20:54:568 Esi/(10062:10062): El proceso ESI se conecto al proceso Planificador con exito
+[TRACE] 17:20:54:568 Esi/(10062:10062): El proceso Planificador confirmo la conexion con el proceso ESI
+[TRACE] 17:20:54:568 Esi/(10062:10062): Se inicio el handshake con el proceso Planificador
+[TRACE] 17:20:54:568 Esi/(10062:10062): Se completo el handshake con el proceso Planificador
+[TRACE] 17:20:54:605 Esi/(10062:10062): El proceso ESI se conecto al proceso Coordinador con exito
+[TRACE] 17:20:54:605 Esi/(10062:10062): El proceso Coordinador confirmo la conexion con el proceso ESI
+[TRACE] 17:20:54:605 Esi/(10062:10062): Se inicio el handshake con el proceso Coordinador
+[TRACE] 17:20:54:605 Esi/(10062:10062): Se completo el handshake con el proceso Coordinador
+[INFO] 17:20:54:605 Esi/(10062:10062): ESI 1 iniciado con exito
+[DEBUG] 17:22:30:673 Esi/(10062:10062): Se recibio la orden de ejecucion de una instruccion.
+[DEBUG] 17:24:58:401 Esi/(10062:10062): Se intento ejecutar la sentencia GET jugador
+
+[TRACE] 17:24:58:401 Esi/(10062:10062): Se ejecuto correctamente la sentencia GET
+[DEBUG] 17:26:27:64 Esi/(10062:10062): Se recibio la orden de ejecucion de una instruccion.

@@ -8,18 +8,18 @@
 #include "t_distribucion.h"
 
 
-t_instancia* equitative_load(t_solicitud* solicitud){
+t_instancia* equitative_load(char* clave){
 	t_instancia* instancia = list_get(INSTANCIAS, distribucion.proxima_instancia);
 
 	distribucion.proxima_instancia = (distribucion.proxima_instancia + 1) % list_size(INSTANCIAS);
 
 	if(!esta_activa(instancia))
-		return equitative_load(solicitud);
+		return equitative_load(clave);
 
 	return instancia;
 }
 
-t_instancia* least_space_used(t_solicitud* solicitud){
+t_instancia* least_space_used(char* clave){
 	t_instancia* instancia_con_mas_espacio = list_get(INSTANCIAS, 0);
 
 	void tiene_mas_espacio(t_instancia* instancia){
@@ -32,10 +32,10 @@ t_instancia* least_space_used(t_solicitud* solicitud){
 	return instancia_con_mas_espacio;
 }
 
-t_instancia* key_explicit(t_solicitud* solicitud){
+t_instancia* key_explicit(char* clave){
 	set_rangos();
 
-	return elegir_instancia_segun_rango(solicitud->clave);
+	return elegir_instancia_segun_rango(clave);
 }
 
 void set_rangos(){

@@ -59,13 +59,7 @@ int validar_existencia_clave(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
 	if(instancia == NULL){
-		agregar_clave_a_crear(distribucion.algoritmo(solicitud), solicitud->clave);
-		/**
-		 * TODO
-		 * if(hay_error_en_distribuir())
-		 * 		solicitud->respuesta_a_esi = ERROR_DE_COMUNICACION;
-		 * 		return -algo;
-		 */
+		agregar_clave_a_crear(distribucion.algoritmo(solicitud->clave), solicitud->clave);
 
 		log_info(LOG_COORD, "La clave %s no existia y se creo en una instancia", solicitud->clave);
 	} else
