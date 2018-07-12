@@ -15,11 +15,13 @@
 #include "store.h"
 #include "compactacion.h"
 
-void		crear_hilo_instancia		(t_instancia* instancia);
-void*		atender_instancia			(void* socket_instancia);
-t_mensaje	serializar_config_instancia	();
-int			enviar_config_instancia		(t_instancia* instancia);
-int			enviar_solicitud			(t_solicitud* pedido, int socket);
-void		evaluar_resultado_instr		(t_solicitud* solicitud, t_instancia* instancia);
+void		crear_hilo_instancia			(t_instancia* instancia);
+void*		atender_instancia				(void* socket_instancia);
+t_mensaje	serializar_config_instancia		();
+int			enviar_config_instancia			(t_instancia* instancia);
+int			enviar_solicitud				(t_solicitud* pedido, int socket);
+void		evaluar_resultado_instr			(t_solicitud* solicitud, t_instancia* instancia);
+void 		actualizar_tablas_y_reintentar	(t_solicitud* solicitud, t_instancia* instancia);
+void 		borrar_claves					(t_instancia* instancia, t_list* claves);
 
 #endif /* HILO_INSTANCIA_H_ */

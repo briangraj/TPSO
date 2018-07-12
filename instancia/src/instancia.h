@@ -42,7 +42,7 @@ int socket_coordinador;
 void* memoria;
 pthread_mutex_t mutex_dump;
 
-int (*algoritmo_reemplazo)(char*, char*);
+t_entrada* (*algoritmo_reemplazo)();
 
 //para reemplazo circular
 int entrada_a_reemplazar;
@@ -78,25 +78,33 @@ void setear_bitarray(t_entrada* entrada);
 int atender_set();
 int modificar_entrada(char* clave, char* valor);
 int entradas_disponibles();
+int entradas_disponibles_si_reemplazo();
 void actualizar_tamanio_entrada(t_entrada* entrada, char* valor);
 void actualizar_valor_entrada(t_entrada* entrada, char* valor);
 void liberar_entradas_desde(int desde_entrada, int cantidad);
 int atender_store();
 void persistir(void* entrada_void);
-int atender_crear_clave();
-int buscar_entrada_para_reemplazar(char* clave, char* valor);
+void atender_crear_clave();
+void procesar_entrada_nueva(char* clave, char* valor);
+void reemplazar_entradas_para(int entradas_necesarias);
 void reemplazar_entrada(int nro_entrada, char* clave, char* valor);
-void eliminar_entrada(char* nombre);
-int reemplazo_circular(char* clave, char* valor);
+void borrar_entrada_de_disco(char* nombre);
+void atender_status();
+void atender_claves_a_borrar();
+void borrar_entrada(char* clave);
+void free_entrada(t_entrada* entrada);
+
+
+t_entrada* reemplazo_circular();
 bool es_nro_entrada_atomica(int nro_entrada);
 t_entrada* buscar_entrada(void* buscado, bool (*comparador)(void*, void*));
 bool buscar_entrada_clave(void* entrada_void, void* clave_void);
 bool buscar_entrada_nro(void* entrada_void, void* nro_void);
 int siguiente_entrada(int nro_entrada);
-int reemplazo_bsu(char* clave, char* valor);
+t_entrada* reemplazo_bsu();
 bool es_entrada_atomica(void* entrada_void);
-bool mayor_entrada(void* entrada1, void* entrada2);
-int reemplazo_lru(char* clave, char* valor);
+bool entrada_mayor_tamanio(void* entrada1, void* entrada2);
+t_entrada* reemplazo_lru();
 void atender_compactacion();
 bool menor_nro_entrada(void* entrada1, void* entrada2);
 char* obtener_valor_de(t_entrada* entrada);

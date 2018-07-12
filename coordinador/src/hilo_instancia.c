@@ -31,11 +31,11 @@ void* atender_instancia(void* instancia_void){
 			);
 
 			if(solicitud->instruccion != COMPACTACION){
-				setear_error_instancia_inactiva(solicitud);
+				set_resultado_instancia(solicitud, ERROR_CLAVE_INACCESIBLE);
 
 				agregar_clave_a_borrar(instancia, solicitud->clave);
 			} else
-				solicitud->resultado_instancia = ERROR_DE_COMUNICACION;
+				set_resultado_instancia(solicitud, ERROR_DE_COMUNICACION);
 
 			desconectar_instancia(instancia);
 
@@ -59,23 +59,56 @@ void* atender_instancia(void* instancia_void){
 void evaluar_resultado_instr(t_solicitud* solicitud, t_instancia* instancia){
 	switch(recibir_protocolo(instancia->socket_instancia)){
 	case OPERACION_EXITOSA:
-		setear_operacion_exitosa_instancia(solicitud);
+		if(solicitud->instruccion == OPERACION_SET || solicitud->instruccion == CREAR_CLAVE)
+			instancia->entradas_disponibles = recibir_cantidad_entradas(instancia);
+
+		set_resultado_instancia(solicitud, OPERACION_EXITOSA);
 		break;
 	case FS_NC:
-		solicitud->respuesta_a_esi = FS_NC;
+		set_resultado_instancia(solicitud, FS_NC);
 		break;
 	case FS_EI:
-		solicitud->respuesta_a_esi = FS_EI;
+		set_resultado_instancia(solicitud, FS_EI);
+		break;
+	case CLAVES_REEMPLAZADAS:
+		actualizar_tablas_y_reintentar(solicitud, instancia);
 		break;
 	default:
 		if(solicitud->instruccion != COMPACTACION){
-			setear_error_instancia_inactiva(solicitud);
+			set_resultado_instancia(solicitud, ERROR_CLAVE_INACCESIBLE);
+
 			agregar_clave_a_borrar(instancia, solicitud->clave);
 		} else
-			solicitud->resultado_instancia = ERROR_DE_COMUNICACION;
+			set_resultado_instancia(solicitud, ERROR_DE_COMUNICACION);
 
 		desconectar_instancia(instancia);
 	}
+}
+
+void actualizar_tablas_y_reintentar(t_solicitud* solicitud, t_instancia* instancia){
+	t_list* claves = recibir_claves(instancia);
+
+	borrar_claves(instancia, claves);
+
+	list_destroy_and_destroy_elements(claves, free);
+
+	evaluar_resultado_instr(solicitud, instancia);
+}
+
+void borrar_claves(t_instancia* instancia, t_list* claves){
+
+	void remover_clave(char* clave){
+
+		bool misma_clave(char* clave_instancia){
+			return string_equals(clave_instancia, clave);
+		}
+
+		list_remove_by_condition(instancia->claves, (bool(*)(void*)) misma_clave);
+
+		//todo modificar el espacio del array
+	}
+
+	list_iterate(claves, (void(*)(void*))remover_clave);
 }
 
 t_mensaje serializar_config_instancia(){

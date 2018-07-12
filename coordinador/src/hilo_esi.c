@@ -69,6 +69,8 @@ void* atender_esi(void* socket_esi){
 }
 
 int atender_solicitud(t_solicitud* solicitud){
+	sleep(RETARDO);
+
 	switch(solicitud->instruccion){
 	case OPERACION_GET:
 		log_trace(LOG_COORD, "Se ejecutara un GET %s", solicitud->clave);
@@ -189,13 +191,13 @@ t_mensaje serializar_a_planif(t_solicitud* solicitud){
 
 int checkear_clave_valida(t_instancia* instancia, t_solicitud* solicitud){
 	if(instancia == NULL){
-		solicitud->respuesta_a_esi = ERROR_CLAVE_NO_IDENTIFICADA;
+		set_respuesta_a_esi(solicitud, ERROR_CLAVE_NO_IDENTIFICADA);
 
 		log_error(LOG_COORD, "ERROR_CLAVE_NO_IDENTIFICADA: No se encontro la clave %s, se abortara al esi %d", solicitud->clave, solicitud->id_esi);
 
 		return -1;
 	} else if(!esta_activa(instancia)){
-		solicitud->respuesta_a_esi = ERROR_CLAVE_INACCESIBLE;
+		set_respuesta_a_esi(solicitud, ERROR_CLAVE_INACCESIBLE);
 
 		agregar_clave_a_borrar(instancia, solicitud->clave);
 
