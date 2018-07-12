@@ -139,3 +139,13 @@ t_info_status info_status_clave_inexistente(){
 			.id_instancia_posible = -1
 	};
 }
+
+t_mensaje serializar_status(t_solicitud* solicitud){
+
+	t_mensaje mensaje = crear_mensaje(STATUS, sizeof(int) + string_size(solicitud->clave));
+
+	serializar_string(mensaje.payload, solicitud->clave);
+
+	return mensaje;
+
+}

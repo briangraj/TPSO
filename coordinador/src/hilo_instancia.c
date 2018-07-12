@@ -153,6 +153,11 @@ int enviar_solicitud(t_solicitud* solicitud, int socket){
 		break;
 	}
 
+	case STATUS:{
+		mensaje = serializar_status(solicitud);
+		break;
+	}
+
 	default:
 		return -1;
 	}

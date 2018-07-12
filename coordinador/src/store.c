@@ -11,7 +11,7 @@ int store(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
 	if(contiene_clave(instancia->claves_a_crear, solicitud)){
-		set_respuesta_a_esi(solicitud, NO_SE_HIZO_UN_GET_ANTES);
+		set_respuesta_a_esi(solicitud, STORE_INVALIDO);
 
 		return -1;
 	}

@@ -155,7 +155,7 @@ int conectar_instancia_nueva(t_instancia* instancia){
 
 	instancia->esta_activa = true;
 
-	log_trace(LOG_COORD, "Se agrego la instancia de id %d al sistema");
+	log_trace(LOG_COORD, "Se agrego la instancia de id %d al sistema", instancia->id);
 
 	return 0;
 }

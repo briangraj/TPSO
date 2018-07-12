@@ -26,5 +26,6 @@ t_info_status	info_status_clave_existente		(t_solicitud* solicitud, t_instancia*
 t_info_status	info_status_clave_inaccesible	();
 t_info_status	info_status_clave_a_crear		(t_instancia* instancia);
 t_info_status	info_status_clave_inexistente	();
+t_mensaje 		serializar_status				(t_solicitud* solicitud);
 
 #endif /* CONSOLA_H_ */

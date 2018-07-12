@@ -69,7 +69,8 @@ void* atender_esi(void* socket_esi){
 }
 
 int atender_solicitud(t_solicitud* solicitud){
-	sleep(RETARDO);
+	float new_retard = RETARDO*1000;
+	usleep(new_retard);
 
 	switch(solicitud->instruccion){
 	case OPERACION_GET:
@@ -183,10 +184,14 @@ int enviar_a_planif(t_solicitud* solicitud){
 t_mensaje serializar_a_planif(t_solicitud* solicitud){
 	switch(solicitud->instruccion){
 	case OPERACION_SET:
-		return serializar_set_a_planif(solicitud);
+		return serializar_clave_a_planif(solicitud);
+
+	case CREAR_CLAVE:
+		return serializar_clave_a_planif(solicitud);
 	default:
 		return serializar_clave_a_planif(solicitud);
 	}
+
 }
 
 int checkear_clave_valida(t_instancia* instancia, t_solicitud* solicitud){

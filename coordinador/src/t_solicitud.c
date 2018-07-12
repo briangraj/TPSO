@@ -130,6 +130,12 @@ int protocolo_planif(t_solicitud* solicitud){
 	case OPERACION_STORE:
 		return STORE_CLAVE;
 
+	case OPERACION_SET:
+		return SET_CLAVE;
+
+	case CREAR_CLAVE:
+		return SET_CLAVE;
+
 	default:
 		return -1;
 	}
