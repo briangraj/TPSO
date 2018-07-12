@@ -21,7 +21,6 @@
 #include <conexiones/strings.h>
 #include <conexiones/threads.h>
 
-#define PATH_CONFIG "/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/configs/instancia.cfg"
 
 typedef struct {
 	int nro_entrada;
@@ -31,7 +30,8 @@ typedef struct {
 	int ultima_referencia;
 }t_entrada;
 
-char* PUNTO_MONTAJE;
+char* PATH_CONFIG = "/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/configs/instancia%s.cfg";
+char* PUNTO_MONTAJE = "/home/utnso/ints%s";
 char* IP_COORDINADOR;
 char* ALGORITMO_REEMPLAZO;
 int PUERTO_COORDINADOR;

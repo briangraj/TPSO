@@ -8,6 +8,14 @@
 #include "instancia.h"
 
 int main(int argc, char **argv){
+	if(argc <= 1){
+		puts("ERROR");
+		return -1;
+	}
+	PATH_CONFIG = string_from_format(PATH_CONFIG, argv[1]);
+
+	PUNTO_MONTAJE = string_from_format(PUNTO_MONTAJE, argv[1]);
+
 	inicializar();
 
 	conectar_con_coordinador();
