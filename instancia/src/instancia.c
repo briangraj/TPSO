@@ -122,6 +122,8 @@ void escuchar_coordinador(){
 
 void leer_protocolo(int protocolo){
 	int resultado;
+	int tam_payload = 0;
+	void* payload = NULL;
 
 	switch(protocolo){
 	case CONFIGURACION_ENTRADAS:
@@ -129,12 +131,15 @@ void leer_protocolo(int protocolo){
 		return;
 	case OPERACION_SET:
 		resultado = atender_set();
-		break;
+		enviar_paquete(resultado, socket_coordinador, 0, NULL);
+		enviar_paquete(entradas_disponibles(), socket_coordinador, 0, NULL);
+		return;
 	case OPERACION_STORE:
 		resultado = atender_store();
 		break;
 	case CREAR_CLAVE:
 		atender_crear_clave();
+		enviar_paquete(entradas_disponibles(), socket_coordinador, 0, NULL);
 		return;
 	case STATUS:
 //		@chakl estuvo aqui
@@ -143,13 +148,14 @@ void leer_protocolo(int protocolo){
 	case CLAVES_A_BORRAR:
 //		TODO @chakl tens que borrar claves /cantclaves / tam 8 / clave / tam 5/ clave2
 		atender_claves_a_borrar();
+		enviar_paquete(entradas_disponibles(), socket_coordinador, 0, NULL);
 		return;
 	case COMPACTACION:
 		atender_compactacion();//todo ver si deberia retornar algo
 		return;
 	}
 
-	enviar_paquete(resultado, socket_coordinador, 0, NULL);
+	enviar_paquete(resultado, socket_coordinador, tam_payload, payload);
 }
 
 void configuracion_entradas(){

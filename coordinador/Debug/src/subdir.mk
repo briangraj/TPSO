@@ -5,6 +5,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../src/compactacion.c \
+../src/consola.c \
 ../src/coordinador.c \
 ../src/distribucion.c \
 ../src/get.c \
@@ -18,6 +19,7 @@ C_SRCS += \
 
 OBJS += \
 ./src/compactacion.o \
+./src/consola.o \
 ./src/coordinador.o \
 ./src/distribucion.o \
 ./src/get.o \
@@ -31,6 +33,7 @@ OBJS += \
 
 C_DEPS += \
 ./src/compactacion.d \
+./src/consola.d \
 ./src/coordinador.d \
 ./src/distribucion.d \
 ./src/get.d \

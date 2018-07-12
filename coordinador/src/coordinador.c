@@ -51,6 +51,23 @@ void setup_coord(){
 	INSTANCIAS = list_create();//t_instancia
 
 	PLANIF_CONECTADO = false;
+
+	set_algoritmo();
+}
+
+void set_algoritmo(){
+	distribucion.proxima_instancia = 0;
+	distribucion.rangos = list_create();
+
+	if(string_equals(ALGORITMO_DISTRIBUCION, "EL"))
+		distribucion.algoritmo = equitative_load;
+
+	if(string_equals(ALGORITMO_DISTRIBUCION, "LSU"))
+		distribucion.algoritmo = least_space_used;
+
+	if(string_equals(ALGORITMO_DISTRIBUCION, "KE"))
+		distribucion.algoritmo = key_explicit;
+
 }
 
 void leer_config(){
