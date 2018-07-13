@@ -150,11 +150,10 @@ void verificar_estado_valido(){
 
 		close(LISTENER);
 		destruir_instancias();
-		list_destroy(INSTANCIAS);
 		free(ALGORITMO_DISTRIBUCION);
 		free(IP_COORD);
 		log_destroy(LOG_COORD);
-
+		log_destroy(LOG_OPERACIONES);
 		exit(EXIT_FAILURE);
 	}
 }

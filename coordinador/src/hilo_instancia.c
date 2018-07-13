@@ -50,7 +50,7 @@ void* atender_instancia(void* instancia_void){
 
 		sem_post(&solicitud->solicitud_finalizada);
 
-		log_trace(LOG_COORD, "El resultado de la instruccion %d fue %d", solicitud->instruccion, solicitud->respuesta_a_esi);
+		log_trace(LOG_COORD, "El resultado de la instruccion %d fue %d", solicitud->instruccion, solicitud->resultado_instancia);
 	}
 
 	pthread_exit(NULL);

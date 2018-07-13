@@ -87,6 +87,8 @@ int recibir_claves_a_instancia(t_instancia* instancia){
 
 	list_add_all(instancia->claves, claves);
 
+	list_destroy(claves);
+
 	return 0;
 }
 
@@ -113,8 +115,7 @@ t_list* recibir_claves(t_instancia* instancia){
 }
 
 void destruir_instancias(){
-	list_iterate(INSTANCIAS, (void (*)(void*)) destruir_instancia);
-	list_clean(INSTANCIAS);
+	list_destroy_and_destroy_elements(INSTANCIAS, (void (*)(void*)) destruir_instancia);
 }
 
 void destruir_instancia(t_instancia* instancia){
