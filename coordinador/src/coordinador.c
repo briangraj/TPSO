@@ -4,7 +4,17 @@
 #include <stdbool.h>
 #include "conexiones/threads.h"
 
+void signal_handler(int sig_num){
+	if(sig_num == SIGUSR1){
+		puts("Finalizando el coordinador...");
+		sleep(1);
+		exit(EXIT_FAILURE);
+	}
+}
+
 int main(void) {
+	signal(SIGUSR1, signal_handler);
+
 	setup_coord();
 	setup_listener();
 
@@ -41,6 +51,7 @@ int main(void) {
 
 	}
 
+	return 0;
 }
 
 void setup_coord(){
@@ -137,7 +148,7 @@ void atender_conexion_consola(int socket_cliente){
 		return;
 	}
 
-	log_debug(LOG_COORD, "Se completo el handshake con el planificador en el socket %d", socket_cliente);
+	log_debug(LOG_COORD, "Se completo el handshake con la consola del planificador en el socket %d", socket_cliente);
 
 	setup_conexion_con_consola(socket_cliente);
 

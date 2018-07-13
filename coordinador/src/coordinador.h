@@ -23,6 +23,7 @@
 #include "t_instancia.h"
 #include "consola.h"
 #include "t_distribucion.h"
+#include <signal.h>
 
 #define PATH_CONFIG "/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/configs/coordinador.cfg"
 

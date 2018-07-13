@@ -131,6 +131,8 @@ void destruir_instancia(t_instancia* instancia){
 	pthread_cancel(instancia->id_hilo);//FIXME me parece que esto no va aca
 
 	desconectar_cliente(instancia->socket_instancia);
+
+	free(instancia);
 }
 
 t_instancia* instancia_de_id(int id){

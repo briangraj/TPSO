@@ -33,8 +33,15 @@ void destruir_solicitud(t_solicitud* solicitud){
 }
 
 void liberar_solicitud(t_solicitud* solicitud){
-	if(solicitud->instruccion == OPERACION_SET || solicitud->instruccion == CREAR_CLAVE || solicitud->instruccion == STATUS)
+	if(solicitud->instruccion == OPERACION_SET
+	|| solicitud->instruccion == CREAR_CLAVE
+	|| solicitud->instruccion == STATUS)
 		free(solicitud->valor);
+
+	if(solicitud->instruccion == OPERACION_GET
+	|| solicitud->instruccion == OPERACION_STORE
+	|| solicitud->instruccion == STATUS)
+		free(solicitud->clave);
 
 	sem_close(&solicitud->solicitud_finalizada);
 	sem_destroy(&solicitud->solicitud_finalizada);

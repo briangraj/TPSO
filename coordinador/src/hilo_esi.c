@@ -149,12 +149,23 @@ void verificar_estado_valido(){
 		log_error(LOG_COORD, "Se desconecto el planificador, se abortara el coordinador");
 
 		close(LISTENER);
+
 		destruir_instancias();
+
 		free(ALGORITMO_DISTRIBUCION);
 		free(IP_COORD);
+
 		log_destroy(LOG_COORD);
 		log_destroy(LOG_OPERACIONES);
-		exit(EXIT_FAILURE);
+
+		list_destroy(distribucion.rangos);
+
+		kill(getpid(), SIGUSR1);
+
+		pthread_exit(NULL);
+//		pthread_detach(pthread_self());
+
+//		exit(EXIT_FAILURE);
 	}
 }
 
