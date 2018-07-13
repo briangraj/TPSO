@@ -53,6 +53,14 @@ void borrar_clave(t_solicitud* solicitud, t_instancia* instancia){
 	free(clave);
 }
 
+void borrar_clave_a_crear(t_solicitud* solicitud, t_instancia* instancia){
+	bool contiene_clave(char* clave){
+		return string_equals(clave, solicitud->clave);
+	}
+
+	list_remove_by_condition(instancia->claves_a_crear, (bool (*)(void*)) contiene_clave);
+}
+
 void agregar_clave(t_instancia* instancia, char* clave){
 	list_add(instancia->claves, clave);
 }

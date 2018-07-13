@@ -220,18 +220,37 @@ int validar_op_con_efecto_sobre_clave(t_instancia* instancia, t_solicitud* solic
 		actualizar_referencias_a_clave(instancia, solicitud);
 
 	if(!esta_activa(instancia)){
-		set_respuesta_a_esi(solicitud, ERROR_CLAVE_INACCESIBLE);
+		if(es_clave_a_crear(instancia, solicitud)){
+			t_instancia* instancia_elegida = distribucion.algoritmo(solicitud->clave);
 
-		agregar_clave_a_borrar(instancia, solicitud->clave);
+			if(instancia_elegida == NULL){
+				log_error(LOG_COORD, "No se pudo aplicar el algoritmo de distribucion sobre la clave %s", solicitud->clave);
 
-		log_error(LOG_COORD, "ERROR_CLAVE_INACCESIBLE: La clave %s se encuentra en una instancia desconectada, se abortara al esi %d",
-				solicitud->clave,
-				solicitud->id_esi);
+				return -1;
+			}
 
-		return -1;
+			agregar_clave_a_crear(instancia_elegida, solicitud->clave);
+
+			borrar_clave_a_crear(solicitud, instancia);
+
+			instancia = instancia_elegida;
+
+			log_trace(LOG_COORD, "Se redistribuyo la clave a crear a la instancia %d", instancia->id);
+
+		} else {
+			set_respuesta_a_esi(solicitud, ERROR_CLAVE_INACCESIBLE);
+
+			agregar_clave_a_borrar(instancia, solicitud->clave);
+
+			log_error(LOG_COORD, "ERROR_CLAVE_INACCESIBLE: La clave %s se encuentra en una instancia desconectada, se abortara al esi %d",
+					solicitud->clave,
+					solicitud->id_esi);
+
+			return -1;
+		}
 	}
-
 	return 0;
+
 }
 
 void logear_operacion(t_solicitud* solicitud){

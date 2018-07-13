@@ -23,5 +23,5 @@ int			enviar_solicitud				(t_solicitud* pedido, int socket);
 void		evaluar_resultado_instr			(t_solicitud* solicitud, t_instancia* instancia);
 void 		actualizar_tablas_y_reintentar	(t_solicitud* solicitud, t_instancia* instancia);
 void 		borrar_claves					(t_instancia* instancia, t_list* claves);
-
+void 		borrar_clave_a_crear			(t_solicitud* solicitud, t_instancia* instancia);
 #endif /* HILO_INSTANCIA_H_ */
