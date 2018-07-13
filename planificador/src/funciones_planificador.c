@@ -942,6 +942,20 @@ void actualizar_esperas(){
 
 }
 
+t_list* asignados_para_el_esi(int id_esi){
+	bool es_el_esi(void* elem){
+		t_recursos_por_esi* recursos_por_esi = (t_recursos_por_esi*) elem;
+
+		return id_esi == recursos_por_esi->id_esi;
+	}
+
+	pthread_mutex_lock(&semaforo_asignaciones);
+	t_recursos_por_esi* rec_x_esi = list_find(colas_de_asignaciones, es_el_esi);
+	pthread_mutex_unlock(&semaforo_asignaciones);
+
+	return rec_x_esi->recursos_asignados;
+}
+
 void actualizar_esperas_bloqueados(){
 	void sumar_tiempo(void* elem2){
 		t_blocked* bloq = (t_blocked*)elem2;
