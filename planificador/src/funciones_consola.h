@@ -76,7 +76,6 @@ void 			imprimir_esperas_circulares							();
 void 			esperas_destroyer									(void* elem);
 void 			involucrados_destroyer								(void* elem);
 void 			cargar_si_recurso_forma_parte_de_un_deadlock		(t_bloqueados_por_clave* bloqueados_por_clave);
-t_list* 		asignados_para_el_esi								(int id_esi);
 bool 			hay_que_descartarla									(t_bloqueados_por_clave* bloqueados_por_clave);
 t_list* 		duplicar_lista_involucrados							(t_list* involucrados);
 void 			mostrar_cola_finalizados							();
