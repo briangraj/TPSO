@@ -14,8 +14,6 @@ int main(int argc, char **argv){
 	}
 	PATH_CONFIG = string_from_format(PATH_CONFIG, argv[1]);
 
-	PUNTO_MONTAJE = string_from_format(PUNTO_MONTAJE, argv[1]);
-
 	inicializar();
 
 	conectar_con_coordinador();
@@ -79,7 +77,6 @@ void conectar_con_coordinador(){
 	enviar_paquete(ENVIO_ID, socket_coordinador, sizeof(MI_ID), &MI_ID);
 }
 
-//todo probablemente haya que ponerlo despues de recibir la config de la tabla de entredas
 void enviar_entradas_al_coordinador(){
 	int cant_claves = tabla_de_entradas->elements_count;
 	int tamanio_paquete = 0;
@@ -114,18 +111,28 @@ void escuchar_coordinador(){
 	while(1) {
 		protocolo = recibir_protocolo(socket_coordinador);
 		pthread_mutex_lock(&mutex_dump);
-		//printf("leer_protocolo %d\n", protocolo);
+
 		if (protocolo <= 0) {
-			log_error(log_instancia, "se desconecto el coordinador");
-			break;//exit(1);
+			log_error(log_instancia, "Se desconecto el coordinador");
+			break;
 		}
 		leer_protocolo(protocolo);
 		pthread_mutex_unlock(&mutex_dump);
 	}
 
-	//rutina_final();
+	rutina_final();
 	close(socket_coordinador);
+}
 
+void rutina_final(){
+	list_destroy_and_destroy_elements(tabla_de_entradas, free_entrada);
+	bitarray_destroy(bitarray_entradas);
+	log_destroy(log_instancia);
+	free(PUNTO_MONTAJE);
+	free(IP_COORDINADOR);
+	free(ALGORITMO_REEMPLAZO);
+	free(PATH_CONFIG);
+	free(memoria);
 }
 
 void leer_protocolo(int protocolo){
@@ -597,8 +604,8 @@ void borrar_entrada(char* clave){
 	free_entrada(entrada);
 }
 
-void free_entrada(t_entrada* entrada){
-	free(entrada->clave);
+void free_entrada(void* entrada){
+	free(((t_entrada*)entrada)->clave);
 	free(entrada);
 }
 
@@ -754,6 +761,9 @@ bool entrada_mayor_tiempo_sin_usar(void* entrada1, void* entrada2){
 }
 
 void actualizar_ultimas_referencias(char* clave){
+	if(!string_equals_ignore_case(ALGORITMO_REEMPLAZO, "LRU"))
+		return;
+
 	void actualizar_ultima_referencia(void* entrada){
 		t_entrada* aux = (t_entrada*)entrada;
 		if(string_equals(aux->clave, clave))

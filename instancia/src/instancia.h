@@ -31,7 +31,7 @@ typedef struct {
 }t_entrada;
 
 char* PATH_CONFIG = "/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/configs/instancia%s.cfg";
-char* PUNTO_MONTAJE = "/home/utnso/ints%s";
+char* PUNTO_MONTAJE;
 char* IP_COORDINADOR;
 char* ALGORITMO_REEMPLAZO;
 int PUERTO_COORDINADOR;
@@ -59,6 +59,7 @@ void conectar_con_coordinador();
 void enviar_entradas_al_coordinador();
 void* hilo_dump(void* _);
 void escuchar_coordinador();
+void rutina_final();
 void leer_protocolo(int protocolo);
 void configuracion_entradas();
 void crear_tabla_de_entradas();
@@ -93,7 +94,7 @@ void borrar_entrada_de_disco(char* nombre);
 void atender_status();
 void atender_claves_a_borrar();
 void borrar_entrada(char* clave);
-void free_entrada(t_entrada* entrada);
+void free_entrada(void* entrada);
 
 
 t_entrada* reemplazo_circular();
