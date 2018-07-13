@@ -466,6 +466,18 @@ void atender_store(){
 
 	int resultado_store = actualizar_cola_de_bloqueados_para(id_esi, clave);
 
+	bool es_el_recurso(void* elem){
+		char* recurso = (char*) elem;
+
+		return string_equals_ignore_case(recurso, clave);
+	}
+
+	t_list* recursos_asignados = asignados_para_el_esi(id_esi);
+
+	pthread_mutex_lock(&semaforo_asignaciones);
+	list_remove_and_destroy_by_condition(recursos_asignados, es_el_recurso, free_elem);
+	pthread_mutex_unlock(&semaforo_asignaciones);
+
 	free(clave);
 
 	if(enviar_paquete(resultado_store, SOCKET_COORDINADOR, 0, NULL) < 0){
@@ -791,13 +803,6 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 		return STORE_INVALIDO;
 
 	}
-	bool es_el_esi_con_el_recurso(void* elem){
-		t_recursos_por_esi* rec = (t_recursos_por_esi*)elem;
-
-		return rec->id_esi == id_esi_que_lo_libero;
-	}
-
-	t_recursos_por_esi* recursos_del_esi = list_find(colas_de_asignaciones, es_el_esi_con_el_recurso);
 
 	bool es_el_recurso_asignado(void* elem){
 		char* clave = (char*)elem;
