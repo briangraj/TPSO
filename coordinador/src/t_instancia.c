@@ -164,6 +164,15 @@ int conectar_instancia_nueva(t_instancia* instancia){
 int	reconectar_instancia(t_instancia* instancia, int socket){
 	instancia->socket_instancia = socket;
 
+	if(enviar_config_instancia(instancia) == -1){
+		log_error(LOG_COORD, "No se pudo enviar la config a la instancia %d", instancia->id);
+		return -1;
+	}
+
+	t_list* claves = recibir_claves(instancia);
+
+	list_destroy_and_destroy_elements(claves, free);
+
 	if(!list_is_empty(instancia->claves_a_borrar)){
 		if(enviar_claves_a_borrar(instancia) <= 0){
 			log_error(LOG_COORD, "No se pudieron enviar las claves a borrar a la instancia %d", instancia->id);
@@ -201,6 +210,8 @@ t_mensaje serializar_claves_a_borrar(t_instancia* instancia){//TODO testear
 	char* aux = mensaje.payload;
 
 	memcpy(aux, &cant_claves, sizeof(int));
+
+	aux += sizeof(int);
 
 	void copiar_clave(char* clave){
 		serializar_string(aux, clave);
