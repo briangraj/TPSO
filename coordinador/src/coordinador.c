@@ -65,10 +65,10 @@ void setup_coord(){
 
 	PLANIF_CONECTADO = false;
 
-	set_algoritmo();
+	setup_algoritmo();
 }
 
-void set_algoritmo(){
+void setup_algoritmo(){
 	distribucion.proxima_instancia = 0;
 	distribucion.rangos = list_create();
 

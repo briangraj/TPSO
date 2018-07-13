@@ -60,7 +60,6 @@ void 			atender_conexion_esi			(int socket_cliente);
 void 			atender_conexion_planif			(int socket_cliente);
 void 			atender_conexion_instancia		(int socket_cliente);
 void			atender_conexion_consola		(int socket_cliente);
-void 			set_algoritmo					();
-
+void 			setup_algoritmo					();
 
 #endif /* COORDINADOR_H_ */

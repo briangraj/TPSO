@@ -59,9 +59,20 @@ int validar_get_clave(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
 	if(instancia == NULL){
-		agregar_clave_a_crear(distribucion.algoritmo(solicitud->clave), solicitud->clave);
+		t_instancia* instancia_elegida = distribucion.algoritmo(solicitud->clave);
 
-		log_info(LOG_COORD, "La clave %s no existia y se creo en una instancia", solicitud->clave);
+		if(instancia_elegida == NULL){
+			log_error(LOG_COORD, "No se pudo aplicar el algoritmo de distribucion sobre la clave %s", solicitud->clave);
+
+			return -1;
+		}
+
+		agregar_clave_a_crear(instancia_elegida, solicitud->clave);
+
+		log_info(LOG_COORD,
+			"Se aplico el algoritmo de distribucion sobre la clave %s, se creara en la instancia %d",
+			solicitud->clave,
+			instancia_elegida->id);
 	} else {
 		log_info(LOG_COORD, "La clave %s se encuentra en la instancia %d", solicitud->clave, instancia->id);
 

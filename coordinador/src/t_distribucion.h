@@ -29,6 +29,6 @@ t_instancia* least_space_used				(char* clave);
 t_instancia* key_explicit					(char* clave);
 void		 set_rangos						();
 t_instancia* elegir_instancia_segun_rango	(char* clave);
-int 		 ceiling						(double numero);
+int 		 ceiling						(int n, int v);
 
 #endif /* T_DISTRIBUCION_H_ */
