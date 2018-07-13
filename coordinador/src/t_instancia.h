@@ -30,6 +30,7 @@ void			agregar_clave_a_crear		(t_instancia* instancia, char* clave);
 void 			agregar_clave_a_borrar		(t_instancia* instancia, char* clave);
 bool			contiene_clave				(t_list* claves, t_solicitud* solicitud);
 t_instancia*	instancia_de_id				(int id);
+bool 			hay_claves_a_borrar			(t_instancia* instancia);
 int				reconectar_instancia		(t_instancia* instancia, int socket);
 int 			conectar_instancia_nueva	(t_instancia* instancia);
 int 			enviar_claves_a_borrar		(t_instancia* instancia);

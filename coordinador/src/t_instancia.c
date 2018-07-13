@@ -82,6 +82,8 @@ void agregar_solicitud(t_instancia* instancia, t_solicitud* solicitud){
 int recibir_claves_a_instancia(t_instancia* instancia){
 	t_list* claves = recibir_claves(instancia);
 
+	log_info(LOG_COORD, "Se agregaron las claves a la instancia %d", instancia->id);
+
 	if(claves == NULL)
 		return -1;
 
@@ -101,15 +103,11 @@ t_list* recibir_claves(t_instancia* instancia){
 		return NULL;
 	}
 
-	log_info(LOG_COORD, "Se recibieron las claves de la instancia");
-
 	int i;
 	for(i = 0; i < cant_claves; i++){
 		char* clave = recibir_string(instancia->socket_instancia);
 		list_add(claves, clave);
 	}
-
-	log_info(LOG_COORD, "Se agregaron las claves a la instancia %d", instancia->id);
 
 	return claves;
 }
@@ -163,6 +161,10 @@ int conectar_instancia_nueva(t_instancia* instancia){
 	return 0;
 }
 
+bool hay_claves_a_borrar(t_instancia* instancia){
+	return !list_is_empty(instancia->claves_a_borrar);
+}
+
 int	reconectar_instancia(t_instancia* instancia, int socket){
 	instancia->socket_instancia = socket;
 
@@ -175,16 +177,17 @@ int	reconectar_instancia(t_instancia* instancia, int socket){
 
 	list_destroy_and_destroy_elements(claves, free);
 
-	if(!list_is_empty(instancia->claves_a_borrar)){
+	if(hay_claves_a_borrar(instancia)){
 		if(enviar_claves_a_borrar(instancia) <= 0){
 			log_error(LOG_COORD, "No se pudieron enviar las claves a borrar a la instancia %d", instancia->id);
 			return -1;
 		}
+
+		instancia->entradas_disponibles = recibir_entradas(instancia);
 	}
 
 	instancia->esta_activa = true;
 
-	instancia->entradas_disponibles = recibir_entradas(instancia);
 
 	return 0;
 }
