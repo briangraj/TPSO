@@ -208,6 +208,8 @@ void crear_bitarray(){
 	char* bitarray = malloc(tamanio_en_bytes);
 
 	bitarray_entradas = bitarray_create_with_mode(bitarray, tamanio_en_bytes, LSB_FIRST);
+
+	liberar_entradas_desde(0, CANTIDAD_ENTRADAS_TOTALES);
 }
 
 t_entrada* levantar_entrada(char* nombre){
@@ -555,7 +557,7 @@ void atender_status(){
 
 	enviar_paquete(OPERACION_EXITOSA, socket_coordinador, tam_payload, payload);
 
-	//log_trace(log_instancia, "Envio status de: %s", clave);
+	log_trace(log_instancia, "Envio status de: %s", clave);
 
 	free(payload);
 	free(valor);
@@ -800,11 +802,10 @@ bool menor_nro_entrada(void* entrada1, void* entrada2){
 
 char* obtener_valor_de(t_entrada* entrada){
 	int offset = TAMANIO_ENTRADA * entrada->nro_entrada;
-	int tamanio_valor = entrada->tamanio_bytes_clave + 1;
-	char* valor = malloc(tamanio_valor);
+	char* valor = malloc(entrada->tamanio_bytes_clave + 1);
 
 	memcpy(valor, memoria + offset, entrada->tamanio_bytes_clave);
-	valor[tamanio_valor] = '\0';
+	valor[entrada->tamanio_bytes_clave] = '\0';
 	return valor;
 }
 
