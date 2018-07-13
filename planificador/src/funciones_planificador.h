@@ -164,6 +164,7 @@ void 						imprimir_estado_cola_bloqueados				(char* clave);
 t_ready* 					encontrar_esi_de_socket						(int socket);
 void 						finalizado_destroyer						(void* elem);
 void 						free_elem									(void* elemento);
+t_list* 					asignados_para_el_esi					(int id_esi);
 
 // Funciones MOCK
 
