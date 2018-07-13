@@ -109,7 +109,7 @@ int validar_resultado_instancia(t_solicitud* solicitud, t_instancia* instancia){
 			if(!esta_activa(instancia))
 				return -1;
 
-			solicitud->instruccion = OPERACION_SET;
+			//solicitud->instruccion = OPERACION_SET;
 
 			ejecutar(solicitud, instancia);
 		} else {
