@@ -26,8 +26,6 @@
 #include <signal.h>
 #include <string.h>
 
-#include "funciones_consola.h"
-
 typedef enum{
 	SJF_SD,
 	SJF_CD,
