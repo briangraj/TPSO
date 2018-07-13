@@ -7,8 +7,10 @@
 
 #include "t_distribucion.h"
 
-
 t_instancia* equitative_load(char* clave){
+	if(!hay_instancias_conectadas())
+		return NULL;
+
 	t_instancia* instancia = list_get(INSTANCIAS, distribucion.proxima_instancia);
 
 	distribucion.proxima_instancia = (distribucion.proxima_instancia + 1) % list_size(INSTANCIAS);
@@ -46,33 +48,42 @@ void set_rangos(){
 	t_list* instancias_activas = list_filter(INSTANCIAS, (bool(*)(void*))esta_activa);
 	int cant_instancias_activas = list_size(instancias_activas);
 
-	int max_rango = ceiling(26/cant_instancias_activas);
-	int min_rango = 26 - max_rango*(cant_instancias_activas-1);
+	int max_rango = ceiling(26, cant_instancias_activas);
+	int min_rango = 26 % max_rango;
+
+	log_error(LOG_COORD, "MAX RANGO: %d", max_rango);
+	log_error(LOG_COORD, "MIN RANGO: %d", min_rango);
 
 	int i;
 	char letra_inicio = 'a';
+	int cant_letras_seteadas = 0;
 
-	for(i=0; i < cant_instancias_activas -1 ;i++){
+	for(i=0; i < cant_instancias_activas -1;i++){
+		if(cant_letras_seteadas + max_rango > 26)
+			break;
 
 		t_rango* nuevo_rango = malloc(sizeof(t_rango));
 		nuevo_rango->id_instancia = ((t_instancia*)list_get(instancias_activas, i))->id;
 
 		nuevo_rango->inicio = letra_inicio;
-		nuevo_rango->fin = letra_inicio + max_rango;
+		nuevo_rango->fin = letra_inicio + max_rango - 1;
+
+		log_error(LOG_COORD, "rango agregado: %c-%c", nuevo_rango->inicio, nuevo_rango->fin);
 
 		list_add(distribucion.rangos, nuevo_rango);
 
 		letra_inicio = letra_inicio + max_rango;
+
+		cant_letras_seteadas += max_rango;
 	}
 
 	t_rango* nuevo_rango = malloc(sizeof(t_rango));
 	nuevo_rango->id_instancia = ((t_instancia*)list_get(instancias_activas, i))->id;
 
 	nuevo_rango->inicio = letra_inicio;
-	nuevo_rango->fin = letra_inicio + min_rango;
+	nuevo_rango->fin = letra_inicio + (min_rango == 0? 0 : min_rango - 1);
 
 	list_add(distribucion.rangos, nuevo_rango);
-
 }
 
 t_instancia* elegir_instancia_segun_rango(char* clave){
@@ -90,7 +101,7 @@ t_instancia* elegir_instancia_segun_rango(char* clave){
 	return instancia_de_id(rango->id_instancia);
 }
 
-int ceiling(double numero){
-	return (int) numero < numero ? (int)numero +1 : numero;
+int ceiling(int n, int v){
+    return !(n%v) ? n/v : (n/v) + 1;
 }
 
