@@ -82,6 +82,7 @@ t_list* 		duplicar_lista_involucrados							(t_list* involucrados);
 void 			mostrar_cola_finalizados							();
 void 			mostrar_cola_listos									();
 void 			mostrar_asignaciones								();
+void 			mostrar_estimaciones								();
 void 			mostrar_todo										();
 
 #endif /* FUNCIONES_CONSOLA_H_ */

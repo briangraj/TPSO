@@ -54,7 +54,7 @@ void leer_archivo_config(){
 	IP_COORDINADOR = config_get_string_value(archivo_config, "IP_COORDINADOR");
 	PUERTO_COORDINADOR = config_get_int_value(archivo_config, "PUERTO_COORDINADOR");
 	ESTIMACION_INICIAL = config_get_int_value(archivo_config, "ESTIMACION_INICIAL");
-	ALFA_PLANIFICACION = config_get_int_value(archivo_config, "ALFA_PLANIFICACION") / 100;
+	ALFA_PLANIFICACION = config_get_double_value(archivo_config, "ALFA_PLANIFICACION") / 100.0;
 	CLAVES_BLOQUEADAS = config_get_array_value(archivo_config, "CLAVES_BLOQUEADAS");
 
 	char* algoritmo = config_get_string_value(archivo_config, "ALGORITMO_PLANIFICACION");
@@ -892,7 +892,7 @@ void actualizar_privilegiado(t_bloqueados_por_clave* bloqueados_de_la_clave){
 
 	eliminar_de_bloqueados(proximo_con_derecho->info_ejecucion);
 
-	free(proximo_con_derecho);
+	//free(proximo_con_derecho);
 }
 
 t_blocked* proximo_no_bloqueado_por_consola(t_list* bloqueados){
@@ -1059,14 +1059,14 @@ bool comparar_sjf(void* un_esi, void* otro_esi){
 	t_ready* primer_esi = (t_ready*) un_esi;
 	t_ready* segundo_esi = (t_ready*) otro_esi;
 
-	return primer_esi->estimacion_actual < segundo_esi->estimacion_actual;
+	return primer_esi->estimacion_actual <= segundo_esi->estimacion_actual;
 }
 
 bool comparar_hrrn(void* un_esi, void* otro_esi){
 	t_ready* primer_esi = (t_ready*) un_esi;
 	t_ready* segundo_esi = (t_ready*) otro_esi;
 
-	return ratio(primer_esi) > ratio(segundo_esi);
+	return ratio(primer_esi) >= ratio(segundo_esi);
 }
 
 float ratio(t_ready* esi){
