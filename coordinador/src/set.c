@@ -89,9 +89,34 @@ int validar_resultado_instancia(t_solicitud* solicitud, t_instancia* instancia){
 	switch(solicitud->resultado_instancia){
 
 	case ERROR_CLAVE_INACCESIBLE:
-		set_respuesta_a_esi(solicitud, ERROR_CLAVE_INACCESIBLE);
+		if(solicitud->instruccion == CREAR_CLAVE){
+			t_instancia* instancia_elegida = distribucion.algoritmo(solicitud->clave);
 
-		log_error_comunicacion_instancia(solicitud);
+			if(instancia_elegida == NULL){
+				log_error(LOG_COORD, "No se pudo aplicar el algoritmo de distribucion sobre la clave %s", solicitud->clave);
+
+				return -1;
+			}
+
+			agregar_clave_a_crear(instancia_elegida, solicitud->clave);
+
+			borrar_clave_a_crear(solicitud, instancia);
+
+			instancia = instancia_elegida;
+
+			log_trace(LOG_COORD, "Se redistribuyo la clave a crear a la instancia %d", instancia->id);
+
+			if(!esta_activa(instancia))
+				return -1;
+
+			solicitud->instruccion = OPERACION_SET;
+
+			ejecutar(solicitud, instancia);
+		} else {
+			set_respuesta_a_esi(solicitud, ERROR_CLAVE_INACCESIBLE);
+
+			log_error_comunicacion_instancia(solicitud);
+		}
 
 		return -1;
 	case FS_NC:

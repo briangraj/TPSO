@@ -166,8 +166,9 @@ void leer_protocolo(int protocolo){
 		enviar_paquete(entradas_disponibles(), socket_coordinador, 0, NULL);
 		return;
 	case COMPACTACION:
-		atender_compactacion();//todo ver si deberia retornar algo
-		return;
+		atender_compactacion();
+		resultado = OPERACION_EXITOSA;
+		break;
 	}
 
 	enviar_paquete(resultado, socket_coordinador, tam_payload, payload);
@@ -686,7 +687,7 @@ t_entrada* reemplazo_bsu(){
 
 	t_list* entradas_reemplazables = list_filter(entradas_atomicas, es_maxima);
 
-	log_debug(log_instancia, "Hay %d entradas de %d bytes", entradas_reemplazables->elements_count + 1, entrada_a_reemplazar->tamanio_bytes_clave);
+	log_debug(log_instancia, "Hay %d entradas de %d bytes", entradas_reemplazables->elements_count, entrada_a_reemplazar->tamanio_bytes_clave);
 
 	if(entradas_reemplazables->elements_count > 1){
 		while(1){
@@ -735,7 +736,7 @@ t_entrada* reemplazo_lru(){
 
 	t_list* entradas_reemplazables = list_filter(entradas_atomicas, es_maxima);
 
-	log_debug(log_instancia, "Hay %d entradas de %d ulitma referencia", entradas_reemplazables->elements_count + 1, entrada_a_reemplazar->ultima_referencia);
+	log_debug(log_instancia, "Hay %d entradas de %d ultima referencia", entradas_reemplazables->elements_count, entrada_a_reemplazar->ultima_referencia);
 
 	if(entradas_reemplazables->elements_count > 1){
 		while(1){
