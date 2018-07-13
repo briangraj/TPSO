@@ -62,6 +62,9 @@ void evaluar_resultado_instr(t_solicitud* solicitud, t_instancia* instancia){
 		if(solicitud->instruccion == OPERACION_SET || solicitud->instruccion == CREAR_CLAVE)
 			instancia->entradas_disponibles = recibir_entradas(instancia);
 
+		if(solicitud->instruccion == STATUS)
+			solicitud->valor = recibir_string(instancia->socket_instancia);
+
 		set_resultado_instancia(solicitud, OPERACION_EXITOSA);
 		break;
 	case FS_NC:

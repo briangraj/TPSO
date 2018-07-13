@@ -35,7 +35,11 @@ t_instancia* least_space_used(char* clave){
 t_instancia* key_explicit(char* clave){
 	set_rangos();
 
-	return elegir_instancia_segun_rango(clave);
+	t_instancia* instancia = elegir_instancia_segun_rango(clave);
+
+	list_clean_and_destroy_elements(distribucion.rangos, free);
+
+	return instancia;
 }
 
 void set_rangos(){

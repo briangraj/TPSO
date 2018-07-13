@@ -100,6 +100,7 @@ t_solicitud* recibir_solicitud_esi(int socket, int id){
 	if(protocolo == FIN_DEL_SCRIPT){
 		solicitud = malloc(sizeof(t_solicitud));
 		solicitud->instruccion = FIN_DEL_SCRIPT;
+		solicitud->socket_esi = socket;
 		return solicitud;
 	}
 
