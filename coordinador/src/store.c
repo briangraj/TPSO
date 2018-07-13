@@ -10,14 +10,14 @@
 int store(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
-	if(contiene_clave(instancia->claves_a_crear, solicitud)){
+	if(validar_op_con_efecto_sobre_clave(instancia, solicitud) == -1)
+		return -1;
+
+	if(es_clave_a_crear(instancia, solicitud)){
 		set_respuesta_a_esi(solicitud, STORE_INVALIDO);
 
 		return -1;
 	}
-
-	if(checkear_clave_valida(instancia, solicitud) == -1)
-		return -1;
 
 	if(enviar_a_planif(solicitud) == -1)
 		return -1;

@@ -20,7 +20,7 @@ void		 verificar_estado_valido	();
 int			 ejecutar					(t_solicitud* solicitud, t_instancia* instancia);
 int 		 enviar_a_planif			(t_solicitud* solicitud);
 t_mensaje 	 serializar_a_planif		(t_solicitud* solicitud);
-int 		 checkear_clave_valida		(t_instancia* instancia, t_solicitud* solicitud);
+int 		 validar_op_con_efecto_sobre_clave		(t_instancia* instancia, t_solicitud* solicitud);
 void 		 logear_operacion			(t_solicitud* solicitud);
-
+void 		 actualizar_referencias_a_clave(t_instancia* instancia, t_solicitud* solicitud);
 #endif /* HILO_ESI_H_ */

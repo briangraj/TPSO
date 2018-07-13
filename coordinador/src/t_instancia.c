@@ -238,6 +238,26 @@ int recibir_entradas(t_instancia* instancia){
 	return cant_entradas;
 }
 
+char* get_clave(t_instancia* instancia, char* una_clave){
+	bool misma_clave(char* otra_clave){
+		return string_equals(una_clave, otra_clave);
+	}
+
+	char* clave_a_crear = (char*) list_find(instancia->claves_a_crear, (bool (*)(void*)) misma_clave);
+
+	char* clave = (char*) list_find(instancia->claves, (bool (*)(void*)) misma_clave);
+
+	if(clave == NULL){
+		if(clave_a_crear == NULL)
+			return NULL;
+
+		return clave_a_crear;
+	} else
+		return clave;
+
+//	return (clave == NULL)? (clave_a_crear == NULL)? NULL : clave;
+}
+
 void eliminar_instancia(t_instancia* una_instancia){
 	bool misma_instancia(t_instancia* otra_instancia){
 		return una_instancia->id == otra_instancia->id;

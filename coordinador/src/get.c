@@ -8,7 +8,7 @@
 #include "get.h"
 
 int get(t_solicitud* solicitud){
-	if(validar_existencia_clave(solicitud) == -1)//FIXME capaz no hace falta chequear
+	if(validar_get_clave(solicitud) == -1)//FIXME capaz no hace falta chequear
 		return -1;
 
 	if(enviar_a_planif(solicitud) == -1)
@@ -55,15 +55,18 @@ t_mensaje serializar_clave_a_planif(t_solicitud* solicitud){
 	return mensaje;
 }
 
-int validar_existencia_clave(t_solicitud* solicitud){
+int validar_get_clave(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
 	if(instancia == NULL){
 		agregar_clave_a_crear(distribucion.algoritmo(solicitud->clave), solicitud->clave);
 
 		log_info(LOG_COORD, "La clave %s no existia y se creo en una instancia", solicitud->clave);
-	} else
+	} else {
 		log_info(LOG_COORD, "La clave %s se encuentra en la instancia %d", solicitud->clave, instancia->id);
+
+		actualizar_referencias_a_clave(instancia, solicitud);
+	}
 
 	return 0;
 }

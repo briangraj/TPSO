@@ -10,10 +10,10 @@
 int set(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
-	if(checkear_clave_valida(instancia, solicitud) == -1)
+	if(validar_op_con_efecto_sobre_clave(instancia, solicitud) == -1)
 		return -1;
 
-	if(contiene_clave(instancia->claves_a_crear, solicitud))
+	if(es_clave_a_crear(instancia, solicitud))
 		solicitud->instruccion = CREAR_CLAVE;
 
 	if(enviar_a_planif(solicitud) == -1)
