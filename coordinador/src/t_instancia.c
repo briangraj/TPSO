@@ -195,7 +195,8 @@ t_mensaje serializar_claves_a_borrar(t_instancia* instancia){//TODO testear
 	int cant_claves = list_size(instancia->claves_a_borrar);
 	int cant_letras = list_sum(list_map(instancia->claves_a_borrar, (void* (*)(void*)) string_size));
 
-	t_mensaje mensaje = crear_mensaje(CLAVES_A_BORRAR, sizeof(int) + cant_claves + cant_letras);
+	t_mensaje mensaje = crear_mensaje(CLAVES_A_BORRAR,
+			sizeof(int) + sizeof(int) * cant_claves + cant_letras);
 
 	char* aux = mensaje.payload;
 

@@ -117,8 +117,6 @@ int validar_resultado_instancia(t_solicitud* solicitud, t_instancia* instancia){
 int resultado_enviar_a_planif(t_mensaje mensaje, t_solicitud* solicitud){
 	int resultado_enviar_a_planif = enviar_mensaje(mensaje, SOCKET_PLANIF);
 
-	destruir_mensaje(mensaje);
-
 	if(resultado_enviar_a_planif < 0){
 
 		log_error_envio_planif(solicitud);
