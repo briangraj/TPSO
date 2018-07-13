@@ -958,6 +958,7 @@ int com_check(char* parametro){
 	// 1 : COLA DE LISTOS
 	// 2 : COLA DE FINALIZADOS
 	// 3 : COLAS DE ASIGNACIONES
+	// 4 : ESTIMACIONES (SOLO DE LOS QUE ESTÁN EN READY)
 
 	if(!parametros){
 		mostrar_todo();
@@ -975,6 +976,9 @@ int com_check(char* parametro){
 			break;
 		case 3:
 			mostrar_asignaciones();
+			break;
+		case 4:
+			mostrar_estimaciones();
 			break;
 		default:
 			mostrar_todo();
@@ -1063,11 +1067,38 @@ void mostrar_asignaciones(){
 	free(mensaje);
 }
 
+void mostrar_estimaciones(){
+
+	char* mensaje = string_from_format("\n------- Las estimaciones de los ESIs en estado ready son: ------- \n\t[ ");
+
+	void imprimir_estimaciones(void* elem){
+		t_ready* esi = (t_ready*) elem;
+
+		string_append_with_format(&mensaje, " ESI %d - %f,", esi->ID, esi->estimacion_actual);
+	}
+
+	pthread_mutex_lock(&semaforo_cola_listos);
+	list_iterate(cola_de_listos, imprimir_estimaciones);
+	pthread_mutex_unlock(&semaforo_cola_listos);
+
+	char* mensaje_final = string_substring(mensaje, 0, strlen(mensaje) - 1);
+
+	free(mensaje);
+
+	string_append(&mensaje_final, " ]");
+
+	imprimir(mensaje_final);
+
+	free(mensaje_final);
+
+}
+
 void mostrar_todo(){
 
 	mostrar_cola_listos();
 	mostrar_cola_finalizados();
 	mostrar_asignaciones();
+	mostrar_estimaciones();
 
 }
 
