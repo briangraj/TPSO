@@ -60,6 +60,7 @@ void* atender_esi(void* socket_esi){
 			break;
 		}
 
+		logear_operacion(solicitud);
 		log_info(LOG_COORD, "Se envio la respuesta %d al esi %d", solicitud->respuesta_a_esi, solicitud->id_esi);
 
 		liberar_solicitud(solicitud);
@@ -215,3 +216,5 @@ int checkear_clave_valida(t_instancia* instancia, t_solicitud* solicitud){
 
 	return 0;
 }
+
+void logear_operacion(t_solicitud* )

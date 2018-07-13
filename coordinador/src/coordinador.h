@@ -36,6 +36,7 @@ int LISTENER;
 struct distr distribucion;
 
 t_log* LOG_COORD;
+t_log* LOG_OPERACIONES;
 
 t_list* INSTANCIAS;//t_instancia
 int SOCKET_PLANIF;

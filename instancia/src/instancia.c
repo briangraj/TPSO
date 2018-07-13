@@ -475,6 +475,7 @@ void procesar_entrada_nueva(char* clave, char* valor){
 		t_entrada* entrada = crear_entrada(clave);
 		entrada->nro_entrada = nro_entrada;
 		actualizar_valor_entrada(entrada, valor);
+		setear_bitarray(entrada);
 		list_add(tabla_de_entradas, entrada);
 		log_trace(log_instancia, "Se creo la clave: %s", clave);
 	} else if(entradas_disponibles() >= entradas_nuevo_valor){
@@ -554,7 +555,7 @@ void atender_status(){
 
 	enviar_paquete(OPERACION_EXITOSA, socket_coordinador, tam_payload, payload);
 
-	log_trace(log_instancia, "Envio status de: %s", clave);
+	//log_trace(log_instancia, "Envio status de: %s", clave);
 
 	free(payload);
 	free(valor);

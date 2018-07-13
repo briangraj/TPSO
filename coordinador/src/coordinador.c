@@ -46,6 +46,8 @@ int main(void) {
 void setup_coord(){
 	LOG_COORD = log_create("Coordinador.log", "Coordinador", 1, LOG_LEVEL_TRACE);
 
+	LOG_OPERACIONES = log_create("Operaciones.log", "Coordinador", 0, LOG_LEVEL_TRACE);
+
 	leer_config();
 
 	INSTANCIAS = list_create();//t_instancia
