@@ -936,6 +936,12 @@ void imprimir_cola_bloqueados(char* clave){
 		return;
 	}
 
+	char* mensaje = string_from_format("El ID del ESI que tiene derecho a la clave solicitada es: \n%d", resultado->id_proximo_esi);
+
+	imprimir(mensaje);
+
+	free(mensaje);
+
 	imprimir("El estado de la cola de bloqueados para la clave solicitada es:");
 
 	pthread_mutex_lock(&semaforo_cola_bloqueados);

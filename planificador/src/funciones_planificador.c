@@ -805,10 +805,9 @@ int actualizar_cola_de_bloqueados_para(int id_esi_que_lo_libero, char* recurso){
 		return string_equals_ignore_case(clave, recurso);
 	}
 
-	list_remove_and_destroy_by_condition(recursos_del_esi->recursos_asignados, es_el_recurso_asignado, free_elem);
-
 	bool es_el_recurso(void* elem){
 		t_bloqueados_por_clave* bloq = (t_bloqueados_por_clave*) elem;
+
 
 		return string_equals_ignore_case(bloq->clave, recurso);
 	}

@@ -21,6 +21,7 @@
 #include <arpa/inet.h>
 
 #include "protocolos.h"
+#include "serializacion.h"
 
 int crear_socket();
 int conectar_socket_a(char ip[], int puerto, int sockfd);
