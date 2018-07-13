@@ -61,6 +61,7 @@ void* atender_esi(void* socket_esi){
 		}
 
 		logear_operacion(solicitud);
+
 		log_info(LOG_COORD, "Se envio la respuesta %d al esi %d", solicitud->respuesta_a_esi, solicitud->id_esi);
 
 		liberar_solicitud(solicitud);
@@ -217,4 +218,22 @@ int checkear_clave_valida(t_instancia* instancia, t_solicitud* solicitud){
 	return 0;
 }
 
-void logear_operacion(t_solicitud* )
+void logear_operacion(t_solicitud* solicitud){
+	switch(solicitud->instruccion){
+	case OPERACION_GET:
+		log_trace(LOG_OPERACIONES, "ESI %d | GET %s", solicitud->id_esi, solicitud->clave);
+		break;
+	case OPERACION_SET:
+		log_trace(LOG_OPERACIONES, "ESI %d | SET %s %s",
+				solicitud->id_esi, solicitud->clave, solicitud->valor);
+		break;
+	case CREAR_CLAVE:
+		log_trace(LOG_OPERACIONES, "ESI %d | SET %s %s",
+				solicitud->id_esi, solicitud->clave, solicitud->valor);
+		break;
+	case OPERACION_STORE:
+		log_trace(LOG_OPERACIONES, "ESI %d | STORE %s", solicitud->id_esi, solicitud->clave);
+		break;
+	default:;
+	}
+}
