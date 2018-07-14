@@ -10,7 +10,7 @@
 int set(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
-	if(validar_op_con_efecto_sobre_clave(instancia, solicitud) == -1)
+	if(validar_op_con_efecto_sobre_clave(&instancia, solicitud) == -1)
 		return -1;
 
 	if(es_clave_a_crear(instancia, solicitud))
@@ -20,7 +20,7 @@ int set(t_solicitud* solicitud){
 		return -1;
 
 	if(solicitud->respuesta_a_esi == SET_EXITOSO){
-		if(ejecutar(solicitud, instancia) == -1)
+		if(ejecutar(solicitud, &instancia) == -1)
 			return -1;
 
 		actualizar_claves(instancia, solicitud);
@@ -85,7 +85,7 @@ void actualizar_claves(t_instancia* instancia, t_solicitud* solicitud){
 
 }
 
-int validar_resultado_instancia(t_solicitud* solicitud, t_instancia* instancia){
+int validar_resultado_instancia(t_solicitud* solicitud, t_instancia** instancia){
 	switch(solicitud->resultado_instancia){
 
 	case ERROR_CLAVE_INACCESIBLE:
@@ -100,29 +100,32 @@ int validar_resultado_instancia(t_solicitud* solicitud, t_instancia* instancia){
 
 			agregar_clave_a_crear(instancia_elegida, solicitud->clave);
 
-			borrar_clave_a_crear(solicitud, instancia);
+			borrar_clave_a_crear(solicitud, *instancia);
 
-			instancia = instancia_elegida;
+			*instancia = instancia_elegida;
 
-			log_trace(LOG_COORD, "Se redistribuyo la clave a crear a la instancia %d", instancia->id);
+			log_trace(LOG_COORD, "Se redistribuyo la clave a crear a la instancia %d", (*instancia)->id);
 
-			if(!esta_activa(instancia))
+			if(!esta_activa(*instancia))//FIXME esta al pedo esto?
 				return -1;
 
 			//solicitud->instruccion = OPERACION_SET;
 
 			ejecutar(solicitud, instancia);
+
+			return 0;
 		} else {
 			set_respuesta_a_esi(solicitud, ERROR_CLAVE_INACCESIBLE);
 
 			log_error_comunicacion_instancia(solicitud);
+
+			return -1;
 		}
 
-		return -1;
 	case FS_NC:
 		compactar_instancias();
 
-		if(!esta_activa(instancia))
+		if(!esta_activa(*instancia))
 			return -1;
 
 		ejecutar(solicitud, instancia);

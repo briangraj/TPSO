@@ -20,7 +20,7 @@ int				set		   						(t_solicitud* solicitud);
 t_mensaje		serializar_set_a_instancia		(t_solicitud* solicitud);
 t_mensaje 		serializar_set_a_planif			(t_solicitud* solicitud);
 void 			actualizar_claves				(t_instancia* instancia, t_solicitud* solicitud);
-int 			validar_resultado_instancia	(t_solicitud* solicitud, t_instancia* instancia);
+int 			validar_resultado_instancia	(t_solicitud* solicitud, t_instancia** instancia);
 int 			resultado_enviar_a_planif		(t_mensaje mensaje, t_solicitud* solicitud);
 int 			validar_resultado_planif		(t_solicitud* solicitud);
 

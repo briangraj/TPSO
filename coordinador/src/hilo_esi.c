@@ -169,8 +169,8 @@ void verificar_estado_valido(){
 	}
 }
 
-int ejecutar(t_solicitud* solicitud, t_instancia* instancia){
-	agregar_solicitud(instancia, solicitud);
+int ejecutar(t_solicitud* solicitud, t_instancia** instancia){
+	agregar_solicitud(*instancia, solicitud);
 
 	sem_wait(&solicitud->solicitud_finalizada);
 
@@ -207,8 +207,8 @@ t_mensaje serializar_a_planif(t_solicitud* solicitud){
 
 }
 
-int validar_op_con_efecto_sobre_clave(t_instancia* instancia, t_solicitud* solicitud){
-	if(instancia == NULL){
+int validar_op_con_efecto_sobre_clave(t_instancia** instancia, t_solicitud* solicitud){
+	if(*instancia == NULL){
 		set_respuesta_a_esi(solicitud, ERROR_CLAVE_NO_IDENTIFICADA);
 
 		log_error(LOG_COORD, "ERROR_CLAVE_NO_IDENTIFICADA: No se encontro la clave %s, se abortara al esi %d", solicitud->clave, solicitud->id_esi);
@@ -217,10 +217,10 @@ int validar_op_con_efecto_sobre_clave(t_instancia* instancia, t_solicitud* solic
 
 		return -1;
 	} else
-		actualizar_referencias_a_clave(instancia, solicitud);
+		actualizar_referencias_a_clave(*instancia, solicitud);
 
-	if(!esta_activa(instancia)){
-		if(es_clave_a_crear(instancia, solicitud)){
+	if(!esta_activa(*instancia)){
+		if(es_clave_a_crear(*instancia, solicitud)){
 			t_instancia* instancia_elegida = distribucion.algoritmo(solicitud->clave);
 
 			if(instancia_elegida == NULL){
@@ -231,16 +231,16 @@ int validar_op_con_efecto_sobre_clave(t_instancia* instancia, t_solicitud* solic
 
 			agregar_clave_a_crear(instancia_elegida, solicitud->clave);
 
-			borrar_clave_a_crear(solicitud, instancia);
+			borrar_clave_a_crear(solicitud, *instancia);
 
-			instancia = instancia_elegida;
+			*instancia = instancia_elegida;
 
-			log_trace(LOG_COORD, "Se redistribuyo la clave a crear a la instancia %d", instancia->id);
+			log_trace(LOG_COORD, "Se redistribuyo la clave a crear a la instancia %d", (*instancia)->id);
 
 		} else {
 			set_respuesta_a_esi(solicitud, ERROR_CLAVE_INACCESIBLE);
 
-			agregar_clave_a_borrar(instancia, solicitud->clave);
+			agregar_clave_a_borrar(*instancia, solicitud->clave);
 
 			log_error(LOG_COORD, "ERROR_CLAVE_INACCESIBLE: La clave %s se encuentra en una instancia desconectada, se abortara al esi %d",
 					solicitud->clave,

@@ -19,6 +19,7 @@ void compactar(t_instancia* instancia){
 	t_solicitud* solicitud = crear_solicitud(COMPACTACION, -1, -1);
 
 	agregar_solicitud(instancia, solicitud);
+
 	sem_wait(&solicitud->solicitud_finalizada);
 
 	sem_close(&solicitud->solicitud_finalizada);

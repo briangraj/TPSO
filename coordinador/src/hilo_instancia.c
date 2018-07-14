@@ -57,7 +57,14 @@ void* atender_instancia(void* instancia_void){
 }
 
 void evaluar_resultado_instr(t_solicitud* solicitud, t_instancia* instancia){
-	switch(recibir_protocolo(instancia->socket_instancia)){
+	int protocolo_recibido = recibir_protocolo(instancia->socket_instancia);
+
+	log_warning(LOG_COORD, "Protocolo recibido: %d", protocolo_recibido);
+
+	switch(protocolo_recibido){
+	case 2:
+		set_resultado_instancia(solicitud, OPERACION_EXITOSA);
+		break;
 	case OPERACION_EXITOSA:
 		if(solicitud->instruccion == OPERACION_SET || solicitud->instruccion == CREAR_CLAVE)
 			instancia->entradas_disponibles = recibir_entradas(instancia);

@@ -17,10 +17,10 @@ t_solicitud* recibir_solicitud_esi 		(int socket, int id);
 int 		 atender_solicitud	  		(t_solicitud* solicitud);
 int 		 recibir_id		   	   		(int socket);
 void		 verificar_estado_valido	();
-int			 ejecutar					(t_solicitud* solicitud, t_instancia* instancia);
+int			 ejecutar					(t_solicitud* solicitud, t_instancia** instancia);
 int 		 enviar_a_planif			(t_solicitud* solicitud);
 t_mensaje 	 serializar_a_planif		(t_solicitud* solicitud);
-int 		 validar_op_con_efecto_sobre_clave		(t_instancia* instancia, t_solicitud* solicitud);
+int 		 validar_op_con_efecto_sobre_clave		(t_instancia** instancia, t_solicitud* solicitud);
 void 		 logear_operacion			(t_solicitud* solicitud);
 void 		 actualizar_referencias_a_clave(t_instancia* instancia, t_solicitud* solicitud);
 #endif /* HILO_ESI_H_ */

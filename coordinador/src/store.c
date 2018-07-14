@@ -10,7 +10,7 @@
 int store(t_solicitud* solicitud){
 	t_instancia* instancia = instancia_con_clave(solicitud);
 
-	if(validar_op_con_efecto_sobre_clave(instancia, solicitud) == -1)
+	if(validar_op_con_efecto_sobre_clave(&instancia, solicitud) == -1)
 		return -1;
 
 	if(es_clave_a_crear(instancia, solicitud)){
@@ -23,7 +23,7 @@ int store(t_solicitud* solicitud){
 		return -1;
 
 	if(solicitud->respuesta_a_esi == STORE_EXITOSO){
-		if(ejecutar(solicitud, instancia) == -1)
+		if(ejecutar(solicitud, &instancia) == -1)
 			return -1;
 	}
 
