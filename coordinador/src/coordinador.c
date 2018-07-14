@@ -12,6 +12,9 @@ void signal_handler(int sig_num){
 
 		log_warning(LOG_COORD, "Finalizando el coordinador...");
 
+		if(hilo_esi_id != -1)
+			pthread_cancel(hilo_esi_id);
+
 		liberar_coord();
 
 		exit(EXIT_FAILURE);
@@ -65,6 +68,8 @@ void setup_coord(){
 
 	LOG_OPERACIONES = log_create("Operaciones.log", "Coordinador", 0, LOG_LEVEL_TRACE);
 
+	hilo_esi_id = -1;
+
 	leer_config();
 
 	INSTANCIAS = list_create();//t_instancia
@@ -103,7 +108,7 @@ void liberar_coord(){
 	list_destroy(distribucion.rangos);
 }
 
-void hilo_verificar_estado_valido(){
+void verificar_estado_valido(){
 	if(!PLANIF_CONECTADO){
 		kill(getpid(), SIGUSR1);
 

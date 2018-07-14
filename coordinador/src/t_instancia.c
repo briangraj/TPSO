@@ -130,16 +130,24 @@ void destruir_instancia(t_instancia* instancia){
 
 	if(list_size(instancia->claves) > 0)
 		list_destroy_and_destroy_elements(instancia->claves, free);
+	else
+		list_destroy(instancia->claves);
+
 	if(list_size(instancia->claves_a_crear) > 0)
 		list_destroy_and_destroy_elements(instancia->claves_a_crear, free);
+	else
+		list_destroy(instancia->claves_a_crear);
+
 	if(list_size(instancia->claves_a_borrar) > 0)
 		list_destroy_and_destroy_elements(instancia->claves_a_borrar, free);
+	else
+		list_destroy(instancia->claves_a_borrar);
 
 	queue_destroy_and_destroy_elements(instancia->solicitudes, (void (*)(void*)) destruir_solicitud);
 
-	if(instancia->id != -1){
+	if(esta_activa(instancia)){
 		pthread_cancel(instancia->id_hilo);//FIXME me parece que esto no va aca
-		desconectar_cliente(instancia->socket_instancia);
+		desconectar_instancia(instancia);
 	}
 
 	free(instancia);
@@ -196,12 +204,40 @@ int	reconectar_instancia(t_instancia* instancia, int socket){
 		}
 
 		instancia->entradas_disponibles = recibir_entradas(instancia);
+
+		log_debug(LOG_COORD, "claves de instancia %d antes de borrar", instancia->id);
+
+		mostrar_claves(instancia->claves);
+
+		log_debug(LOG_COORD, "claves a borrar de instancia %d", instancia->id);
+
+		mostrar_claves(instancia->claves_a_borrar);
+
+		borrar_claves_a_borrar(instancia);
+
+		log_debug(LOG_COORD, "claves de instancia %d despues de borrar", instancia->id);
+
+		mostrar_claves(instancia->claves);
 	}
 
 	instancia->esta_activa = true;
 
 
 	return 0;
+}
+
+void borrar_claves_a_borrar(t_instancia* instancia){
+	borrar_claves(instancia, instancia->claves_a_borrar);
+
+	list_destroy_and_destroy_elements(instancia->claves_a_borrar, free);
+}
+
+void mostrar_claves(t_list* claves){
+	void mostrar_clave(char* clave){
+		log_debug(LOG_COORD, "%s", clave);
+	}
+
+	list_iterate(claves, (void (*)(void*)) mostrar_clave);
 }
 
 int list_sum(t_list* numeros){
@@ -286,7 +322,7 @@ void eliminar_instancia(t_instancia* una_instancia){
 void desconectar_instancia(t_instancia* instancia){
 	instancia->esta_activa = false;
 
-	close(instancia->socket_instancia);
+	desconectar_cliente(instancia->socket_instancia);
 
 	log_trace(LOG_COORD, "Se desconecto la instancia %d", instancia->id);
 }

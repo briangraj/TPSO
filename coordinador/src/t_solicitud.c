@@ -32,54 +32,34 @@ void destruir_solicitud(t_solicitud* solicitud){
 	liberar_solicitud(solicitud);
 }
 
-//bool es_clave_a_crear_en_alguna_instancia(t_solicitud* solicitud){
-//	bool es_clave_a_crear_aux(t_instancia* instancia){
-//		return es_clave_a_crear(instancia, solicitud);
-//	}
-//
-//	return list_any_satisfy(INSTANCIAS, (bool (*)(void*)) es_clave_a_crear_aux);
-//}
-//
-//bool es_get_de_clave_existente(t_solicitud* solicitud){
-//	return solicitud->instruccion == OPERACION_GET
-//			&& es_clave_a_crear_en_alguna_instancia(solicitud);
-//}
-//
-//bool clave_ya_esta_en_memoria(t_solicitud* solicitud){
-//	return es_get_de_clave_existente(solicitud)
-//		|| solicitud->instruccion == OPERACION_STORE
-//		|| solicitud->instruccion == STATUS;
-//}
-
 bool valor_ya_esta_en_memoria(t_solicitud* solicitud){
 	return solicitud->instruccion == OPERACION_SET
 		|| solicitud->instruccion == CREAR_CLAVE
 		|| solicitud->instruccion == STATUS;
 }
 
+const char* solicitud_to_string(t_solicitud* solicitud){
+	switch(solicitud->instruccion){
+	case OPERACION_GET:
+		return "GET";
+	case OPERACION_SET:
+		return "SET";
+	case OPERACION_STORE:
+		return "STORE";
+	case CREAR_CLAVE:
+		return "SET (CREAR_CLAVE)";
+	case COMPACTACION:
+		return "COMPACTACION";
+	case STATUS:
+		return "STATUS";
+	default:
+		return "INSTRUCCION NO RECONOCIDA";
+	}
+}
+
 void liberar_solicitud(t_solicitud* solicitud){
 	if(valor_ya_esta_en_memoria(solicitud))
 		free(solicitud->valor);
-
-//	if(clave_ya_esta_en_memoria(solicitud))
-//		free(solicitud->clave);
-
-	/**
-	 * GET
-	 * 	si es de clave nueva, entonces no hay que borrarla
-	 * 	sino si
-	 * SET
-	 * 	si es OPERACION_SET entonces la clave ya existe, entonces hay que borrarla
-	 * 	si es CREAR_CLAVE no
-	 * CREAR_CLAVE
-	 * 	la clave que llega debe existir
-	 * STORE
-	 * 	la clave que llega debe existir
-	 * STATUS
-	 *	la clave que llega debe existir
-	 * COMPACTACION
-	 * 	no involucra clave
-	 */
 
 	sem_close(&solicitud->solicitud_finalizada);
 	sem_destroy(&solicitud->solicitud_finalizada);
