@@ -534,7 +534,9 @@ int	com_kill(char* parametro){
 		return 0;
 	}
 
+	pthread_mutex_lock(&semaforo_kill);
 	mover_a_finalizados(esi_buscado, "Se envio el comando kill sobre el ESI");
+	pthread_mutex_unlock(&semaforo_kill);
 
 	imprimir("Se finalizo el ESI solicitado");
 
@@ -618,8 +620,6 @@ int	com_deadlock(char* parametro){
 	esperas_circulares = list_create();
 
 	void buscar_espera_circular(void* elem){
-		imprimir("Voy a empezar una nueva busqueda de esperas circulares");
-
 		encontre_un_ciclo = false;
 
 		t_bloqueados_por_clave* bloqueados_por_clave = (t_bloqueados_por_clave*) elem;
@@ -629,7 +629,6 @@ int	com_deadlock(char* parametro){
 		cargar_si_recurso_forma_parte_de_un_deadlock(bloqueados_por_clave);
 
 		if(encontre_un_ciclo){
-			imprimir("Encontre un ciclo!!");
 			t_espera_circular* espera = malloc(sizeof(t_espera_circular));
 
 			espera->esis_por_recurso = duplicar_lista_involucrados(nueva_espera->esis_por_recurso);
@@ -643,8 +642,6 @@ int	com_deadlock(char* parametro){
 		}
 
 	}
-
-	imprimir("Voy a pausar todo para analizar si hay deadlock");
 
 	pthread_mutex_lock(&semaforo_pausa);
 
@@ -731,14 +728,12 @@ void cargar_si_recurso_forma_parte_de_un_deadlock(t_bloqueados_por_clave* bloque
 	t_blocked* esi;
 
 	while(!encontre_un_ciclo){
-		imprimir("Voy a analizar un nuevo esi");
 		esi = list_get(bloqueados_por_clave->bloqueados, indice);
 
 		if(!esi)
 			return;
 
 		if(list_is_empty(asignados_para_el_esi(esi->info_ejecucion->ID))){
-			imprimir("La lista de asignados para el esi esta vacia");
 			indice++;
 
 			continue;
@@ -749,18 +744,12 @@ void cargar_si_recurso_forma_parte_de_un_deadlock(t_bloqueados_por_clave* bloque
 		char* recurso;
 
 		while(!encontre_un_ciclo){
-			imprimir("Voy a analizar un nuevo recurso para el esi");
 			recurso = list_get(asignados_para_el_esi(esi->info_ejecucion->ID), indice_recursos);
 
-			if(!recurso){
-				imprimir("El esi se quedo sin recursos");
+			if(!recurso)
 				break;
-			}
-
 
 			if(string_equals_ignore_case(recurso, recurso_inicial)){
-				imprimir("Encontre deadlock en el while !!!!!");
-
 				encontre_un_ciclo = true;
 
 				nueva_espera->esis_por_recurso = list_create();
@@ -768,7 +757,6 @@ void cargar_si_recurso_forma_parte_de_un_deadlock(t_bloqueados_por_clave* bloque
 				break;
 			}
 
-			imprimir("Me voy a meter recursivamente");
 			cargar_si_recurso_forma_parte_de_un_deadlock(encontrar_bloqueados_para_la_clave(recurso));
 
 			indice_recursos++;
@@ -777,7 +765,6 @@ void cargar_si_recurso_forma_parte_de_un_deadlock(t_bloqueados_por_clave* bloque
 		indice++;
 	}
 
-	imprimir("Voy a armar el t_involucrados");
 	t_involucrados* involucrados = malloc(sizeof(t_involucrados));
 
 	involucrados->id_bloqueado = esi->info_ejecucion->ID;

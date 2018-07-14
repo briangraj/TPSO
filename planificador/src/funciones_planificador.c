@@ -26,6 +26,7 @@ void iniciar_planificador(int loggear){
 	colas_de_asignaciones = list_create();
 
 	pthread_mutex_init(&semaforo_pausa, NULL);
+	pthread_mutex_init(&semaforo_kill, NULL);
 	pthread_mutex_init(&semaforo_cola_bloqueados, NULL);
 	pthread_mutex_init(&semaforo_cola_finalizados, NULL);
 	pthread_mutex_init(&semaforo_cola_listos, NULL);
@@ -204,9 +205,23 @@ void atender_protocolo(int protocolo, int socket_cliente){
 				mover_a_finalizados(esi_desconectado, "Se perdio la conexion con el esi.");
 				mandar_a_ejecutar();
 			}else{
-				mover_a_finalizados(esi_desconectado, "Se perdio la conexion con el esi.");
+				pthread_mutex_lock(&semaforo_kill);
+				if(el_esi_esta_vivo(esi_desconectado->ID))
+					mover_a_finalizados(esi_desconectado, "Se perdio la conexion con el esi.");
+				pthread_mutex_unlock(&semaforo_kill);
 			}
 	}
+}
+
+bool el_esi_esta_vivo(int id){
+
+	bool es_el_esi(void* elem){
+		t_ended* ended = (t_ended*) elem;
+
+		return ended->ID == id;
+	}
+
+	return !list_any_satisfy(cola_finalizados, es_el_esi);
 }
 
 t_ready* encontrar_esi_de_socket(int socket){
@@ -624,6 +639,8 @@ void planificar(t_ready* esi_ready){
 
 	if(cant_listos == 0){
 
+		calcular_estimacion(esi_ready);
+
 		pthread_mutex_lock(&semaforo_cola_listos);
 		list_add(cola_de_listos, esi_ready);
 		pthread_mutex_unlock(&semaforo_cola_listos);
@@ -659,6 +676,9 @@ void mandar_a_ejecutar(){//Enviar orden de ejecucion al primer ESI de la cola de
 	pthread_mutex_unlock(&semaforo_cola_listos);
 
 	log_trace(log_planif, "Se le va a dar la orden de ejecucion al ESI de ID %d", esi_ejecucion->ID);
+
+	if(ALGORITMO_PLANIFICACION == HRRN && id_esi_activo != esi_ejecucion->ID)
+		loguear_info_hrrn();
 
 	if(enviar_paquete(EJECUTAR_SENTENCIA, esi_ejecucion->socket, 0, NULL) == -1){
 		mover_a_finalizados(esi_ejecucion, "Error en la comunicacion ESI-Planificador");
@@ -1019,7 +1039,7 @@ t_ready* buscar_en_ready(int id_esi){
 
 void insertar_ordenado(t_ready* esi_ready){
 
-	esi_ready->estimacion_actual = estimacion(esi_ready);
+	calcular_estimacion(esi_ready);
 
 	switch(ALGORITMO_PLANIFICACION){
 		case SJF_CD:
@@ -1041,6 +1061,18 @@ void insertar_ordenado(t_ready* esi_ready){
 			break;
 	}
 }
+
+void calcular_estimacion(t_ready* esi_ready){
+
+	esi_ready->ultima_estimacion = esi_ready->estimacion_actual;
+
+	if(esi_ready->total_instrucciones_ejecutadas != 0)
+		esi_ready->estimacion_actual = estimacion(esi_ready);
+
+	esi_ready->ultima_rafaga_real = 0.0;
+
+}
+
 
 float estimacion(t_ready* esi_ready){
 
@@ -1087,6 +1119,30 @@ float ratio(t_ready* esi){
 	return (esi->tiempo_espera / esi->estimacion_actual) + 1;
 }
 
+void loguear_info_hrrn(){
+	char* mensaje = string_from_format("\n------- La info de HRRN de los ESIs en estado ready es: ------- \n\t[ ");
+
+	void imprimir_info_hrrn(void* elem){
+		t_ready* esi = (t_ready*) elem;
+
+		string_append_with_format(&mensaje, "ESI %d - S: %f - W: %f - RR: %f \n\t", esi->ID, esi->estimacion_actual, esi->tiempo_espera, ratio(esi));
+	}
+
+	pthread_mutex_lock(&semaforo_cola_listos);
+	list_iterate(cola_de_listos, imprimir_info_hrrn);
+	pthread_mutex_unlock(&semaforo_cola_listos);
+
+	char* mensaje_final = string_substring(mensaje, 0, strlen(mensaje) - 2);
+
+	free(mensaje);
+
+	string_append(&mensaje_final, " ]");
+
+	log_info(log_planif, mensaje_final);
+
+	free(mensaje_final);
+}
+
 void finalizar(){
 	close(SOCKET_COORDINADOR);
 	log_destroy(log_planif);
@@ -1111,6 +1167,7 @@ void finalizar(){
 	list_destroy_and_destroy_elements(colas_de_asignaciones, asignacion_destroyer);
 	pthread_mutex_unlock(&semaforo_asignaciones);
 
+	pthread_mutex_destroy(&semaforo_kill);
 	pthread_mutex_destroy(&semaforo_pausa);
 	pthread_mutex_destroy(&semaforo_cola_bloqueados);
 	pthread_mutex_destroy(&semaforo_cola_finalizados);

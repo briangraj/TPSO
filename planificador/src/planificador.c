@@ -97,9 +97,9 @@ int main(int argc, char* argv[]) {
 									.ID = proximo_id,
 									.socket = newfd,
 									.tiempo_espera = 0.0,
-									.ultima_estimacion = ESTIMACION_INICIAL,
+									.ultima_estimacion = 0.0,
 									.ultima_rafaga_real = 0.0,
-									.estimacion_actual = 0.0,
+									.estimacion_actual = ESTIMACION_INICIAL,
 									.tiempo_total_bloqueado = 0,
 									.tiempo_total_espera = 0,
 									.total_instrucciones_ejecutadas = 0
