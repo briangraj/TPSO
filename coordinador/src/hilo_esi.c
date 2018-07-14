@@ -55,7 +55,7 @@ void* atender_esi(void* socket_esi){
 
 			destruir_solicitud(solicitud);
 
-			verificar_estado_valido();
+			hilo_verificar_estado_valido();
 			break;
 		}
 
@@ -155,31 +155,6 @@ int recibir_id(int socket){
 		return -1;
 
 	return id;
-}
-
-void verificar_estado_valido(){
-	if(!PLANIF_CONECTADO){
-		log_error(LOG_COORD, "Se desconecto el planificador, se abortara el coordinador");
-
-		close(LISTENER);
-
-		destruir_instancias();
-
-		free(ALGORITMO_DISTRIBUCION);
-		free(IP_COORD);
-
-		log_destroy(LOG_COORD);
-		log_destroy(LOG_OPERACIONES);
-
-		list_destroy(distribucion.rangos);
-
-		kill(getpid(), SIGUSR1);
-
-		pthread_exit(NULL);
-//		pthread_detach(pthread_self());
-
-//		exit(EXIT_FAILURE);
-	}
 }
 
 int ejecutar(t_solicitud* solicitud, t_instancia** instancia){

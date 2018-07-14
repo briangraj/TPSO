@@ -16,10 +16,13 @@ void* atender_consola(void* _){
 		int protocolo = recibir_protocolo(SOCKET_CONSOLA);
 
 		if(protocolo < 0){
-//			kill(hilo_esi_id, SIGUSR1);
 			PLANIF_CONECTADO = false;
-			pthread_exit(NULL);
+
+			hilo_verificar_estado_valido();
+
+			break;
 		}
+
 		if(protocolo != STATUS)
 			break;
 
@@ -29,6 +32,11 @@ void* atender_consola(void* _){
 
 		if(enviar_status(info_status) <= 0){
 			log_error(LOG_COORD, "Se perdio la conexion con la consola");
+
+			PLANIF_CONECTADO = false;
+
+			hilo_verificar_estado_valido();
+
 			break;
 		}
 	}
@@ -152,7 +160,7 @@ t_info_status info_status_clave_inexistente(char* clave){
 	if(instancia == NULL){
 		id = -1;
 	} else {
-		id = instancia->id
+		id = instancia->id;
 	}
 
 	t_info_status info_status = {

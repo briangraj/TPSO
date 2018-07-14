@@ -88,7 +88,8 @@ void set_rangos(){
 	nuevo_rango->id_instancia = ((t_instancia*)list_get(instancias_activas, i))->id;
 
 	nuevo_rango->inicio = letra_inicio;
-	nuevo_rango->fin = letra_inicio + (min_rango == 0? 0 : min_rango - 1);
+//	nuevo_rango->fin = letra_inicio + (min_rango == 0? 0 : min_rango - 1);
+	nuevo_rango->fin = 'z';
 
 	list_add(distribucion.rangos, nuevo_rango);
 }

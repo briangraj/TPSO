@@ -6,8 +6,14 @@
 
 void signal_handler(int sig_num){
 	if(sig_num == SIGUSR1){
-		puts("Finalizando el coordinador...");
+		log_error(LOG_COORD, "Se desconecto el planificador, se abortara el coordinador");
+
 		sleep(1);
+
+		log_warning(LOG_COORD, "Finalizando el coordinador...");
+
+		liberar_coord();
+
 		exit(EXIT_FAILURE);
 	}
 }
@@ -81,6 +87,28 @@ void setup_algoritmo(){
 	if(string_equals(ALGORITMO_DISTRIBUCION, "KE"))
 		distribucion.algoritmo = key_explicit;
 
+}
+
+void liberar_coord(){
+	close(LISTENER);
+
+	destruir_instancias();
+
+	free(ALGORITMO_DISTRIBUCION);
+	free(IP_COORD);
+
+	log_destroy(LOG_COORD);
+	log_destroy(LOG_OPERACIONES);
+
+	list_destroy(distribucion.rangos);
+}
+
+void hilo_verificar_estado_valido(){
+	if(!PLANIF_CONECTADO){
+		kill(getpid(), SIGUSR1);
+
+		pthread_exit(NULL);
+	}
 }
 
 void leer_config(){
