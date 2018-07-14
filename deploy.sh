@@ -48,6 +48,7 @@ mostrar coordinador-mock $LOG_TRACE
 mostrar "coordinador-mock - LISTO!" $LOG_OK
 
 echo export LD_LIBRARY_PATH=/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/sisopLib/Debug/ >> /home/utnso/.bashrc
+export LD_LIBRARY_PATH=/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/sisopLib/Debug/
 mostrar "LD_LIBRARY_PATH quedo seteado como $LD_LIBRARY_PATH" $LOG_INFO
 
 mostrar "$NOSOTROS - DEPLOY TERMINADO" $LOG_TITLE
