@@ -586,6 +586,7 @@ void atender_claves_a_borrar(){
 
 	for(i = 0; i < cant_claves; i++){
 		clave = recibir_string(socket_coordinador);
+		log_debug(log_instancia, "clave: %s.", clave);
 		borrar_entrada(clave);
 		log_info(log_instancia, "Se borro la clave: %s", clave);
 		free(clave);
@@ -797,8 +798,10 @@ void atender_compactacion(){
 			return;
 
 		char* valor = obtener_valor_de(entrada);
+		liberar_entradas_desde(entrada->nro_entrada, entrada->tamanio_entradas_clave);
 		entrada->nro_entrada = primer_entrada_libre;
 		copiar_a_memoria(entrada, valor);
+		setear_bitarray(entrada);
 		free(valor);
 
 		primer_entrada_libre = entrada_para(1);
