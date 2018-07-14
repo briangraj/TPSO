@@ -61,7 +61,7 @@ int validar_get_clave(t_solicitud* solicitud){
 	if(instancia == NULL){
 		t_instancia* instancia_elegida = distribucion.algoritmo(solicitud->clave);
 
-		if(instancia_elegida->id == -1){
+		if(instancia_elegida == NULL){
 			log_error(LOG_COORD, "No se pudo aplicar el algoritmo de distribucion sobre la clave %s", solicitud->clave);
 
 			return -1;

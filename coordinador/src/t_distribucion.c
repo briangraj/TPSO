@@ -8,9 +8,9 @@
 #include "t_distribucion.h"
 
 t_instancia* equitative_load(char* clave){
-	if(!hay_instancias_conectadas()){
-		return crear_instancia(-1, -1);
-	}
+	if(!hay_instancias_conectadas())
+		return NULL;
+
 
 	t_instancia* instancia = list_get(INSTANCIAS, distribucion.proxima_instancia);
 
@@ -23,6 +23,9 @@ t_instancia* equitative_load(char* clave){
 }
 
 t_instancia* least_space_used(char* clave){
+	if(!hay_instancias_conectadas())
+		return NULL;
+
 	t_instancia* instancia_con_mas_espacio = list_get(INSTANCIAS, 0);
 
 	void tiene_mas_espacio(t_instancia* instancia){
@@ -36,6 +39,9 @@ t_instancia* least_space_used(char* clave){
 }
 
 t_instancia* key_explicit(char* clave){
+	if(!hay_instancias_conectadas())
+		return NULL;
+
 	set_rangos();
 
 	t_instancia* instancia = elegir_instancia_segun_rango(clave);

@@ -147,14 +147,20 @@ t_info_status info_status_clave_a_crear(t_instancia* instancia){
 t_info_status info_status_clave_inexistente(char* clave){
 	int proxima_instancia = distribucion.proxima_instancia;
 	t_instancia* instancia = distribucion.algoritmo(clave);
+	int id;
+
+	if(instancia == NULL){
+		id = -1;
+	} else {
+		id = instancia->id
+	}
+
 	t_info_status info_status = {
 			.tamanio_mensaje = string_size("CLAVE SIN VALOR"),
 			.mensaje = "CLAVE SIN VALOR",
 			.id_instancia_actual = -1,
-			.id_instancia_posible = instancia->id
+			.id_instancia_posible = id
 	};
-	if(instancia->id == -1)
-		destruir_instancia(instancia);
 
 	distribucion.proxima_instancia = proxima_instancia;
 
