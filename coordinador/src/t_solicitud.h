@@ -13,6 +13,7 @@
 t_solicitud*	crear_solicitud						(int instruccion, int id, int socket);
 void			destruir_solicitud					(t_solicitud* solicitud);
 void 			liberar_solicitud					(t_solicitud* solicitud);
+const char* 	solicitud_to_string					(t_solicitud* solicitud);
 void 			set_resultado_instancia				(t_solicitud* solicitud, int resultado);
 void			set_respuesta_a_esi					(t_solicitud* solicitud, int resultado);
 void			setear_operacion_exitosa_instancia	(t_solicitud* solicitud);

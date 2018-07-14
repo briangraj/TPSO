@@ -48,9 +48,10 @@ void* atender_instancia(void* instancia_void){
 
 		evaluar_resultado_instr(solicitud, instancia);
 
-		sem_post(&solicitud->solicitud_finalizada);
+		log_trace(LOG_COORD, "El resultado de la instruccion %d fue %d",
+			solicitud->instruccion, solicitud->resultado_instancia);
 
-		log_trace(LOG_COORD, "El resultado de la instruccion %d fue %d", solicitud->instruccion, solicitud->resultado_instancia);
+		sem_post(&solicitud->solicitud_finalizada);
 	}
 
 	pthread_exit(NULL);
@@ -59,12 +60,7 @@ void* atender_instancia(void* instancia_void){
 void evaluar_resultado_instr(t_solicitud* solicitud, t_instancia* instancia){
 	int protocolo_recibido = recibir_protocolo(instancia->socket_instancia);
 
-	log_warning(LOG_COORD, "Protocolo recibido: %d", protocolo_recibido);
-
 	switch(protocolo_recibido){
-	case 2:
-		set_resultado_instancia(solicitud, OPERACION_EXITOSA);
-		break;
 	case OPERACION_EXITOSA:
 		if(solicitud->instruccion == OPERACION_SET || solicitud->instruccion == CREAR_CLAVE)
 			instancia->entradas_disponibles = recibir_entradas(instancia);

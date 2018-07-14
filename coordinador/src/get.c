@@ -70,7 +70,8 @@ int validar_get_clave(t_solicitud* solicitud){
 		agregar_clave_a_crear(instancia_elegida, solicitud->clave);
 
 		log_info(LOG_COORD,
-			"Se aplico el algoritmo de distribucion sobre la clave %s, se creara en la instancia %d",
+			"Se aplico el algoritmo %s sobre la clave %s, se creara en la instancia %d",
+			ALGORITMO_DISTRIBUCION,
 			solicitud->clave,
 			instancia_elegida->id);
 	} else {

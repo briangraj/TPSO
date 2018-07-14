@@ -18,7 +18,7 @@ void* atender_consola(void* _){
 		if(protocolo < 0){
 			PLANIF_CONECTADO = false;
 
-			hilo_verificar_estado_valido();
+			verificar_estado_valido();
 
 			break;
 		}
@@ -35,7 +35,7 @@ void* atender_consola(void* _){
 
 			PLANIF_CONECTADO = false;
 
-			hilo_verificar_estado_valido();
+			verificar_estado_valido();
 
 			break;
 		}
@@ -126,6 +126,7 @@ t_info_status enviar_status_a_instancia(t_instancia* instancia, t_solicitud* sol
 }
 
 t_info_status info_status_clave_existente(t_solicitud* solicitud, t_instancia* instancia){
+	log_warning(LOG_COORD, "valor: %s", solicitud->valor);
 	return (t_info_status) {
 			.tamanio_mensaje = string_length(solicitud->valor),
 			.mensaje = strdup(solicitud->valor),

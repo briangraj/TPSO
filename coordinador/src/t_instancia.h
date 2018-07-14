@@ -36,5 +36,6 @@ int 			conectar_instancia_nueva	(t_instancia* instancia);
 int 			enviar_claves_a_borrar		(t_instancia* instancia);
 int 			recibir_entradas			(t_instancia* instancia);
 char* 			get_clave					(t_instancia* instancia, char* clave);
+void 			mostrar_claves				(t_list* claves);
 
 #endif /* T_INSTANCIA_H_ */

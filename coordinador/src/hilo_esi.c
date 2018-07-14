@@ -6,7 +6,7 @@
  */
 
 #include "hilo_esi.h"
-//
+
 //void signal_handler_hilo_esi(int sig_num){
 //	if(sig_num == SIGUSR1){
 //		PLANIF_CONECTADO = false;
@@ -16,13 +16,12 @@
 //	}
 //}
 
-
 void crear_hilo_esi(int socket_cliente){
 	crear_hilo(atender_esi, (void*) socket_cliente);
 }
 
 void* atender_esi(void* socket_esi){
-//	hilo_esi_id = pthread_self();
+	hilo_esi_id = pthread_self();
 //	signal(SIGUSR1, signal_handler_hilo_esi);
 
 	int id_esi = recibir_id((int) socket_esi);
@@ -55,11 +54,11 @@ void* atender_esi(void* socket_esi){
 
 			destruir_solicitud(solicitud);
 
-			hilo_verificar_estado_valido();
+			verificar_estado_valido();
 			break;
 		}
 
-		log_trace(LOG_COORD, "Se atendio la instruccion %d del esi %d", solicitud->instruccion, solicitud->id_esi);
+		log_trace(LOG_COORD, "Se atendio la instruccion %s del esi %d", solicitud_to_string(solicitud), solicitud->id_esi);
 
 		if(enviar_paquete(solicitud->respuesta_a_esi, (int) socket_esi, 0, NULL) <= 0){
 			log_error(
@@ -79,6 +78,8 @@ void* atender_esi(void* socket_esi){
 
 		liberar_solicitud(solicitud);
 	}
+
+	hilo_esi_id = -1;
 
 	pthread_exit(NULL);
 }
@@ -229,6 +230,14 @@ int validar_op_con_efecto_sobre_clave(t_instancia** instancia, t_solicitud* soli
 			set_respuesta_a_esi(solicitud, ERROR_CLAVE_INACCESIBLE);
 
 			agregar_clave_a_borrar(*instancia, solicitud->clave);
+
+			log_debug(LOG_COORD, "claves de instancia %d", (*instancia)->id);
+
+			mostrar_claves((*instancia)->claves);
+
+			log_debug(LOG_COORD, "claves a borrar de instancia %d", (*instancia)->id);
+
+			mostrar_claves((*instancia)->claves_a_borrar);
 
 			log_error(LOG_COORD, "ERROR_CLAVE_INACCESIBLE: La clave %s se encuentra en una instancia desconectada, se abortara al esi %d",
 					solicitud->clave,

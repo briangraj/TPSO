@@ -75,8 +75,6 @@ void set_rangos(){
 		nuevo_rango->inicio = letra_inicio;
 		nuevo_rango->fin = letra_inicio + max_rango - 1;
 
-		log_error(LOG_COORD, "rango agregado: %c-%c", nuevo_rango->inicio, nuevo_rango->fin);
-
 		list_add(distribucion.rangos, nuevo_rango);
 
 		letra_inicio = letra_inicio + max_rango;
@@ -88,8 +86,9 @@ void set_rangos(){
 	nuevo_rango->id_instancia = ((t_instancia*)list_get(instancias_activas, i))->id;
 
 	nuevo_rango->inicio = letra_inicio;
-//	nuevo_rango->fin = letra_inicio + (min_rango == 0? 0 : min_rango - 1);
 	nuevo_rango->fin = 'z';
+
+	list_destroy(instancias_activas);
 
 	list_add(distribucion.rangos, nuevo_rango);
 }

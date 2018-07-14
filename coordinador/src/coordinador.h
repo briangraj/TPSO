@@ -49,7 +49,7 @@ void 			setup_listener					();
 void 			setup_conexion_con_planif		(int socket);
 t_instancia*	setup_conexion_con_instancia	(int socket);
 void			setup_conexion_con_consola		(int socket_cliente);
-void		 	hilo_verificar_estado_valido	();
+void		 	verificar_estado_valido	();
 void 			liberar_coord					();
 void			leer_config						();
 void			bindear_socket_server			();
