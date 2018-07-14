@@ -128,15 +128,19 @@ void destruir_instancia(t_instancia* instancia){
 	sem_close(&instancia->solicitud_lista);
 	sem_destroy(&instancia->solicitud_lista);
 
-	list_destroy_and_destroy_elements(instancia->claves, free);
-	list_destroy_and_destroy_elements(instancia->claves_a_crear, free);
-	list_destroy_and_destroy_elements(instancia->claves_a_borrar, free);
+	if(list_size(instancia->claves) > 0)
+		list_destroy_and_destroy_elements(instancia->claves, free);
+	if(list_size(instancia->claves_a_crear) > 0)
+		list_destroy_and_destroy_elements(instancia->claves_a_crear, free);
+	if(list_size(instancia->claves_a_borrar) > 0)
+		list_destroy_and_destroy_elements(instancia->claves_a_borrar, free);
 
 	queue_destroy_and_destroy_elements(instancia->solicitudes, (void (*)(void*)) destruir_solicitud);
 
-	pthread_cancel(instancia->id_hilo);//FIXME me parece que esto no va aca
-
-	desconectar_cliente(instancia->socket_instancia);
+	if(instancia->id != -1){
+		pthread_cancel(instancia->id_hilo);//FIXME me parece que esto no va aca
+		desconectar_cliente(instancia->socket_instancia);
+	}
 
 	free(instancia);
 }

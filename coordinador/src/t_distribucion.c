@@ -8,8 +8,9 @@
 #include "t_distribucion.h"
 
 t_instancia* equitative_load(char* clave){
-	if(!hay_instancias_conectadas())
-		return NULL;
+	if(!hay_instancias_conectadas()){
+		return crear_instancia(-1, -1);
+	}
 
 	t_instancia* instancia = list_get(INSTANCIAS, distribucion.proxima_instancia);
 

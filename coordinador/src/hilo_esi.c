@@ -6,12 +6,25 @@
  */
 
 #include "hilo_esi.h"
+//
+//void signal_handler_hilo_esi(int sig_num){
+//	if(sig_num == SIGUSR1){
+//		PLANIF_CONECTADO = false;
+//		verificar_estado_valido();
+//		sleep(1);
+//		exit(EXIT_FAILURE);
+//	}
+//}
+
 
 void crear_hilo_esi(int socket_cliente){
 	crear_hilo(atender_esi, (void*) socket_cliente);
 }
 
 void* atender_esi(void* socket_esi){
+//	hilo_esi_id = pthread_self();
+//	signal(SIGUSR1, signal_handler_hilo_esi);
+
 	int id_esi = recibir_id((int) socket_esi);
 
 	if(id_esi == -1){

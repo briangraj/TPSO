@@ -11,6 +11,8 @@
 #include "coordinador.h"
 #include "t_mensaje.h"
 
+pid_t hilo_esi_id;
+
 void 		 crear_hilo_esi		   		(int socket_cliente);
 void* 		 atender_esi		  		(void* socket_esi);
 t_solicitud* recibir_solicitud_esi 		(int socket, int id);

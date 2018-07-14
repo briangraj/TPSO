@@ -15,6 +15,11 @@ void* atender_consola(void* _){
 	while(1){
 		int protocolo = recibir_protocolo(SOCKET_CONSOLA);
 
+		if(protocolo < 0){
+//			kill(hilo_esi_id, SIGUSR1);
+			PLANIF_CONECTADO = false;
+			pthread_exit(NULL);
+		}
 		if(protocolo != STATUS)
 			break;
 
@@ -141,13 +146,15 @@ t_info_status info_status_clave_a_crear(t_instancia* instancia){
 
 t_info_status info_status_clave_inexistente(char* clave){
 	int proxima_instancia = distribucion.proxima_instancia;
-
+	t_instancia* instancia = distribucion.algoritmo(clave);
 	t_info_status info_status = {
 			.tamanio_mensaje = string_size("CLAVE SIN VALOR"),
 			.mensaje = "CLAVE SIN VALOR",
 			.id_instancia_actual = -1,
-			.id_instancia_posible = distribucion.algoritmo(clave)->id
+			.id_instancia_posible = instancia->id
 	};
+	if(instancia->id == -1)
+		destruir_instancia(instancia);
 
 	distribucion.proxima_instancia = proxima_instancia;
 
