@@ -26,14 +26,18 @@ t_instancia* least_space_used(char* clave){
 	if(!hay_instancias_conectadas())
 		return NULL;
 
-	t_instancia* instancia_con_mas_espacio = list_get(INSTANCIAS, 0);
+	t_list* instancias_activas = list_filter(INSTANCIAS, (bool(*)(void*))esta_activa);
+
+	t_instancia* instancia_con_mas_espacio = list_get(instancias_activas, 0);
 
 	void tiene_mas_espacio(t_instancia* instancia){
 		if(instancia_con_mas_espacio->entradas_disponibles < instancia->entradas_disponibles)
 			instancia_con_mas_espacio = instancia;
 	}
 
-	list_iterate(INSTANCIAS, (void(*)(void*))tiene_mas_espacio);
+	list_iterate(instancias_activas, (void(*)(void*))tiene_mas_espacio);
+
+	list_destroy(instancias_activas);
 
 	return instancia_con_mas_espacio;
 }
@@ -57,9 +61,6 @@ void set_rangos(){
 
 	int max_rango = ceiling(26, cant_instancias_activas);
 	int min_rango = 26 % max_rango;
-
-	log_error(LOG_COORD, "MAX RANGO: %d", max_rango);
-	log_error(LOG_COORD, "MIN RANGO: %d", min_rango);
 
 	int i;
 	char letra_inicio = 'a';

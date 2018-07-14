@@ -27,6 +27,8 @@
 
 #define PATH_CONFIG "/home/utnso/workspace/tp-2018-1c-A-la-grande-le-puse-Jacketing/configs/coordinador.cfg"
 
+int pid_coord;
+
 char* IP_COORD;
 int PUERTO_COORD;
 char* ALGORITMO_DISTRIBUCION;

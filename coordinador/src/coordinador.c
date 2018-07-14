@@ -12,8 +12,8 @@ void signal_handler(int sig_num){
 
 		log_warning(LOG_COORD, "Finalizando el coordinador...");
 
-		if(hilo_esi_id != -1)
-			pthread_cancel(hilo_esi_id);
+//		if(hilo_esi_id != -1)
+//			pthread_cancel(hilo_esi_id);
 
 		liberar_coord();
 
@@ -64,6 +64,8 @@ int main(void) {
 }
 
 void setup_coord(){
+	pid_coord = getpid();
+
 	LOG_COORD = log_create("Coordinador.log", "Coordinador", 1, LOG_LEVEL_TRACE);
 
 	LOG_OPERACIONES = log_create("Operaciones.log", "Coordinador", 0, LOG_LEVEL_TRACE);
@@ -110,7 +112,8 @@ void liberar_coord(){
 
 void verificar_estado_valido(){
 	if(!PLANIF_CONECTADO){
-		kill(getpid(), SIGUSR1);
+//		kill(getpid(), SIGUSR1);
+		kill(pid_coord, SIGUSR1);
 
 		pthread_exit(NULL);
 	}
