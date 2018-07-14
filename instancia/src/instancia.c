@@ -154,7 +154,6 @@ void leer_protocolo(int protocolo){
 		break;
 	case CREAR_CLAVE:
 		atender_crear_clave();
-		enviar_paquete(entradas_disponibles(), socket_coordinador, 0, NULL);
 		return;
 	case STATUS:
 //		@chakl estuvo aqui
@@ -488,6 +487,9 @@ void procesar_entrada_nueva(char* clave, char* valor){
 		setear_bitarray(entrada);
 		list_add(tabla_de_entradas, entrada);
 		log_trace(log_instancia, "Se creo la clave: %s", clave);
+		enviar_paquete(resultado, socket_coordinador, 0, NULL);
+		enviar_paquete(entradas_disponibles(), socket_coordinador, 0, NULL);
+		return;
 	} else if(entradas_disponibles() >= entradas_nuevo_valor){
 		resultado = FS_NC;
 		log_trace(log_instancia, "Se necesita compactar");
