@@ -128,7 +128,7 @@ t_info_status enviar_status_a_instancia(t_instancia* instancia, t_solicitud* sol
 t_info_status info_status_clave_existente(t_solicitud* solicitud, t_instancia* instancia){
 	log_warning(LOG_COORD, "valor: %s", solicitud->valor);
 	return (t_info_status) {
-			.tamanio_mensaje = string_length(solicitud->valor),
+			.tamanio_mensaje = string_size(solicitud->valor),
 			.mensaje = strdup(solicitud->valor),
 			.id_instancia_actual = instancia->id,
 			.id_instancia_posible = instancia->id
